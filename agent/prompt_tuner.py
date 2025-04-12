@@ -146,66 +146,55 @@ class PromptTuner:
         
         return variations
     
-    def tune(self, initial_prompt: str, test_cases: List[Dict], iterations: int = 5) -> List[Dict]:
-        """
-        Tune a system prompt through multiple iterations.
-        
-        Args:
-            initial_prompt (str): The initial system prompt
-            test_cases (List[Dict]): List of test cases for evaluation
-            iterations (int): Number of tuning iterations
-            
-        Returns:
-            List[Dict]: List of results for each iteration, containing:
-                - prompt: The prompt used in this iteration
-                - avg_score: Average score across all test cases
-                - best_score: Best score among test cases
-                - worst_score: Worst score among test cases
-                - detailed_responses: Detailed responses for each test case
-        """
+    def tune_prompt(self, initial_prompt: str, test_cases: List[Dict], num_iterations: int = 3) -> str:
         current_prompt = initial_prompt
-        self.best_prompt = initial_prompt
-        self.best_score = 0.0
-        results = []
+        best_prompt = initial_prompt
+        best_score = 0.0
         
-        for i in range(iterations):
-            # Generate variations of the current prompt
-            variations = self.generate_variations(current_prompt)
+        for iteration in range(num_iterations):
+            self.logger.info(f"\nIteration {iteration + 1}/{num_iterations}")
             
-            iteration_results = []
-            # Evaluate each variation
-            for variation in variations:
-                evaluation_result = self.evaluate_prompt(variation, test_cases)
-                score = evaluation_result['total_score']
+            # 각 테스트 케이스에 대해 순차적으로 평가하고 프롬프트를 조정
+            for i, test_case in enumerate(test_cases):
+                self.logger.info(f"\nTest Case {i + 1}/{len(test_cases)}")
+                self.logger.info(f"Question: {test_case['question']}")
                 
-                # Update best prompt if this variation performs better
-                if score > self.best_score:
-                    self.best_score = score
-                    self.best_prompt = variation
+                # 현재 프롬프트로 응답 생성
+                response = self.model.ask(test_case['question'], current_prompt)
+                self.logger.info(f"Response: {response}")
                 
-                # Record evaluation history
+                # 응답 평가
+                score = self._evaluate_response(response, test_case['expected'])
+                self.logger.info(f"Score: {score}")
+                
+                # 평가 결과를 바탕으로 프롬프트 조정
+                if score < 0.8:  # 점수가 낮은 경우
+                    self.logger.info("프롬프트 개선 중...")
+                    # 메타프롬프트를 사용하여 현재 프롬프트를 개선
+                    improvement_prompt = self.meta_prompt_template.format(
+                        prompt=current_prompt,
+                        question=test_case['question'],
+                        expected=test_case['expected']
+                    )
+                    improved_prompt = self.model.ask("", improvement_prompt)
+                    current_prompt = improved_prompt
+                    self.logger.info(f"개선된 프롬프트: {current_prompt}")
+                
+                # 현재까지의 최고 점수와 비교
+                if score > best_score:
+                    best_score = score
+                    best_prompt = current_prompt
+                    self.logger.info(f"새로운 최고 점수: {best_score}")
+                
+                # 평가 기록 저장
                 self.evaluation_history.append({
-                    'iteration': i,
-                    'prompt': variation,
-                    'score': score,
-                    'detailed_responses': evaluation_result['detailed_responses']
+                    'iteration': iteration + 1,
+                    'test_case': i + 1,
+                    'prompt': current_prompt,
+                    'question': test_case['question'],
+                    'response': response,
+                    'expected': test_case['expected'],
+                    'score': score
                 })
-                
-                # Collect scores for this variation
-                scores = [r['score'] for r in evaluation_result['detailed_responses']]
-                iteration_results.append({
-                    'prompt': variation,
-                    'avg_score': score,
-                    'best_score': max(scores),
-                    'worst_score': min(scores),
-                    'detailed_responses': evaluation_result['detailed_responses']
-                })
-            
-            # Add the best result from this iteration
-            best_iteration_result = max(iteration_results, key=lambda x: x['avg_score'])
-            results.append(best_iteration_result)
-            
-            # Update current prompt to the best performing one
-            current_prompt = best_iteration_result['prompt']
         
-        return results 
+        return best_prompt 

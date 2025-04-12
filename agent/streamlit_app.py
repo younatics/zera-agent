@@ -110,12 +110,23 @@ if uploaded_file is not None:
         st.write("Uploaded Data:")
         st.dataframe(df)
         
+        # 컬럼 이름 확인 및 매핑
+        required_columns = ['question', 'expected_answer']
+        available_columns = df.columns.tolist()
+        
+        # 필수 컬럼이 있는지 확인
+        missing_columns = [col for col in required_columns if col not in available_columns]
+        if missing_columns:
+            st.error(f"CSV 파일에 다음 컬럼이 필요합니다: {', '.join(missing_columns)}")
+            st.info("CSV 파일은 'question'과 'expected_answer' 컬럼을 포함해야 합니다.")
+            st.stop()
+        
         # 테스트 케이스 생성
         test_cases = []
         for _, row in df.iterrows():
             test_cases.append({
-                'input': row['question'],
-                'expected_output': row['expected_answer']
+                'question': row['question'],
+                'expected': row['expected_answer']
             })
         
         # 튜닝 시작 버튼
@@ -145,80 +156,87 @@ if uploaded_file is not None:
                 if meta_prompt.strip():
                     tuner.set_meta_prompt(meta_prompt)
                 
+                # 프롬프트 튜닝 실행
                 with st.spinner("프롬프트 튜닝 중..."):
-                    results = tuner.tune(initial_prompt, test_cases, iterations=iterations)
-                
-                # 결과 표시
-                st.header("프롬프트 튜닝 결과")
-                
-                # 최고의 결과 표시
-                best_result = max(results, key=lambda x: x['avg_score'])
-                best_prompt = best_result['prompt']
-                
-                # 모든 iteration의 결과를 하나의 DataFrame으로 통합
-                all_results = []
-                for i, record in enumerate(results):
-                    for j, response in enumerate(record['detailed_responses']):
+                    results = tuner.tune_prompt(initial_prompt, test_cases, num_iterations=iterations)
+                    
+                    # 최적의 프롬프트 표시
+                    st.markdown("### 최적의 프롬프트")
+                    st.text_area("", value=results, height=80, disabled=True)
+                    
+                    # 모든 Iteration 결과를 테이블로 표시
+                    st.markdown("### 모든 Iteration 결과")
+                    all_results = []
+                    for result in tuner.evaluation_history:
                         all_results.append({
-                            'Iteration': i + 1,
-                            '프롬프트': record['prompt'],
-                            '평균 점수': record['avg_score'],
-                            '테스트 케이스': j + 1,
-                            '질문': response['input'],
-                            '기대 응답': response['expected'],
-                            '실제 응답': response['response'],
-                            '점수': response['score']
+                            'Iteration': result['iteration'],
+                            '프롬프트': result['prompt'],
+                            '평균 점수': result['score'],
+                            '테스트 케이스': result['test_case'],
+                            '질문': result['question'],
+                            '기대 응답': result['expected'],
+                            '실제 응답': result['response'],
+                            '점수': result['score']
                         })
-                
-                df_all = pd.DataFrame(all_results)
-                
-                # 최적 프롬프트를 강조하기 위한 스타일 함수
-                def highlight_best_prompt(row):
-                    if row['프롬프트'] == best_prompt:
-                        return ['background-color: #e6ffe6'] * len(row)
-                    return [''] * len(row)
-                
-                st.dataframe(
-                    df_all.style.apply(highlight_best_prompt, axis=1),
-                    column_config={
-                        "Iteration": st.column_config.NumberColumn(
-                            "Iteration",
-                            width="small"
-                        ),
-                        "프롬프트": st.column_config.TextColumn(
-                            "프롬프트",
-                            width="large"
-                        ),
-                        "평균 점수": st.column_config.NumberColumn(
-                            "평균 점수",
-                            format="%.2f",
-                            width="small"
-                        ),
-                        "테스트 케이스": st.column_config.NumberColumn(
-                            "테스트 케이스",
-                            width="small"
-                        ),
-                        "질문": st.column_config.TextColumn(
-                            "질문",
-                            width="medium"
-                        ),
-                        "기대 응답": st.column_config.TextColumn(
-                            "기대 응답",
-                            width="medium"
-                        ),
-                        "실제 응답": st.column_config.TextColumn(
-                            "실제 응답",
-                            width="medium"
-                        ),
-                        "점수": st.column_config.NumberColumn(
-                            "점수",
-                            format="%.2f",
-                            width="small"
-                        )
-                    },
-                    hide_index=True,
-                    use_container_width=True
-                )
+                    
+                    df_all = pd.DataFrame(all_results)
+                    
+                    # 최고 점수를 가진 행을 찾기
+                    best_score = df_all['점수'].max()
+                    best_rows = df_all[df_all['점수'] == best_score]
+                    
+                    # 최고 점수를 가진 행에 하이라이트 스타일 적용
+                    def highlight_best(row):
+                        if row['점수'] == best_score:
+                            return ['background-color: #e6ffe6'] * len(row)
+                        return [''] * len(row)
+                    
+                    st.dataframe(
+                        df_all.style.apply(highlight_best, axis=1),
+                        column_config={
+                            "Iteration": st.column_config.NumberColumn(
+                                "Iteration",
+                                help="Iteration 번호",
+                                format="%d",
+                            ),
+                            "프롬프트": st.column_config.TextColumn(
+                                "프롬프트",
+                                help="사용된 프롬프트",
+                                width="medium",
+                            ),
+                            "평균 점수": st.column_config.NumberColumn(
+                                "평균 점수",
+                                help="평균 점수",
+                                format="%.2f",
+                            ),
+                            "테스트 케이스": st.column_config.NumberColumn(
+                                "테스트 케이스",
+                                help="테스트 케이스 번호",
+                                format="%d",
+                            ),
+                            "질문": st.column_config.TextColumn(
+                                "질문",
+                                help="테스트 케이스 질문",
+                                width="medium",
+                            ),
+                            "기대 응답": st.column_config.TextColumn(
+                                "기대 응답",
+                                help="기대하는 응답",
+                                width="medium",
+                            ),
+                            "실제 응답": st.column_config.TextColumn(
+                                "실제 응답",
+                                help="실제 응답",
+                                width="medium",
+                            ),
+                            "점수": st.column_config.NumberColumn(
+                                "점수",
+                                help="평가 점수",
+                                format="%.2f",
+                            ),
+                        },
+                        hide_index=True,
+                    )
                 
                 st.markdown("---")
                 
