@@ -154,7 +154,7 @@ class PromptTuner:
         
         return variations
     
-    def tune_prompt(self, initial_prompt: str, test_cases: List[Dict], num_iterations: int = 3, score_threshold: Optional[float] = None, evaluation_score_threshold: float = 0.8) -> str:
+    def tune_prompt(self, initial_prompt: str, test_cases: List[Dict], num_iterations: int = 3, score_threshold: Optional[float] = None, evaluation_score_threshold: float = 0.8, use_meta_prompt: bool = True) -> str:
         current_prompt = initial_prompt
         best_prompt = initial_prompt
         best_score = 0.0
@@ -180,8 +180,8 @@ class PromptTuner:
                 if self.progress_callback:
                     self.progress_callback(iteration + 1, i + 1)
                 
-                # 평가 결과를 바탕으로 프롬프트 조정
-                if score < evaluation_score_threshold:  # 점수가 score_threshold 보다 낮은 경우
+                # 평가 결과를 바탕으로 프롬프트 조정 (프롬프트 개선이 켜져있을 때만)
+                if use_meta_prompt and score < evaluation_score_threshold:  # 점수가 score_threshold 보다 낮은 경우
                     self.logger.info("프롬프트 개선 중...")
                     # 메타프롬프트를 사용하여 현재 프롬프트를 개선
                     improvement_prompt = self.meta_prompt_template.format(

@@ -247,7 +247,8 @@ if uploaded_file is not None:
                         test_cases=test_cases,
                         num_iterations=iterations,
                         score_threshold=score_threshold if use_threshold else None,
-                        evaluation_score_threshold=evaluation_threshold
+                        evaluation_score_threshold=evaluation_threshold,
+                        use_meta_prompt=use_meta_prompt
                     )
                     
                     # 프로그레스바 완료 표시
