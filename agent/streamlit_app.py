@@ -47,40 +47,44 @@ with st.sidebar:
     st.header("튜닝 파라미터")
     iterations = st.slider("반복 횟수", min_value=1, max_value=10, value=1)
     
-    # 평가 프롬프트 점수 임계값 설정
+    # 프롬프트 개선 사용 토글
+    use_meta_prompt = st.toggle(
+        "프롬프트 개선 사용", 
+        value=True, 
+        help="메타 프롬프트를 사용하여 프롬프트를 개선합니다. 비활성화하면 초기 프롬프트를 사용합니다."
+    )
+    
+    # 평가 프롬프트 점수 임계값 설정 (프롬프트 개선이 켜져있을 때만 활성화)
     evaluation_threshold = st.slider(
         "평가 프롬프트 점수 임계값",
         min_value=0.0,
         max_value=1.0,
         value=0.8,
         step=0.1,
-        help="평가 프롬프트에서 이 점수 미만이면 프롬프트를 개선합니다."
+        disabled=not use_meta_prompt,
+        help="이 점수 미만이면 프롬프트를 개선합니다. 프롬프트 개선이 켜져있을 때만 사용 가능합니다."
     )
     
-    # 점수 임계값 적용 여부 토글
+    # 점수 임계값 적용 여부 토글 (프롬프트 개선이 켜져있을 때만 활성화)
     use_threshold = st.toggle(
-        "점수 임계값 도달시 평가 중단",
+        "점수 임계값 적용",
         value=True,
-        help="이 옵션이 켜져있으면 점수가 임계값 이상일 때 반복을 중단합니다."
+        disabled=not use_meta_prompt,
+        help="이 옵션이 켜져있으면 점수가 임계값 이상일 때 반복을 중단합니다. 프롬프트 개선이 켜져있을 때만 사용 가능합니다."
     )
     
-    # 점수 임계값 적용이 켜져있을 때만 슬라이더 표시
-    if use_threshold:
-        score_threshold = st.slider(
-            "점수 임계값",
-            min_value=0.0,
-            max_value=1.0,
-            value=0.9,
-            step=0.05,
-            help="이 점수 이상을 평가 프롬프트에서 받으면 반복을 중단합니다."
-        )
-    else:
-        score_threshold = None
+
+
     
-    use_meta_prompt = st.toggle(
-        "프롬프트 개선 사용", 
-        value=True, 
-        help="메타 프롬프트를 사용하여 프롬프트를 개선합니다. 비활성화하면 초기 프롬프트를 사용합니다."
+    # 점수 임계값 슬라이더 (점수 임계값 적용이 꺼져있거나 프롬프트 개선이 꺼져있을 때는 비활성화)
+    score_threshold = st.slider(
+        "점수 임계값",
+        min_value=0.0,
+        max_value=1.0,
+        value=0.9,
+        step=0.05,
+        disabled=not (use_threshold and use_meta_prompt),
+        help="이 점수 이상이면 반복을 중단합니다. 점수 임계값 적용과 프롬프트 개선이 모두 켜져있을 때만 사용 가능합니다."
     )
     
     # 모델 선택
@@ -243,7 +247,7 @@ if uploaded_file is not None:
                         test_cases=test_cases,
                         num_iterations=iterations,
                         score_threshold=score_threshold if use_threshold else None,
-                        evaluation_threshold=evaluation_threshold
+                        evaluation_score_threshold=evaluation_threshold
                     )
                     
                     # 프로그레스바 완료 표시
