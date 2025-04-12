@@ -189,7 +189,8 @@ if uploaded_file is not None:
                             '질문': result['question'],
                             '기대 응답': result['expected'],
                             '실제 응답': result['response'],
-                            '점수': result['score']
+                            '점수': result['score'],
+                            '평가 이유': result['evaluation_reason']
                         })
                     
                     df_all = pd.DataFrame(all_results)
@@ -246,6 +247,11 @@ if uploaded_file is not None:
                                 "점수",
                                 help="평가 점수",
                                 format="%.2f",
+                            ),
+                            "평가 이유": st.column_config.TextColumn(
+                                "평가 이유",
+                                help="평가 모델이 내린 평가의 이유",
+                                width="large",
                             ),
                         },
                         hide_index=True,

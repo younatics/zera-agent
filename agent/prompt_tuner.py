@@ -76,10 +76,14 @@ class PromptTuner:
         )
         
         try:
-            score_str = self.evaluator.ask(evaluation_prompt).strip()
+            evaluation_result = self.evaluator.ask(evaluation_prompt).strip()
+            # 평가 결과에서 점수와 이유를 분리
+            score_str = evaluation_result.split('\n')[0]  # 첫 번째 줄은 점수
+            reason = '\n'.join(evaluation_result.split('\n')[1:])  # 나머지는 평가 이유
             score = float(score_str)
             self.logger.info(f"Evaluation score: {score}")
-            return score
+            self.logger.info(f"Evaluation reason: {reason}")
+            return score, reason
         except (ValueError, TypeError):
             # 숫자로 변환할 수 없는 경우 기본 평가 방식 사용
             self.logger.warning("Failed to get valid score from evaluator, using fallback evaluation method")
@@ -94,7 +98,7 @@ class PromptTuner:
             matches = sum(1 for phrase in key_phrases if phrase in response)
             fallback_score = min(1.0, matches / len(key_phrases))
             self.logger.info(f"Fallback evaluation score: {fallback_score}")
-            return fallback_score
+            return fallback_score, "키워드 기반 기본 평가"
     
     def evaluate_prompt(self, prompt: str, test_cases: List[Dict]) -> Dict:
         """
@@ -112,14 +116,15 @@ class PromptTuner:
         
         for test_case in test_cases:
             response = self.model.ask(test_case['input'], system_message=prompt)
-            score = self._evaluate_response(response, test_case['expected_output'])
+            score, reason = self._evaluate_response(response, test_case['expected_output'])
             total_score += score
             
             detailed_responses.append({
                 'input': test_case['input'],
                 'response': response,
                 'expected': test_case['expected_output'],
-                'score': score
+                'score': score,
+                'evaluation_reason': reason
             })
         
         return {
@@ -166,8 +171,9 @@ class PromptTuner:
                 self.logger.info(f"Response: {response}")
                 
                 # 응답 평가
-                score = self._evaluate_response(response, test_case['expected'])
+                score, reason = self._evaluate_response(response, test_case['expected'])
                 self.logger.info(f"Score: {score}")
+                self.logger.info(f"Evaluation reason: {reason}")
                 
                 # 평가 결과를 바탕으로 프롬프트 조정
                 if score < 0.8:  # 점수가 낮은 경우
@@ -196,7 +202,8 @@ class PromptTuner:
                     'question': test_case['question'],
                     'response': response,
                     'expected': test_case['expected'],
-                    'score': score
+                    'score': score,
+                    'evaluation_reason': reason
                 })
         
         return best_prompt 
