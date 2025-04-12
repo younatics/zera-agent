@@ -46,20 +46,28 @@ with open(os.path.join(prompts_dir, 'meta_prompt.txt'), 'r', encoding='utf-8') a
 with st.sidebar:
     st.header("튜닝 파라미터")
     iterations = st.slider("반복 횟수", min_value=1, max_value=10, value=1)
-    score_threshold = st.slider(
-        "점수 임계값",
-        min_value=0.0,
-        max_value=1.0,
-        value=0.95,
-        step=0.05,
-        help="이 점수 이상이면 반복을 중단합니다."
-    )
-    
-    # 임계값 적용 여부 토글
+
+        # 임계값 적용 여부 토글
     use_threshold = st.toggle(
         "점수 임계값 적용",
         value=True,
         help="이 옵션이 켜져있으면 점수가 임계값 이상일 때 반복을 중단합니다."
+    )
+
+    score_threshold = st.slider(
+        "점수 임계값",
+        min_value=0.0,
+        max_value=1.0,
+        value=0.9,
+        step=0.05,
+        help="이 점수 이상이면 반복을 중단합니다."
+    )
+ 
+
+    use_meta_prompt = st.toggle(
+        "프롬프트 개선 사용", 
+        value=True, 
+        help="메타 프롬프트를 사용하여 프롬프트를 개선합니다. 비활성화하면 초기 프롬프트를 사용합니다."
     )
     
     # 모델 선택
@@ -182,7 +190,8 @@ if uploaded_file is not None:
                 tuner = PromptTuner(
                     model_name=model_name, 
                     evaluator_model_name=evaluator_model,
-                    meta_prompt_model_name=meta_prompt_model
+                    meta_prompt_model_name=meta_prompt_model,
+                    use_meta_prompt=use_meta_prompt
                 )
                 tuner.set_evaluation_prompt(evaluation_prompt)
                 
