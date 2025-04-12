@@ -46,24 +46,37 @@ with open(os.path.join(prompts_dir, 'meta_prompt.txt'), 'r', encoding='utf-8') a
 with st.sidebar:
     st.header("튜닝 파라미터")
     iterations = st.slider("반복 횟수", min_value=1, max_value=10, value=1)
-
-        # 임계값 적용 여부 토글
+    
+    # 평가 프롬프트 점수 임계값 설정
+    evaluation_threshold = st.slider(
+        "평가 프롬프트 점수 임계값",
+        min_value=0.0,
+        max_value=1.0,
+        value=0.8,
+        step=0.1,
+        help="평가 프롬프트에서 이 점수 미만이면 프롬프트를 개선합니다."
+    )
+    
+    # 점수 임계값 적용 여부 토글
     use_threshold = st.toggle(
-        "점수 임계값 적용",
+        "점수 임계값 도달시 평가 중단",
         value=True,
         help="이 옵션이 켜져있으면 점수가 임계값 이상일 때 반복을 중단합니다."
     )
-
-    score_threshold = st.slider(
-        "점수 임계값",
-        min_value=0.0,
-        max_value=1.0,
-        value=0.9,
-        step=0.05,
-        help="이 점수 이상이면 반복을 중단합니다."
-    )
- 
-
+    
+    # 점수 임계값 적용이 켜져있을 때만 슬라이더 표시
+    if use_threshold:
+        score_threshold = st.slider(
+            "점수 임계값",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.9,
+            step=0.05,
+            help="이 점수 이상을 평가 프롬프트에서 받으면 반복을 중단합니다."
+        )
+    else:
+        score_threshold = None
+    
     use_meta_prompt = st.toggle(
         "프롬프트 개선 사용", 
         value=True, 
@@ -100,6 +113,7 @@ with st.sidebar:
 # 프롬프트 설정
 with st.expander("초기 프롬프트 설정", expanded=False):
     initial_prompt = st.text_area(
+        
         "프롬프트",
         value=DEFAULT_INITIAL_PROMPT,
         height=100,
@@ -186,12 +200,11 @@ if uploaded_file is not None:
                 st.error(f"다음 API 키가 필요합니다: {', '.join(missing_keys)}")
                 st.info("API 키를 .env 파일에 설정하세요.")
             else:
-                # 프롬프트 튜너 초기화 및 실행
+                # PromptTuner 인스턴스 생성
                 tuner = PromptTuner(
-                    model_name=model_name, 
+                    model_name=model_name,
                     evaluator_model_name=evaluator_model,
-                    meta_prompt_model_name=meta_prompt_model,
-                    use_meta_prompt=use_meta_prompt
+                    meta_prompt_model_name=meta_prompt_model
                 )
                 tuner.set_evaluation_prompt(evaluation_prompt)
                 
@@ -229,7 +242,8 @@ if uploaded_file is not None:
                         initial_prompt=initial_prompt,
                         test_cases=test_cases,
                         num_iterations=iterations,
-                        score_threshold=score_threshold if use_threshold else None
+                        score_threshold=score_threshold if use_threshold else None,
+                        evaluation_threshold=evaluation_threshold
                     )
                     
                     # 프로그레스바 완료 표시

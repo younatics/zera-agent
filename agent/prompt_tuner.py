@@ -181,7 +181,7 @@ class PromptTuner:
                     self.progress_callback(iteration + 1, i + 1)
                 
                 # 평가 결과를 바탕으로 프롬프트 조정
-                if score < score_threshold:  # 점수가 score_threshold 보다 낮은 경우
+                if score_threshold is not None and score < score_threshold:  # 점수가 score_threshold 보다 낮은 경우
                     self.logger.info("프롬프트 개선 중...")
                     # 메타프롬프트를 사용하여 현재 프롬프트를 개선
                     improvement_prompt = self.meta_prompt_template.format(
