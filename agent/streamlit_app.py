@@ -75,24 +75,23 @@ with st.sidebar:
     st.caption(MODEL_INFO[evaluator_model]['description'])
 
 # 프롬프트 설정
-st.header("프롬프트 설정")
+with st.expander("프롬프트 설정", expanded=False):
+    # 초기 프롬프트 입력
+    initial_prompt = st.text_area(
+        "초기 프롬프트 입력",
+        value="You are a helpful AI assistant. Be polite and concise in your responses.",
+        height=100,
+        help="튜닝을 시작할 초기 프롬프트를 입력하세요."
+    )
 
-# 초기 프롬프트 입력
-initial_prompt = st.text_area(
-    "초기 프롬프트 입력",
-    value="You are a helpful AI assistant. Be polite and concise in your responses.",
-    height=100,
-    help="튜닝을 시작할 초기 프롬프트를 입력하세요."
-)
-
-# 평가 프롬프트 입력
-evaluation_prompt = st.text_area(
-    "평가 프롬프트 입력",
-    value=DEFAULT_EVALUATION_PROMPT,
-    height=300,
-    help="""응답을 평가할 때 사용하는 프롬프트를 입력하세요.
+    # 평가 프롬프트 입력
+    evaluation_prompt = st.text_area(
+        "평가 프롬프트 입력",
+        value=DEFAULT_EVALUATION_PROMPT,
+        height=300,
+        help="""응답을 평가할 때 사용하는 프롬프트를 입력하세요.
 {response}와 {expected}는 실제 응답과 기대 응답으로 대체됩니다."""
-)
+    )
 
 # CSV 파일 업로드
 uploaded_file = st.file_uploader("Upload your CSV file", type=['csv'])
