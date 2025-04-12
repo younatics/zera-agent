@@ -154,7 +154,7 @@ class PromptTuner:
         
         return variations
     
-    def tune_prompt(self, initial_prompt: str, test_cases: List[Dict], num_iterations: int = 3) -> str:
+    def tune_prompt(self, initial_prompt: str, test_cases: List[Dict], num_iterations: int = 3, score_threshold: float = 0.9) -> str:
         current_prompt = initial_prompt
         best_prompt = initial_prompt
         best_score = 0.0
@@ -168,7 +168,7 @@ class PromptTuner:
                 self.logger.info(f"Question: {test_case['question']}")
                 
                 # 현재 프롬프트로 응답 생성
-                response = self.model.ask(test_case['question'], current_prompt)
+                response = self.model.ask(test_case['question'], system_message=current_prompt)
                 self.logger.info(f"Response: {response}")
                 
                 # 응답 평가
@@ -211,5 +211,10 @@ class PromptTuner:
                     'score': score,
                     'evaluation_reason': reason
                 })
+
+                # score_threshold 이상의 점수가 나오면 iteration 중단
+                if score >= score_threshold:
+                    self.logger.info(f"{score_threshold} 이상의 점수({score})를 달성하여 iteration을 중단합니다.")
+                    return best_prompt
         
         return best_prompt 

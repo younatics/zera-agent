@@ -46,6 +46,8 @@ with open(os.path.join(prompts_dir, 'meta_prompt.txt'), 'r', encoding='utf-8') a
 with st.sidebar:
     st.header("튜닝 파라미터")
     iterations = st.slider("반복 횟수", min_value=1, max_value=10, value=1)
+    score_threshold = st.slider("점수 임계값", min_value=0.0, max_value=1.0, value=0.9, step=0.1, 
+                              help="이 점수 이상이 나오면 iteration을 중단합니다.")
     
     # 모델 선택
     model_name = st.selectbox(
@@ -191,17 +193,25 @@ if uploaded_file is not None:
                             progress = self.current_step / total_steps
                             progress_bar.progress(progress)
                             self.progress_text.text(f"진행 중: Iteration {iteration}/{iterations}, Test Case {test_case}/{len(test_cases)} ({self.current_step}/{total_steps})")
+                        
+                        def complete(self):
+                            progress_bar.progress(1.0)
+                            self.progress_text.text("완료!")
                     
                     progress_tracker = ProgressTracker()
                     
                     # 프로그레스 바 업데이트 콜백 설정
                     tuner.progress_callback = lambda i, tc: progress_tracker.update(i, tc)
                     
-                    results = tuner.tune_prompt(initial_prompt, test_cases, num_iterations=iterations)
+                    results = tuner.tune_prompt(
+                        initial_prompt=initial_prompt,
+                        test_cases=test_cases,
+                        num_iterations=iterations,
+                        score_threshold=score_threshold
+                    )
                     
-                    # 프로그레스바와 진행 중 문구 제거
-                    progress_bar.empty()
-                    progress_tracker.progress_text.empty()
+                    # 프로그레스바 완료 표시
+                    progress_tracker.complete()
                     
                     # 최적의 프롬프트 표시
                     st.markdown("### 최적의 프롬프트")
