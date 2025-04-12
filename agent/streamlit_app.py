@@ -46,8 +46,21 @@ with open(os.path.join(prompts_dir, 'meta_prompt.txt'), 'r', encoding='utf-8') a
 with st.sidebar:
     st.header("튜닝 파라미터")
     iterations = st.slider("반복 횟수", min_value=1, max_value=10, value=1)
-    score_threshold = st.slider("점수 임계값", min_value=0.0, max_value=1.0, value=0.9, step=0.1, 
-                              help="이 점수 이상이 나오면 iteration을 중단합니다.")
+    score_threshold = st.slider(
+        "점수 임계값",
+        min_value=0.0,
+        max_value=1.0,
+        value=0.95,
+        step=0.05,
+        help="이 점수 이상이면 반복을 중단합니다."
+    )
+    
+    # 임계값 적용 여부 토글
+    use_threshold = st.toggle(
+        "점수 임계값 적용",
+        value=True,
+        help="이 옵션이 켜져있으면 점수가 임계값 이상일 때 반복을 중단합니다."
+    )
     
     # 모델 선택
     model_name = st.selectbox(
@@ -207,7 +220,7 @@ if uploaded_file is not None:
                         initial_prompt=initial_prompt,
                         test_cases=test_cases,
                         num_iterations=iterations,
-                        score_threshold=score_threshold
+                        score_threshold=score_threshold if use_threshold else None
                     )
                     
                     # 프로그레스바 완료 표시
