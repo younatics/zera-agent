@@ -4,6 +4,7 @@ import plotly.express as px
 from prompt_tuner import PromptTuner
 import os
 import logging
+import plotly.graph_objects as go
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -141,28 +142,60 @@ if uploaded_file is not None:
                 tuner.set_evaluation_prompt(evaluation_prompt)
                 
                 with st.spinner("프롬프트 튜닝 중..."):
-                    best_prompt = tuner.tune(initial_prompt, test_cases, iterations=iterations)
+                    results = tuner.tune(initial_prompt, test_cases, iterations=iterations)
                 
                 # 결과 표시
+                st.header("프롬프트 튜닝 결과")
+                
+                # 최고의 결과 표시
+                best_result = max(results, key=lambda x: x['avg_score'])
+                st.markdown("### 🏆 최고의 결과")
                 col1, col2 = st.columns(2)
-                
                 with col1:
-                    st.subheader("최종 결과")
-                    st.metric("최고 점수", f"{tuner.best_score:.2f}")
-                    st.text_area("최적 프롬프트", value=best_prompt, height=150)
-                
+                    st.metric("평균 점수", f"{best_result['avg_score']:.2f}")
+                    st.metric("최고 점수", f"{best_result['best_score']:.2f}")
                 with col2:
-                    st.subheader("평가 기록")
-                    # 평가 기록을 DataFrame으로 변환
-                    history_df = pd.DataFrame(tuner.evaluation_history)
-                    
-                    # 점수 변화 그래프
-                    fig = px.line(history_df, 
-                                x=history_df.index, 
-                                y='score',
-                                title='점수 변화',
-                                labels={'x': 'Iteration', 'y': 'Score'})
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.metric("최저 점수", f"{best_result['worst_score']:.2f}")
+                    st.metric("테스트 케이스 수", len(best_result['detailed_responses']))
+                
+                st.text_area("최적 프롬프트", value=best_result['prompt'], height=150)
+                st.markdown("---")
+                
+                # Iteration별로 결과 표시
+                for i, record in enumerate(results):
+                    with st.expander(f"Iteration {i+1} (평균 점수: {record['avg_score']:.2f})", expanded=True):
+                        st.markdown(f"**프롬프트:** {record['prompt']}")
+                        st.markdown(f"**평균 점수:** {record['avg_score']:.2f}")
+                        st.markdown(f"**최고 점수:** {record['best_score']:.2f}")
+                        st.markdown(f"**최저 점수:** {record['worst_score']:.2f}")
+                        st.markdown("---")
+                        
+                        # 점수 변화 그래프
+                        st.markdown("#### 점수 분포")
+                        fig = go.Figure()
+                        fig.add_trace(go.Box(
+                            y=[r['score'] for r in record['detailed_responses']],
+                            name='점수 분포',
+                            boxpoints='all',
+                            jitter=0.3,
+                            pointpos=-1.8
+                        ))
+                        fig.update_layout(
+                            title='테스트 케이스별 점수 분포',
+                            yaxis_title='점수',
+                            showlegend=False,
+                            height=300
+                        )
+                        st.plotly_chart(fig, use_container_width=True, key=f"score_distribution_{i}")
+                        
+                        # 상세 결과 표시
+                        st.markdown("#### 상세 결과")
+                        for j, response in enumerate(record['detailed_responses']):
+                            st.markdown(f"##### 테스트 케이스 {j+1} (점수: {response['score']:.2f})")
+                            st.text_area("질문", value=response['input'], height=100, key=f"input_{i}_{j}")
+                            st.text_area("실제 응답", value=response['response'], height=150, key=f"response_{i}_{j}")
+                            st.text_area("기대 응답", value=response['expected'], height=150, key=f"expected_{i}_{j}")
+                            st.markdown("---")  # 구분선 추가
                 
     except Exception as e:
         st.error(f"Error processing CSV file: {str(e)}")

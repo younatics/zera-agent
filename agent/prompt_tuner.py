@@ -91,7 +91,7 @@ class PromptTuner:
             self.logger.info(f"Fallback evaluation score: {fallback_score}")
             return fallback_score
     
-    def evaluate_prompt(self, prompt: str, test_cases: List[Dict]) -> float:
+    def evaluate_prompt(self, prompt: str, test_cases: List[Dict]) -> Dict:
         """
         Evaluate a system prompt using a set of test cases.
         
@@ -100,16 +100,27 @@ class PromptTuner:
             test_cases (List[Dict]): List of test cases, each containing 'input' and 'expected_output'
             
         Returns:
-            float: The evaluation score (0.0 to 1.0)
+            Dict: Evaluation results including total score and detailed responses
         """
         total_score = 0.0
+        detailed_responses = []
         
         for test_case in test_cases:
             response = self.model.ask(test_case['input'], system_message=prompt)
             score = self._evaluate_response(response, test_case['expected_output'])
             total_score += score
+            
+            detailed_responses.append({
+                'input': test_case['input'],
+                'response': response,
+                'expected': test_case['expected_output'],
+                'score': score
+            })
         
-        return total_score / len(test_cases)
+        return {
+            'total_score': total_score / len(test_cases),
+            'detailed_responses': detailed_responses
+        }
     
     def generate_variations(self, prompt: str, num_variations: int = 3) -> List[str]:
         """
@@ -147,7 +158,7 @@ class PromptTuner:
         
         return variations
     
-    def tune(self, initial_prompt: str, test_cases: List[Dict], iterations: int = 5) -> str:
+    def tune(self, initial_prompt: str, test_cases: List[Dict], iterations: int = 5) -> List[Dict]:
         """
         Tune a system prompt through multiple iterations.
         
@@ -157,19 +168,27 @@ class PromptTuner:
             iterations (int): Number of tuning iterations
             
         Returns:
-            str: The best performing prompt
+            List[Dict]: List of results for each iteration, containing:
+                - prompt: The prompt used in this iteration
+                - avg_score: Average score across all test cases
+                - best_score: Best score among test cases
+                - worst_score: Worst score among test cases
+                - detailed_responses: Detailed responses for each test case
         """
         current_prompt = initial_prompt
         self.best_prompt = initial_prompt
-        self.best_score = self.evaluate_prompt(initial_prompt, test_cases)
+        self.best_score = 0.0
+        results = []
         
         for i in range(iterations):
             # Generate variations of the current prompt
             variations = self.generate_variations(current_prompt)
             
+            iteration_results = []
             # Evaluate each variation
             for variation in variations:
-                score = self.evaluate_prompt(variation, test_cases)
+                evaluation_result = self.evaluate_prompt(variation, test_cases)
+                score = evaluation_result['total_score']
                 
                 # Update best prompt if this variation performs better
                 if score > self.best_score:
@@ -180,10 +199,25 @@ class PromptTuner:
                 self.evaluation_history.append({
                     'iteration': i,
                     'prompt': variation,
-                    'score': score
+                    'score': score,
+                    'detailed_responses': evaluation_result['detailed_responses']
+                })
+                
+                # Collect scores for this variation
+                scores = [r['score'] for r in evaluation_result['detailed_responses']]
+                iteration_results.append({
+                    'prompt': variation,
+                    'avg_score': score,
+                    'best_score': max(scores),
+                    'worst_score': min(scores),
+                    'detailed_responses': evaluation_result['detailed_responses']
                 })
             
+            # Add the best result from this iteration
+            best_iteration_result = max(iteration_results, key=lambda x: x['avg_score'])
+            results.append(best_iteration_result)
+            
             # Update current prompt to the best performing one
-            current_prompt = self.best_prompt
+            current_prompt = best_iteration_result['prompt']
         
-        return self.best_prompt 
+        return results 
