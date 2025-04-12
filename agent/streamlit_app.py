@@ -90,7 +90,13 @@ with st.expander("메타프롬프트 설정", expanded=False):
         value=DEFAULT_META_PROMPT,
         height=300,
         help="""프롬프트 변형을 생성할 때 사용하는 프롬프트를 입력하세요.
-{prompt}는 원본 프롬프트로 대체됩니다."""
+다음 변수들이 사용됩니다:
+- {prompt}: 원본 프롬프트
+- {question}: 테스트 케이스의 질문
+- {expected}: 기대하는 응답
+- {evaluation_reason}: 평가 모델이 내린 평가의 이유
+
+평가 이유를 바탕으로 프롬프트를 개선하는 방향성을 제시할 수 있습니다."""
     )
 
 # 평가 프롬프트 설정
