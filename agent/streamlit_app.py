@@ -177,6 +177,26 @@ if uploaded_file is not None:
                 
                 # 프롬프트 튜닝 실행
                 with st.spinner("프롬프트 튜닝 중..."):
+                    # 전체 진행 상황을 위한 프로그레스 바
+                    progress_bar = st.progress(0)
+                    total_steps = iterations * len(test_cases)
+                    
+                    class ProgressTracker:
+                        def __init__(self):
+                            self.current_step = 0
+                            self.progress_text = st.empty()
+                        
+                        def update(self, iteration, test_case):
+                            self.current_step += 1
+                            progress = self.current_step / total_steps
+                            progress_bar.progress(progress)
+                            self.progress_text.text(f"진행 중: Iteration {iteration}/{iterations}, Test Case {test_case}/{len(test_cases)} ({self.current_step}/{total_steps})")
+                    
+                    progress_tracker = ProgressTracker()
+                    
+                    # 프로그레스 바 업데이트 콜백 설정
+                    tuner.progress_callback = lambda i, tc: progress_tracker.update(i, tc)
+                    
                     results = tuner.tune_prompt(initial_prompt, test_cases, num_iterations=iterations)
                     
                     # 최적의 프롬프트 표시

@@ -23,6 +23,7 @@ class PromptTuner:
         self.evaluation_history: List[Dict] = []
         self.best_prompt: Optional[str] = None
         self.best_score: float = 0.0
+        self.progress_callback = None
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
         
@@ -174,6 +175,10 @@ class PromptTuner:
                 score, reason = self._evaluate_response(response, test_case['expected'])
                 self.logger.info(f"Score: {score}")
                 self.logger.info(f"Evaluation reason: {reason}")
+                
+                # 프로그레스 바 업데이트
+                if self.progress_callback:
+                    self.progress_callback(iteration + 1, i + 1)
                 
                 # 평가 결과를 바탕으로 프롬프트 조정
                 if score < 0.8:  # 점수가 낮은 경우
