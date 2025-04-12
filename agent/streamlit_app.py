@@ -148,22 +148,7 @@ if uploaded_file is not None:
                 
                 # 최고의 결과 표시
                 best_result = max(results, key=lambda x: x['avg_score'])
-                st.markdown("### 🏆 최고의 결과")
-                col1, col2, col3, col4 = st.columns(4)
-                with col1:
-                    st.metric("평균 점수", f"{best_result['avg_score']:.2f}")
-                with col2:
-                    st.metric("최고 점수", f"{best_result['best_score']:.2f}")
-                with col3:
-                    st.metric("최저 점수", f"{best_result['worst_score']:.2f}")
-                with col4:
-                    st.metric("테스트 케이스 수", len(best_result['detailed_responses']))
-                
-                st.text_area("최적 프롬프트", value=best_result['prompt'], height=80)
-                st.markdown("---")
-                
-                # Iteration별로 결과 표시
-                st.markdown("#### 모든 Iteration 결과")
+                best_prompt = best_result['prompt']
                 
                 # 모든 iteration의 결과를 하나의 DataFrame으로 통합
                 all_results = []
@@ -181,8 +166,15 @@ if uploaded_file is not None:
                         })
                 
                 df_all = pd.DataFrame(all_results)
+                
+                # 최적 프롬프트를 강조하기 위한 스타일 함수
+                def highlight_best_prompt(row):
+                    if row['프롬프트'] == best_prompt:
+                        return ['background-color: #e6ffe6'] * len(row)
+                    return [''] * len(row)
+                
                 st.dataframe(
-                    df_all,
+                    df_all.style.apply(highlight_best_prompt, axis=1),
                     column_config={
                         "Iteration": st.column_config.NumberColumn(
                             "Iteration",
