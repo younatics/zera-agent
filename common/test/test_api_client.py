@@ -1,4 +1,4 @@
-from api_client import Model
+from ..api_client import Model
 import os
 from openai import OpenAI
 from anthropic import Anthropic
