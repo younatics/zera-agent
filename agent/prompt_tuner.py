@@ -182,7 +182,8 @@ class PromptTuner:
                     improvement_prompt = self.meta_prompt_template.format(
                         prompt=current_prompt,
                         question=test_case['question'],
-                        expected=test_case['expected']
+                        expected=test_case['expected'],
+                        evaluation_reason=reason
                     )
                     improved_prompt = self.meta_prompt_model.ask("", improvement_prompt)
                     current_prompt = improved_prompt

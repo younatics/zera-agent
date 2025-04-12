@@ -45,7 +45,7 @@ with open(os.path.join(prompts_dir, 'meta_prompt.txt'), 'r', encoding='utf-8') a
 # 사이드바에서 파라미터 설정
 with st.sidebar:
     st.header("튜닝 파라미터")
-    iterations = st.slider("반복 횟수", min_value=1, max_value=10, value=3)
+    iterations = st.slider("반복 횟수", min_value=1, max_value=10, value=1)
     
     # 모델 선택
     model_name = st.selectbox(
@@ -190,7 +190,13 @@ if uploaded_file is not None:
                             '기대 응답': result['expected'],
                             '실제 응답': result['response'],
                             '점수': result['score'],
-                            '평가 이유': result['evaluation_reason']
+                            '평가 이유': result['evaluation_reason'],
+                            '메타프롬프트': tuner.meta_prompt_template.format(
+                                prompt=result['prompt'],
+                                question=result['question'],
+                                expected=result['expected'],
+                                evaluation_reason=result['evaluation_reason']
+                            )
                         })
                     
                     df_all = pd.DataFrame(all_results)
@@ -251,6 +257,11 @@ if uploaded_file is not None:
                             "평가 이유": st.column_config.TextColumn(
                                 "평가 이유",
                                 help="평가 모델이 내린 평가의 이유",
+                                width="large",
+                            ),
+                            "메타프롬프트": st.column_config.TextColumn(
+                                "메타프롬프트",
+                                help="프롬프트 개선에 사용된 메타프롬프트",
                                 width="large",
                             ),
                         },
