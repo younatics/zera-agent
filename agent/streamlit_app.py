@@ -33,23 +33,14 @@ MODEL_INFO = {
     }
 }
 
-# 기본 평가 프롬프트
-DEFAULT_EVALUATION_PROMPT = """당신은 AI 응답의 품질을 평가하는 전문가입니다. 주어진 응답이 기대하는 응답과 얼마나 잘 일치하는지 평가해주세요.
-
-실제 응답:
-{response}
-
-기대하는 응답:
-{expected}
-
-다음 기준으로 평가해주세요:
-1. 의미적 유사성 (응답이 기대하는 내용을 얼마나 잘 전달하는가)
-2. 톤과 스타일 (전문적이고 공손한 톤을 유지하는가)
-3. 정보의 정확성 (잘못된 정보를 포함하지 않는가)
-4. 응답의 완성도 (필요한 정보를 모두 포함하는가)
-
-0.0에서 1.0 사이의 점수만 출력해주세요. 다른 설명은 하지 마세요.
-예시: 0.85"""
+# 프롬프트 파일 로드
+prompts_dir = os.path.join(os.path.dirname(__file__), 'prompts')
+with open(os.path.join(prompts_dir, 'initial_prompt.txt'), 'r', encoding='utf-8') as f:
+    DEFAULT_INITIAL_PROMPT = f.read()
+with open(os.path.join(prompts_dir, 'evaluation_prompt.txt'), 'r', encoding='utf-8') as f:
+    DEFAULT_EVALUATION_PROMPT = f.read()
+with open(os.path.join(prompts_dir, 'meta_prompt.txt'), 'r', encoding='utf-8') as f:
+    DEFAULT_META_PROMPT = f.read()
 
 # 사이드바에서 파라미터 설정
 with st.sidebar:
@@ -78,15 +69,25 @@ with st.sidebar:
 with st.expander("초기 프롬프트 설정", expanded=False):
     initial_prompt = st.text_area(
         "프롬프트",
-        value="You are a helpful AI assistant. Be polite and concise in your responses.",
+        value=DEFAULT_INITIAL_PROMPT,
         height=100,
         help="튜닝을 시작할 초기 프롬프트를 입력하세요."
+    )
+
+# 메타프롬프트 설정
+with st.expander("메타프롬프트 설정", expanded=False):
+    meta_prompt = st.text_area(
+        "메타프롬프트 입력",
+        value=DEFAULT_META_PROMPT,
+        height=300,
+        help="""프롬프트 변형을 생성할 때 사용하는 프롬프트를 입력하세요.
+{prompt}는 원본 프롬프트로 대체됩니다."""
     )
 
 # 평가 프롬프트 설정
 with st.expander("평가 프롬프트 설정", expanded=False):
     evaluation_prompt = st.text_area(
-        "프롬프트",
+        "평가 프롬프트 입력",
         value=DEFAULT_EVALUATION_PROMPT,
         height=300,
         help="""응답을 평가할 때 사용하는 프롬프트를 입력하세요.
@@ -139,6 +140,10 @@ if uploaded_file is not None:
                 # 프롬프트 튜너 초기화 및 실행
                 tuner = PromptTuner(model_name=model_name, evaluator_model_name=evaluator_model)
                 tuner.set_evaluation_prompt(evaluation_prompt)
+                
+                # 메타프롬프트가 입력된 경우에만 설정
+                if meta_prompt.strip():
+                    tuner.set_meta_prompt(meta_prompt)
                 
                 with st.spinner("프롬프트 튜닝 중..."):
                     results = tuner.tune(initial_prompt, test_cases, iterations=iterations)

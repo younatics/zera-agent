@@ -1,6 +1,7 @@
 from typing import List, Dict, Optional
 import logging
 from common.api_client import Model
+import os
 
 class PromptTuner:
     """
@@ -23,23 +24,16 @@ class PromptTuner:
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
         
-        # 기본 평가 프롬프트
-        self.evaluation_prompt_template = """당신은 AI 응답의 품질을 평가하는 전문가입니다. 주어진 응답이 기대하는 응답과 얼마나 잘 일치하는지 평가해주세요.
-
-실제 응답:
-{response}
-
-기대하는 응답:
-{expected}
-
-다음 기준으로 평가해주세요:
-1. 의미적 유사성 (응답이 기대하는 내용을 얼마나 잘 전달하는가)
-2. 톤과 스타일 (전문적이고 공손한 톤을 유지하는가)
-3. 정보의 정확성 (잘못된 정보를 포함하지 않는가)
-4. 응답의 완성도 (필요한 정보를 모두 포함하는가)
-
-0.0에서 1.0 사이의 점수만 출력해주세요. 다른 설명은 하지 마세요.
-예시: 0.85"""
+        # 프롬프트 파일 경로
+        prompts_dir = os.path.join(os.path.dirname(__file__), 'prompts')
+        
+        # 기본 평가 프롬프트 로드
+        with open(os.path.join(prompts_dir, 'evaluation_prompt.txt'), 'r', encoding='utf-8') as f:
+            self.evaluation_prompt_template = f.read()
+        
+        # 기본 메타프롬프트 로드
+        with open(os.path.join(prompts_dir, 'meta_prompt.txt'), 'r', encoding='utf-8') as f:
+            self.meta_prompt_template = f.read()
     
     def set_evaluation_prompt(self, prompt_template: str):
         """
@@ -49,6 +43,15 @@ class PromptTuner:
             prompt_template (str): 평가 프롬프트 템플릿. {response}와 {expected}를 포함해야 합니다.
         """
         self.evaluation_prompt_template = prompt_template
+    
+    def set_meta_prompt(self, prompt_template: str):
+        """
+        메타프롬프트 템플릿을 설정합니다.
+        
+        Args:
+            prompt_template (str): 메타프롬프트 템플릿. {prompt}를 포함해야 합니다.
+        """
+        self.meta_prompt_template = prompt_template
     
     def _evaluate_response(self, response: str, expected: str) -> float:
         """
@@ -135,24 +138,9 @@ class PromptTuner:
         """
         variations = [prompt]  # Always include the original prompt
         
-        # 프롬프트 변형 생성을 위한 메타 프롬프트
-        meta_prompt = f"""아래는 AI 모델을 위한 시스템 프롬프트입니다. 이 프롬프트의 의도를 유지하면서 다른 표현으로 바꾼 새로운 버전을 생성해주세요.
-각 변형은 원래 프롬프트의 핵심 지시사항을 유지하되, 다른 관점이나 표현을 사용해야 합니다.
-
-원본 프롬프트:
-{prompt}
-
-새로운 버전을 생성할 때 다음 사항을 고려하세요:
-1. 명확성과 구체성 유지
-2. 전문적이고 공손한 톤 유지
-3. 모델의 역할과 제한사항 명시
-4. 간결하면서도 필요한 정보는 모두 포함
-
-새로운 버전을 생성해주세요. 프롬프트만 출력하고 다른 설명은 하지 마세요."""
-        
         # 지정된 수만큼 변형 생성
         for _ in range(num_variations - 1):  # -1 because we already have the original
-            variation = self.model.ask(meta_prompt)
+            variation = self.model.ask(self.meta_prompt_template.format(prompt=prompt))
             if variation and variation.strip():
                 variations.append(variation.strip())
         
