@@ -2,6 +2,7 @@ import base64
 import json
 import os
 from openai import OpenAI
+from anthropic import Anthropic
 
 
 def create_messages(prompt, system_message="You are a helpful assistant."):
@@ -34,14 +35,26 @@ class Model:
         
         self.name = model_name
         self.model_id = self.models[model_name]
-        self.handler = self.create_handler()
+        
+        # Initialize appropriate client
+        if model_name == "claude":
+            self.client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        elif model_name == "solar":
+            self.client = OpenAI(
+                api_key=os.getenv("SOLAR_API_KEY"),
+                base_url=self.base_urls["solar"]
+            )
+        else:  # gpt4o
+            self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        
+        self.handler = self._create_handler()
 
-    def create_handler(self):
-        def handler(client, prompt, system_message="You are a helpful assistant."):
+    def _create_handler(self):
+        def handler(prompt, system_message="You are a helpful assistant."):
             try:
                 messages = create_messages(prompt, system_message)
                 if "claude" in self.model_id:
-                    response = client.messages.create(
+                    response = self.client.messages.create(
                         model=self.model_id,
                         max_tokens=1000,
                         system=messages[0]["content"],
@@ -49,14 +62,7 @@ class Model:
                     )
                     return response.content[0].text
                 else:
-                    # Solar Pro의 경우 base_url 설정이 필요
-                    if "solar" in self.model_id:
-                        client = OpenAI(
-                            api_key=os.getenv("SOLAR_API_KEY"),
-                            base_url=self.base_urls["solar"]
-                        )
-                    
-                    response = client.chat.completions.create(
+                    response = self.client.chat.completions.create(
                         model=self.model_id,
                         messages=messages,
                         stream=False if "solar" in self.model_id else None,
@@ -66,8 +72,8 @@ class Model:
                 return f"Error: {e}"
         return handler
 
-    def ask(self, client, prompt, system_message="You are a helpful assistant."):
-        answer = self.handler(client, prompt, system_message)
+    def ask(self, prompt, system_message="You are a helpful assistant."):
+        answer = self.handler(prompt, system_message)
         print("Done.")
         return answer
 
@@ -78,4 +84,4 @@ class Model:
 
 # 사용 예시:
 # model = Model("gpt4o")
-# answer = model.ask(client, input_prompt)
+# answer = model.ask(input_prompt)
