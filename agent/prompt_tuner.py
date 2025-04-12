@@ -8,16 +8,18 @@ class PromptTuner:
     A class for automatically fine-tuning system prompts for LLMs.
     """
     
-    def __init__(self, model_name: str = "solar", evaluator_model_name: str = "solar"):
+    def __init__(self, model_name: str = "solar", evaluator_model_name: str = "solar", meta_prompt_model_name: str = "solar"):
         """
         Initialize the PromptTuner with specific models.
         
         Args:
             model_name (str): The name of the model to use for tuning (default: "solar")
-            evaluator_model_name (str): The name of the model to use for evaluation (default: "claude")
+            evaluator_model_name (str): The name of the model to use for evaluation (default: "solar")
+            meta_prompt_model_name (str): The name of the model to use for meta prompt generation (default: "solar")
         """
         self.model = Model(model_name)
         self.evaluator = Model(evaluator_model_name)
+        self.meta_prompt_model = Model(meta_prompt_model_name)
         self.evaluation_history: List[Dict] = []
         self.best_prompt: Optional[str] = None
         self.best_score: float = 0.0
@@ -140,7 +142,7 @@ class PromptTuner:
         
         # 지정된 수만큼 변형 생성
         for _ in range(num_variations - 1):  # -1 because we already have the original
-            variation = self.model.ask(self.meta_prompt_template.format(prompt=prompt))
+            variation = self.meta_prompt_model.ask(self.meta_prompt_template.format(prompt=prompt))
             if variation and variation.strip():
                 variations.append(variation.strip())
         
@@ -176,7 +178,7 @@ class PromptTuner:
                         question=test_case['question'],
                         expected=test_case['expected']
                     )
-                    improved_prompt = self.model.ask("", improvement_prompt)
+                    improved_prompt = self.meta_prompt_model.ask("", improvement_prompt)
                     current_prompt = improved_prompt
                     self.logger.info(f"개선된 프롬프트: {current_prompt}")
                 

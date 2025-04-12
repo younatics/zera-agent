@@ -56,6 +56,15 @@ with st.sidebar:
     )
     st.caption(MODEL_INFO[model_name]['description'])
     
+    # 메타 프롬프트 모델 선택
+    meta_prompt_model = st.selectbox(
+        "메타 프롬프트 모델 선택",
+        options=list(MODEL_INFO.keys()),
+        format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['version']})",
+        help="메타 프롬프트 생성에 사용할 모델을 선택하세요."
+    )
+    st.caption(MODEL_INFO[meta_prompt_model]['description'])
+
     # 평가 모델 선택
     evaluator_model = st.selectbox(
         "평가 모델 선택",
@@ -149,7 +158,11 @@ if uploaded_file is not None:
                 st.info("API 키를 .env 파일에 설정하세요.")
             else:
                 # 프롬프트 튜너 초기화 및 실행
-                tuner = PromptTuner(model_name=model_name, evaluator_model_name=evaluator_model)
+                tuner = PromptTuner(
+                    model_name=model_name, 
+                    evaluator_model_name=evaluator_model,
+                    meta_prompt_model_name=meta_prompt_model
+                )
                 tuner.set_evaluation_prompt(evaluation_prompt)
                 
                 # 메타프롬프트가 입력된 경우에만 설정
@@ -188,8 +201,8 @@ if uploaded_file is not None:
                     # 최고 점수를 가진 행에 하이라이트 스타일 적용
                     def highlight_best(row):
                         if row['점수'] == best_score:
-                            return ['background-color: #e6ffe6'] * len(row)
-                        return [''] * len(row)
+                            return ['background-color: #2e4053; color: white'] * len(row)
+                        return ['background-color: #1a1a1a; color: white'] * len(row)
                     
                     st.dataframe(
                         df_all.style.apply(highlight_best, axis=1),
