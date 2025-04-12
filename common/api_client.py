@@ -18,25 +18,25 @@ def create_messages(prompt, system_message="You are a helpful assistant."):
 
 
 class Model:
-    _models = {
+    models = {
         "gpt4o": "gpt-4o",
         "claude": "claude-3-sonnet-20240229",
         "solar": "solar-pro"
     }
 
-    _base_urls = {
+    base_urls = {
         "solar": "https://api.upstage.ai/v1"
     }
 
     def __init__(self, model_name):
-        if model_name not in self._models:
-            raise ValueError(f"Model {model_name} not found. Available models: {list(self._models.keys())}")
+        if model_name not in self.models:
+            raise ValueError(f"Model {model_name} not found. Available models: {list(self.models.keys())}")
         
         self.name = model_name
-        self.model_id = self._models[model_name]
-        self.handler = self._create_handler()
+        self.model_id = self.models[model_name]
+        self.handler = self.create_handler()
 
-    def _create_handler(self):
+    def create_handler(self):
         def handler(client, prompt, system_message="You are a helpful assistant."):
             try:
                 messages = create_messages(prompt, system_message)
@@ -53,7 +53,7 @@ class Model:
                     if "solar" in self.model_id:
                         client = OpenAI(
                             api_key=os.getenv("SOLAR_API_KEY"),
-                            base_url=self._base_urls["solar"]
+                            base_url=self.base_urls["solar"]
                         )
                     
                     response = client.chat.completions.create(
@@ -73,7 +73,7 @@ class Model:
 
     @classmethod
     def get_available_models(cls):
-        return list(cls._models.keys())
+        return list(cls.models.keys())
 
 
 # 사용 예시:
