@@ -22,6 +22,33 @@ class PromptTuner:
         self.best_score: float = 0.0
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
+        
+        # 기본 평가 프롬프트
+        self.evaluation_prompt_template = """당신은 AI 응답의 품질을 평가하는 전문가입니다. 주어진 응답이 기대하는 응답과 얼마나 잘 일치하는지 평가해주세요.
+
+실제 응답:
+{response}
+
+기대하는 응답:
+{expected}
+
+다음 기준으로 평가해주세요:
+1. 의미적 유사성 (응답이 기대하는 내용을 얼마나 잘 전달하는가)
+2. 톤과 스타일 (전문적이고 공손한 톤을 유지하는가)
+3. 정보의 정확성 (잘못된 정보를 포함하지 않는가)
+4. 응답의 완성도 (필요한 정보를 모두 포함하는가)
+
+0.0에서 1.0 사이의 점수만 출력해주세요. 다른 설명은 하지 마세요.
+예시: 0.85"""
+    
+    def set_evaluation_prompt(self, prompt_template: str):
+        """
+        평가 프롬프트 템플릿을 설정합니다.
+        
+        Args:
+            prompt_template (str): 평가 프롬프트 템플릿. {response}와 {expected}를 포함해야 합니다.
+        """
+        self.evaluation_prompt_template = prompt_template
     
     def _evaluate_response(self, response: str, expected: str) -> float:
         """
@@ -38,22 +65,10 @@ class PromptTuner:
         self.logger.info(f"Actual response: {response}")
         self.logger.info(f"Expected response: {expected}")
         
-        evaluation_prompt = f"""당신은 AI 응답의 품질을 평가하는 전문가입니다. 주어진 응답이 기대하는 응답과 얼마나 잘 일치하는지 평가해주세요.
-
-실제 응답:
-{response}
-
-기대하는 응답:
-{expected}
-
-다음 기준으로 평가해주세요:
-1. 의미적 유사성 (응답이 기대하는 내용을 얼마나 잘 전달하는가)
-2. 톤과 스타일 (전문적이고 공손한 톤을 유지하는가)
-3. 정보의 정확성 (잘못된 정보를 포함하지 않는가)
-4. 응답의 완성도 (필요한 정보를 모두 포함하는가)
-
-0.0에서 1.0 사이의 점수만 출력해주세요. 다른 설명은 하지 마세요.
-예시: 0.85"""
+        evaluation_prompt = self.evaluation_prompt_template.format(
+            response=response,
+            expected=expected
+        )
         
         try:
             score_str = self.evaluator.ask(evaluation_prompt).strip()
