@@ -75,18 +75,18 @@ with st.sidebar:
     st.caption(MODEL_INFO[evaluator_model]['description'])
 
 # 프롬프트 설정
-with st.expander("프롬프트 설정", expanded=False):
-    # 초기 프롬프트 입력
+with st.expander("초기 프롬프트 설정", expanded=False):
     initial_prompt = st.text_area(
-        "초기 프롬프트 입력",
+        "프롬프트",
         value="You are a helpful AI assistant. Be polite and concise in your responses.",
         height=100,
         help="튜닝을 시작할 초기 프롬프트를 입력하세요."
     )
 
-    # 평가 프롬프트 입력
+# 평가 프롬프트 설정
+with st.expander("평가 프롬프트 설정", expanded=False):
     evaluation_prompt = st.text_area(
-        "평가 프롬프트 입력",
+        "프롬프트",
         value=DEFAULT_EVALUATION_PROMPT,
         height=300,
         help="""응답을 평가할 때 사용하는 프롬프트를 입력하세요.
@@ -149,51 +149,97 @@ if uploaded_file is not None:
                 # 최고의 결과 표시
                 best_result = max(results, key=lambda x: x['avg_score'])
                 st.markdown("### 🏆 최고의 결과")
-                col1, col2 = st.columns(2)
+                col1, col2, col3, col4 = st.columns(4)
                 with col1:
                     st.metric("평균 점수", f"{best_result['avg_score']:.2f}")
-                    st.metric("최고 점수", f"{best_result['best_score']:.2f}")
                 with col2:
+                    st.metric("최고 점수", f"{best_result['best_score']:.2f}")
+                with col3:
                     st.metric("최저 점수", f"{best_result['worst_score']:.2f}")
+                with col4:
                     st.metric("테스트 케이스 수", len(best_result['detailed_responses']))
                 
-                st.text_area("최적 프롬프트", value=best_result['prompt'], height=150)
+                st.text_area("최적 프롬프트", value=best_result['prompt'], height=80)
                 st.markdown("---")
                 
                 # Iteration별로 결과 표시
                 for i, record in enumerate(results):
-                    with st.expander(f"Iteration {i+1} (평균 점수: {record['avg_score']:.2f})", expanded=True):
-                        st.markdown(f"**프롬프트:** {record['prompt']}")
-                        st.markdown(f"**평균 점수:** {record['avg_score']:.2f}")
-                        st.markdown(f"**최고 점수:** {record['best_score']:.2f}")
-                        st.markdown(f"**최저 점수:** {record['worst_score']:.2f}")
+                    with st.expander(f"Iteration {i+1} (평균 점수: {record['avg_score']:.2f}) - {record['prompt']}", expanded=False):
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("평균 점수", f"{record['avg_score']:.2f}")
+                        with col2:
+                            st.metric("최고 점수", f"{record['best_score']:.2f}")
+                        with col3:
+                            st.metric("최저 점수", f"{record['worst_score']:.2f}")
                         st.markdown("---")
                         
                         # 점수 변화 그래프
                         st.markdown("#### 점수 분포")
+                        scores = [r['score'] for r in record['detailed_responses']]
+                        
+                        # 박스 플롯과 히스토그램을 함께 표시
                         fig = go.Figure()
+                        
+                        # 박스 플롯 추가
                         fig.add_trace(go.Box(
-                            y=[r['score'] for r in record['detailed_responses']],
+                            y=scores,
                             name='점수 분포',
                             boxpoints='all',
                             jitter=0.3,
-                            pointpos=-1.8
+                            pointpos=-1.8,
+                            marker_color='#1f77b4'
                         ))
+                        
+                        # 히스토그램 추가
+                        fig.add_trace(go.Histogram(
+                            x=scores,
+                            name='점수 분포',
+                            nbinsx=10,
+                            marker_color='#ff7f0e',
+                            opacity=0.5
+                        ))
+                        
                         fig.update_layout(
                             title='테스트 케이스별 점수 분포',
                             yaxis_title='점수',
                             showlegend=False,
-                            height=300
+                            height=300,
+                            barmode='overlay'
                         )
+                        
                         st.plotly_chart(fig, use_container_width=True, key=f"score_distribution_{i}")
                         
                         # 상세 결과 표시
                         st.markdown("#### 상세 결과")
                         for j, response in enumerate(record['detailed_responses']):
                             st.markdown(f"##### 테스트 케이스 {j+1} (점수: {response['score']:.2f})")
-                            st.text_area("질문", value=response['input'], height=100, key=f"input_{i}_{j}")
-                            st.text_area("실제 응답", value=response['response'], height=150, key=f"response_{i}_{j}")
-                            st.text_area("기대 응답", value=response['expected'], height=150, key=f"expected_{i}_{j}")
+                            
+                            # 가로로 배치된 표 형식으로 결과 표시
+                            df = pd.DataFrame({
+                                '질문': [response['input']],
+                                '실제 응답': [response['response']],
+                                '기대 응답': [response['expected']]
+                            })
+                            st.dataframe(
+                                df,
+                                column_config={
+                                    "질문": st.column_config.TextColumn(
+                                        "질문",
+                                        width="large"
+                                    ),
+                                    "실제 응답": st.column_config.TextColumn(
+                                        "실제 응답",
+                                        width="large"
+                                    ),
+                                    "기대 응답": st.column_config.TextColumn(
+                                        "기대 응답",
+                                        width="large"
+                                    )
+                                },
+                                hide_index=True,
+                                use_container_width=True
+                            )
                             st.markdown("---")  # 구분선 추가
                 
     except Exception as e:
