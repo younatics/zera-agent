@@ -1,7 +1,4 @@
 from typing import List, Dict, Optional
-import os
-from openai import OpenAI
-from anthropic import Anthropic
 from common.api_client import Model
 
 class PromptTuner:
@@ -17,22 +14,38 @@ class PromptTuner:
             model_name (str): The name of the model to use for tuning (default: "solar")
         """
         self.model = Model(model_name)
-        self.client = self._create_client(model_name)
         self.evaluation_history: List[Dict] = []
         self.best_prompt: Optional[str] = None
         self.best_score: float = 0.0
     
-    def _create_client(self, model_name: str):
-        """Create appropriate client based on model name."""
-        if model_name == "claude":
-            return Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-        elif model_name == "solar":
-            return OpenAI(
-                api_key=os.getenv("SOLAR_API_KEY"),
-                base_url="https://api.upstage.ai/v1"
-            )
-        else:  # gpt4o
-            return OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    def _evaluate_response(self, response: str, expected: str) -> float:
+        """
+        Evaluate a single response against the expected output.
+        
+        Args:
+            response (str): The model's response
+            expected (str): The expected output
+            
+        Returns:
+            float: Score between 0.0 and 1.0
+        """
+        # Convert to lowercase for case-insensitive comparison
+        response = response.lower()
+        expected = expected.lower()
+        
+        # Exact match
+        if response == expected:
+            return 1.0
+        
+        # Check for key phrases
+        key_phrases = [
+            "ai", "assistant", "help", "안녕하세요", "도와드릴까요",
+            "어떻게", "무엇을", "필요하신가요"
+        ]
+        
+        # Count matching key phrases
+        matches = sum(1 for phrase in key_phrases if phrase in response)
+        return min(1.0, matches / len(key_phrases))
     
     def evaluate_prompt(self, prompt: str, test_cases: List[Dict]) -> float:
         """
@@ -49,26 +62,48 @@ class PromptTuner:
         
         for test_case in test_cases:
             response = self.model.ask(test_case['input'], system_message=prompt)
-            # TODO: Implement proper response evaluation
-            # For now, we'll use a simple string matching
-            score = 1.0 if response == test_case['expected_output'] else 0.0
+            score = self._evaluate_response(response, test_case['expected_output'])
             total_score += score
         
         return total_score / len(test_cases)
     
-    def generate_variations(self, prompt: str) -> List[str]:
+    def generate_variations(self, prompt: str, num_variations: int = 3) -> List[str]:
         """
-        Generate variations of a given prompt.
+        Generate variations of a given prompt using the model itself.
         
         Args:
             prompt (str): The original prompt
+            num_variations (int): Number of variations to generate
             
         Returns:
-            List[str]: List of prompt variations
+            List[str]: List of prompt variations including the original
         """
-        # TODO: Implement prompt variation generation
-        # For now, return the original prompt
-        return [prompt]
+        variations = [prompt]  # Always include the original prompt
+        
+        # 프롬프트 변형 생성을 위한 메타 프롬프트
+        meta_prompt = f"""
+아래는 AI 모델을 위한 시스템 프롬프트입니다. 이 프롬프트의 의도를 유지하면서 다른 표현으로 바꾼 새로운 버전을 생성해주세요.
+각 변형은 원래 프롬프트의 핵심 지시사항을 유지하되, 다른 관점이나 표현을 사용해야 합니다.
+
+원본 프롬프트:
+{prompt}
+
+새로운 버전을 생성할 때 다음 사항을 고려하세요:
+1. 명확성과 구체성 유지
+2. 전문적이고 공손한 톤 유지
+3. 모델의 역할과 제한사항 명시
+4. 간결하면서도 필요한 정보는 모두 포함
+
+새로운 버전을 생성해주세요. 프롬프트만 출력하고 다른 설명은 하지 마세요.
+"""
+        
+        # 지정된 수만큼 변형 생성
+        for _ in range(num_variations - 1):  # -1 because we already have the original
+            variation = self.model.ask(meta_prompt)
+            if variation and variation.strip():
+                variations.append(variation.strip())
+        
+        return variations
     
     def tune(self, initial_prompt: str, test_cases: List[Dict], iterations: int = 5) -> str:
         """
