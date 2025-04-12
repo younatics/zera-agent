@@ -199,6 +199,10 @@ if uploaded_file is not None:
                     
                     results = tuner.tune_prompt(initial_prompt, test_cases, num_iterations=iterations)
                     
+                    # 프로그레스바와 진행 중 문구 제거
+                    progress_bar.empty()
+                    progress_tracker.progress_text.empty()
+                    
                     # 최적의 프롬프트 표시
                     st.markdown("### 최적의 프롬프트")
                     st.text_area("", value=results, height=80, disabled=True)
@@ -210,7 +214,6 @@ if uploaded_file is not None:
                         all_results.append({
                             'Iteration': result['iteration'],
                             '프롬프트': result['prompt'],
-                            '평균 점수': result['score'],
                             '테스트 케이스': result['test_case'],
                             '질문': result['question'],
                             '기대 응답': result['expected'],
@@ -249,11 +252,6 @@ if uploaded_file is not None:
                                 "프롬프트",
                                 help="사용된 프롬프트",
                                 width="medium",
-                            ),
-                            "평균 점수": st.column_config.NumberColumn(
-                                "평균 점수",
-                                help="평균 점수",
-                                format="%.2f",
                             ),
                             "테스트 케이스": st.column_config.NumberColumn(
                                 "테스트 케이스",
