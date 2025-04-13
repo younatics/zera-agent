@@ -29,12 +29,13 @@ class Model:
         "solar": "https://api.upstage.ai/v1"
     }
 
-    def __init__(self, model_name):
+    def __init__(self, model_name, system_prompt=None):
         if model_name not in self.models:
             raise ValueError(f"Model {model_name} not found. Available models: {list(self.models.keys())}")
         
         self.name = model_name
         self.model_id = self.models[model_name]
+        self.system_prompt = system_prompt
         
         # Initialize appropriate client
         if model_name == "claude":
@@ -50,9 +51,9 @@ class Model:
         self.handler = self._create_handler()
 
     def _create_handler(self):
-        def handler(prompt, system_message="You are a helpful assistant."):
+        def handler(prompt, system_prompt=None):
             try:
-                messages = create_messages(prompt, system_message)
+                messages = create_messages(prompt, system_prompt or self.system_prompt or "You are a helpful assistant.")
                 if "claude" in self.model_id:
                     response = self.client.messages.create(
                         model=self.model_id,
@@ -72,8 +73,8 @@ class Model:
                 return f"Error: {e}"
         return handler
 
-    def ask(self, prompt, system_message="You are a helpful assistant."):
-        answer = self.handler(prompt, system_message)
+    def ask(self, prompt, system_prompt=None):
+        answer = self.handler(prompt, system_prompt)
         print("Done.")
         return answer
 
