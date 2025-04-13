@@ -161,8 +161,9 @@ class PromptTuner:
         
         for iteration in range(num_iterations):
             self.logger.info(f"\nIteration {iteration + 1}/{num_iterations}")
+            iteration_scores = []
             
-            # 각 테스트 케이스에 대해 순차적으로 평가하고 프롬프트를 조정
+            # 각 테스트 케이스에 대해 순차적으로 평가
             for i, test_case in enumerate(test_cases):
                 self.logger.info(f"\nTest Case {i + 1}/{len(test_cases)}")
                 self.logger.info(f"Question: {test_case['question']}")
@@ -176,29 +177,8 @@ class PromptTuner:
                 self.logger.info(f"Score: {score}")
                 self.logger.info(f"Evaluation reason: {reason}")
                 
-                # 프로그레스 바 업데이트
-                if self.progress_callback:
-                    self.progress_callback(iteration + 1, i + 1)
-                
-                # 평가 결과를 바탕으로 프롬프트 조정 (프롬프트 개선이 켜져있을 때만)
-                if use_meta_prompt and score < evaluation_score_threshold:  # 점수가 score_threshold 보다 낮은 경우
-                    self.logger.info("프롬프트 개선 중...")
-                    # 메타프롬프트를 사용하여 현재 프롬프트를 개선
-                    improvement_prompt = self.meta_prompt_template.format(
-                        prompt=current_prompt,
-                        question=test_case['question'],
-                        expected=test_case['expected'],
-                        evaluation_reason=reason
-                    )
-                    improved_prompt = self.meta_prompt_model.ask("", improvement_prompt)
-                    current_prompt = improved_prompt
-                    self.logger.info(f"개선된 프롬프트: {current_prompt}")
-                
-                # 현재까지의 최고 점수와 비교
-                if score > best_score:
-                    best_score = score
-                    best_prompt = current_prompt
-                    self.logger.info(f"새로운 최고 점수: {best_score}")
+                # 점수 저장
+                iteration_scores.append(score)
                 
                 # 평가 기록 저장
                 self.evaluation_history.append({
@@ -206,15 +186,48 @@ class PromptTuner:
                     'test_case': i + 1,
                     'prompt': current_prompt,
                     'question': test_case['question'],
-                    'actual_answer': response,
                     'expected_answer': test_case['expected'],
+                    'actual_answer': response,
                     'score': score,
                     'evaluation_reason': reason
                 })
                 
-                # score_threshold가 None이 아니고, 점수가 임계값 이상이면 중단
-                if score_threshold is not None and score >= score_threshold:
-                    self.logger.info(f"{score_threshold} 이상의 점수({score})를 달성하여 iteration을 중단합니다.")
-                    return best_prompt
+                # 프로그레스 바 업데이트
+                if self.progress_callback:
+                    self.progress_callback(iteration + 1, i + 1)
+                
+                # 현재까지의 최고 점수와 비교
+                if score > best_score:
+                    best_score = score
+                    best_prompt = current_prompt
+            
+            # iteration이 끝난 후 평균 점수 계산
+            avg_score = sum(iteration_scores) / len(iteration_scores)
+            self.logger.info(f"Iteration {iteration + 1} 평균 점수: {avg_score:.2f}")
+            
+            # 프롬프트 개선 (평균 점수가 임계값 미만인 경우)
+            if use_meta_prompt and avg_score < evaluation_score_threshold:
+                self.logger.info("프롬프트 개선 중...")
+                
+                # 가장 낮은 점수를 받은 테스트 케이스 찾기
+                worst_case_idx = iteration_scores.index(min(iteration_scores))
+                worst_case = test_cases[worst_case_idx]
+                worst_score = iteration_scores[worst_case_idx]
+                
+                # 메타프롬프트를 사용하여 현재 프롬프트를 개선
+                improvement_prompt = self.meta_prompt_template.format(
+                    prompt=current_prompt,
+                    question=worst_case['question'],
+                    expected=worst_case['expected'],
+                    evaluation_reason=self.evaluation_history[-len(test_cases) + worst_case_idx]['evaluation_reason']
+                )
+                improved_prompt = self.meta_prompt_model.ask("", improvement_prompt)
+                current_prompt = improved_prompt
+                self.logger.info(f"개선된 프롬프트: {current_prompt}")
+            
+            # 점수 임계값 체크
+            if score_threshold is not None and avg_score >= score_threshold:
+                self.logger.info(f"평균 점수가 임계값({score_threshold}) 이상입니다. 튜닝을 종료합니다.")
+                break
         
         return best_prompt 

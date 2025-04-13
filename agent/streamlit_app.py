@@ -6,6 +6,7 @@ import os
 import logging
 import plotly.graph_objects as go
 from dataset.mmlu_dataset import MMLUDataset
+import numpy as np
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -49,7 +50,7 @@ mmlu_dataset = MMLUDataset()
 # 사이드바에서 파라미터 설정
 with st.sidebar:
     st.header("튜닝 파라미터")
-    iterations = st.slider("반복 횟수", min_value=1, max_value=10, value=1)
+    iterations = st.slider("반복 횟수", min_value=1, max_value=10, value=3)
     
     # 프롬프트 개선 사용 토글
     use_meta_prompt = st.toggle(
@@ -324,16 +325,8 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
             # 결과 표시
             st.success("프롬프트 튜닝 완료!")
             
-            # 최종 프롬프트 표시
-            st.subheader("최종 프롬프트")
-            st.code(results, language="text")
-            
-            # 평가 기록 표시
-            st.subheader("평가 기록")
-            evaluation_history = tuner.evaluation_history
-            
             # 평가 기록을 데이터프레임으로 변환
-            history_df = pd.DataFrame(evaluation_history)
+            history_df = pd.DataFrame(tuner.evaluation_history)
             
             # 컬럼 순서 변경
             history_df = history_df[['iteration', 'test_case', 'prompt', 'question', 'expected_answer', 'actual_answer', 'score', 'evaluation_reason']]
@@ -341,11 +334,47 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
             # 점수를 소수점 두자리까지만 표시
             history_df['score'] = history_df['score'].round(2)
             
+            # 최고 점수를 가진 프롬프트 찾기
+            best_prompt_idx = history_df['score'].idxmax()
+            best_prompt = history_df.loc[best_prompt_idx, 'prompt']
+            
+            # 최종 프롬프트 표시
+            st.subheader("최종 프롬프트")
+            st.code(best_prompt, language="text")
+            
             # 최고 점수 하이라이트
-            def highlight_max_row(s):
-                max_score = history_df['score'].max()
-                is_max_row = history_df['score'] == max_score
-                return ['background-color: #e6ffe6' if is_max_row[i] else '' for i in range(len(s))]
+            def highlight_max_row(df):
+                try:
+                    if df.empty:
+                        return pd.DataFrame('', index=df.index, columns=df.columns)
+                    max_score = df['score'].max()
+                    is_max = df['score'] == max_score
+                    # 모든 열에 대해 동일한 스타일 적용
+                    styles = np.where(is_max, 'background-color: #e6ffe6', '')
+                    # 스타일을 2D 배열로 확장
+                    styles_2d = np.tile(styles.reshape(-1, 1), (1, len(df.columns)))
+                    return pd.DataFrame(styles_2d, index=df.index, columns=df.columns)
+                except Exception as e:
+                    print(f"하이라이트 오류: {str(e)}")
+                    return pd.DataFrame('', index=df.index, columns=df.columns)
             
             # 상세 평가 기록 표시
-            st.dataframe(history_df.style.apply(highlight_max_row)) 
+            st.subheader("평가 기록")
+            for iteration in range(1, iterations + 1):
+                st.subheader(f"Iteration {iteration}")
+                iteration_df = history_df[history_df['iteration'] == iteration]
+                st.dataframe(iteration_df.style.apply(highlight_max_row, axis=None))
+                
+                # 각 iteration의 평균 점수 계산 및 출력
+                avg_score = iteration_df['score'].mean()
+                st.write(f"평균 점수: {avg_score:.2f}")
+                
+                # 점수 임계값 체크
+                if use_threshold:
+                    if avg_score >= score_threshold:
+                        st.success(f"Iteration {iteration}: 평균 점수가 임계값 이상입니다. 프롬프트 튜닝을 종료합니다.")
+                        break
+                    else:
+                        st.warning(f"Iteration {iteration}: 평균 점수가 임계값 미만입니다. 프롬프트 개선을 계속합니다.")
+                else:
+                    st.info(f"Iteration {iteration}: 점수 임계값이 비활성화되어 프롬프트 개선을 계속합니다.") 
