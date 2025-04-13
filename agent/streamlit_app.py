@@ -349,8 +349,20 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                         return pd.DataFrame('', index=df.index, columns=df.columns)
                     max_score = df['score'].max()
                     is_max = df['score'] == max_score
+                    
+                    # 현재 테마 확인
+                    is_dark = st.get_option("theme.base") == "dark"
+                    
+                    # 테마에 따른 색상 선택
+                    if not is_dark:
+                        # 라이트모드: 연한 파란색 배경, 진한 파란색 글자
+                        highlight_style = 'background-color: #E3F2FD; color: #0D47A1'
+                    else:
+                        # 다크모드: 어두운 청록색 배경, 밝은 청록색 글자
+                        highlight_style = 'background-color: #006064; color: #80DEEA'
+                    
                     # 모든 열에 대해 동일한 스타일 적용
-                    styles = np.where(is_max, 'background-color: #e6ffe6', '')
+                    styles = np.where(is_max, highlight_style, '')
                     # 스타일을 2D 배열로 확장
                     styles_2d = np.tile(styles.reshape(-1, 1), (1, len(df.columns)))
                     return pd.DataFrame(styles_2d, index=df.index, columns=df.columns)
