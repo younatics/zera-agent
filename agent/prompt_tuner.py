@@ -206,8 +206,8 @@ class PromptTuner:
                     'test_case': i + 1,
                     'prompt': current_prompt,
                     'question': test_case['question'],
-                    'response': response,
-                    'expected': test_case['expected'],
+                    'actual_answer': response,
+                    'expected_answer': test_case['expected'],
                     'score': score,
                     'evaluation_reason': reason
                 })

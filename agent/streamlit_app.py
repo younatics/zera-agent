@@ -5,6 +5,7 @@ from prompt_tuner import PromptTuner
 import os
 import logging
 import plotly.graph_objects as go
+from dataset.mmlu_dataset import MMLUDataset
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -42,6 +43,9 @@ with open(os.path.join(prompts_dir, 'evaluation_prompt.txt'), 'r', encoding='utf
 with open(os.path.join(prompts_dir, 'meta_prompt.txt'), 'r', encoding='utf-8') as f:
     DEFAULT_META_PROMPT = f.read()
 
+# MMLU 데이터셋 인스턴스 생성
+mmlu_dataset = MMLUDataset()
+
 # 사이드바에서 파라미터 설정
 with st.sidebar:
     st.header("튜닝 파라미터")
@@ -72,9 +76,6 @@ with st.sidebar:
         disabled=not use_meta_prompt,
         help="이 옵션이 켜져있으면 점수가 임계값 이상일 때 반복을 중단합니다. 프롬프트 개선이 켜져있을 때만 사용 가능합니다."
     )
-    
-
-
     
     # 점수 임계값 슬라이더 (점수 임계값 적용이 꺼져있거나 프롬프트 개선이 꺼져있을 때는 비활성화)
     score_threshold = st.slider(
@@ -117,7 +118,6 @@ with st.sidebar:
 # 프롬프트 설정
 with st.expander("초기 프롬프트 설정", expanded=False):
     initial_prompt = st.text_area(
-        
         "프롬프트",
         value=DEFAULT_INITIAL_PROMPT,
         height=100,
@@ -150,201 +150,199 @@ with st.expander("평가 프롬프트 설정", expanded=False):
 {response}와 {expected}는 실제 응답과 기대 응답으로 대체됩니다."""
     )
 
-# CSV 파일 업로드
-uploaded_file = st.file_uploader("Upload your CSV file", type=['csv'])
+# 데이터셋 선택
+st.header("Dataset Selection")
+dataset_type = st.radio(
+    "Select Dataset Type",
+    ["CSV", "MMLU"],
+    horizontal=True
+)
 
-if uploaded_file is not None:
+if dataset_type == "CSV":
+    csv_file = st.file_uploader("Upload CSV file", type=['csv'])
+else:
+    subject = st.selectbox(
+        "Select MMLU Subject",
+        mmlu_dataset.subjects,
+        index=0
+    )
+    split = st.selectbox(
+        "Select Data Split",
+        ["validation", "test"],
+        index=0
+    )
+
+# 데이터셋 로드 및 테스트 케이스 생성
+test_cases = []
+if dataset_type == "MMLU":
     try:
-        # CSV 파일을 읽을 때 더 유연한 파싱 옵션 사용
-        df = pd.read_csv(uploaded_file, 
-                        encoding='utf-8',
-                        on_bad_lines='skip',  # 문제가 있는 줄은 건너뛰기
-                        quoting=1,  # 모든 필드를 따옴표로 감싸기
-                        escapechar='\\')  # 이스케이프 문자 설정
+        # MMLU 데이터셋 로드
+        subject_data = mmlu_dataset.get_subject_data(subject)
+        data = subject_data[split]
         
-        # 데이터프레임 표시
-        st.write("Uploaded Data:")
-        st.dataframe(df)
+        # 데이터 표시
+        st.write(f"총 예제 수: {len(data)}")
         
-        # 컬럼 이름 확인 및 매핑
-        required_columns = ['question', 'expected_answer']
-        available_columns = df.columns.tolist()
-        
-        # 필수 컬럼이 있는지 확인
-        missing_columns = [col for col in required_columns if col not in available_columns]
-        if missing_columns:
-            st.error(f"CSV 파일에 다음 컬럼이 필요합니다: {', '.join(missing_columns)}")
-            st.info("CSV 파일은 'question'과 'expected_answer' 컬럼을 포함해야 합니다.")
-            st.stop()
-        
-        # 테스트 케이스 생성
-        test_cases = []
-        for _, row in df.iterrows():
+        # 테스트 케이스 생성 및 데이터프레임 생성
+        display_data = []
+        for item in data:
+            # 선택지를 문자열로 변환
+            choices_str = "\n".join([f"{i+1}. {choice}" for i, choice in enumerate(item['choices'])])
+            question = f"{item['question']}\n\nChoices:\n{choices_str}"
+            expected = str(item['answer'] + 1)  # 0-based를 1-based로 변환
+            
             test_cases.append({
-                'question': row['question'],
-                'expected': row['expected_answer']
+                'question': question,
+                'expected': expected
+            })
+            
+            # 표시용 데이터 추가
+            display_data.append({
+                'question': question,
+                'expected_answer': expected
             })
         
-        # 튜닝 시작 버튼
-        if st.button("Start Prompt Tuning", type="primary"):
-            # API 키 확인
-            required_keys = {
-                "solar": "SOLAR_API_KEY",
-                "gpt4o": "OPENAI_API_KEY",
-                "claude": "ANTHROPIC_API_KEY"
-            }
+        # 전체 데이터 표시
+        st.write("데이터셋 내용:")
+        st.dataframe(pd.DataFrame(display_data))
             
-            missing_keys = []
-            for model in [model_name, evaluator_model]:
-                key = required_keys[model]
-                if not os.getenv(key):
-                    missing_keys.append(f"{MODEL_INFO[model]['name']} ({key})")
-            
-            if missing_keys:
-                st.error(f"다음 API 키가 필요합니다: {', '.join(missing_keys)}")
-                st.info("API 키를 .env 파일에 설정하세요.")
-            else:
-                # PromptTuner 인스턴스 생성
-                tuner = PromptTuner(
-                    model_name=model_name,
-                    evaluator_model_name=evaluator_model,
-                    meta_prompt_model_name=meta_prompt_model
-                )
-                tuner.set_evaluation_prompt(evaluation_prompt)
-                
-                # 메타프롬프트가 입력된 경우에만 설정
-                if meta_prompt.strip():
-                    tuner.set_meta_prompt(meta_prompt)
-                
-                # 프롬프트 튜닝 실행
-                with st.spinner("프롬프트 튜닝 중..."):
-                    # 전체 진행 상황을 위한 프로그레스 바
-                    progress_bar = st.progress(0)
-                    total_steps = iterations * len(test_cases)
-                    
-                    class ProgressTracker:
-                        def __init__(self):
-                            self.current_step = 0
-                            self.progress_text = st.empty()
-                        
-                        def update(self, iteration, test_case):
-                            self.current_step += 1
-                            progress = self.current_step / total_steps
-                            progress_bar.progress(progress)
-                            self.progress_text.text(f"진행 중: Iteration {iteration}/{iterations}, Test Case {test_case}/{len(test_cases)} ({self.current_step}/{total_steps})")
-                        
-                        def complete(self):
-                            progress_bar.progress(1.0)
-                            self.progress_text.text("완료!")
-                    
-                    progress_tracker = ProgressTracker()
-                    
-                    # 프로그레스 바 업데이트 콜백 설정
-                    tuner.progress_callback = lambda i, tc: progress_tracker.update(i, tc)
-                    
-                    results = tuner.tune_prompt(
-                        initial_prompt=initial_prompt,
-                        test_cases=test_cases,
-                        num_iterations=iterations,
-                        score_threshold=score_threshold if use_threshold else None,
-                        evaluation_score_threshold=evaluation_threshold,
-                        use_meta_prompt=use_meta_prompt
-                    )
-                    
-                    # 프로그레스바 완료 표시
-                    progress_tracker.complete()
-                    
-                    # 최적의 프롬프트 표시
-                    st.markdown("### 최적의 프롬프트")
-                    st.text_area("", value=results, height=80, disabled=True)
-                    
-                    # 모든 Iteration 결과를 테이블로 표시
-                    st.markdown("### 모든 Iteration 결과")
-                    all_results = []
-                    for result in tuner.evaluation_history:
-                        all_results.append({
-                            'Iteration': result['iteration'],
-                            '프롬프트': result['prompt'],
-                            '테스트 케이스': result['test_case'],
-                            '질문': result['question'],
-                            '기대 응답': result['expected'],
-                            '실제 응답': result['response'],
-                            '점수': result['score'],
-                            '평가 이유': result['evaluation_reason'],
-                            '메타프롬프트': tuner.meta_prompt_template.format(
-                                prompt=result['prompt'],
-                                question=result['question'],
-                                expected=result['expected'],
-                                evaluation_reason=result['evaluation_reason']
-                            )
-                        })
-                    
-                    df_all = pd.DataFrame(all_results)
-                    
-                    # 최고 점수를 가진 행을 찾기
-                    best_score = df_all['점수'].max()
-                    best_rows = df_all[df_all['점수'] == best_score]
-                    
-                    # 최고 점수를 가진 행에 하이라이트 스타일 적용
-                    def highlight_best(row):
-                        if row['점수'] == best_score:
-                            return ['background-color: #2e4053; color: white'] * len(row)
-                        return ['background-color: #1a1a1a; color: white'] * len(row)
-                    
-                    st.dataframe(
-                        df_all.style.apply(highlight_best, axis=1),
-                        column_config={
-                            "Iteration": st.column_config.NumberColumn(
-                                "Iteration",
-                                help="Iteration 번호",
-                                format="%d",
-                            ),
-                            "프롬프트": st.column_config.TextColumn(
-                                "프롬프트",
-                                help="사용된 프롬프트",
-                                width="medium",
-                            ),
-                            "테스트 케이스": st.column_config.NumberColumn(
-                                "테스트 케이스",
-                                help="테스트 케이스 번호",
-                                format="%d",
-                            ),
-                            "질문": st.column_config.TextColumn(
-                                "질문",
-                                help="테스트 케이스 질문",
-                                width="medium",
-                            ),
-                            "기대 응답": st.column_config.TextColumn(
-                                "기대 응답",
-                                help="기대하는 응답",
-                                width="medium",
-                            ),
-                            "실제 응답": st.column_config.TextColumn(
-                                "실제 응답",
-                                help="실제 응답",
-                                width="medium",
-                            ),
-                            "점수": st.column_config.NumberColumn(
-                                "점수",
-                                help="평가 점수",
-                                format="%.2f",
-                            ),
-                            "평가 이유": st.column_config.TextColumn(
-                                "평가 이유",
-                                help="평가 모델이 내린 평가의 이유",
-                                width="large",
-                            ),
-                            "메타프롬프트": st.column_config.TextColumn(
-                                "메타프롬프트",
-                                help="프롬프트 개선에 사용된 메타프롬프트",
-                                width="large",
-                            ),
-                        },
-                        hide_index=True,
-                    )
-                
-                st.markdown("---")
-                
     except Exception as e:
-        st.error(f"Error processing CSV file: {str(e)}")
-        logger.error(f"Error processing CSV file: {str(e)}") 
+        st.error(f"MMLU 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.stop()
+else:
+    if csv_file is not None:
+        try:
+            # CSV 파일을 읽을 때 더 유연한 파싱 옵션 사용
+            df = pd.read_csv(csv_file, 
+                            encoding='utf-8',
+                            on_bad_lines='skip',  # 문제가 있는 줄은 건너뛰기
+                            quoting=1,  # 모든 필드를 따옴표로 감싸기
+                            escapechar='\\')  # 이스케이프 문자 설정
+            
+            # 데이터프레임이 비어있는지 확인
+            if df.empty:
+                st.error("CSV 파일이 비어있습니다. 올바른 데이터가 포함된 CSV 파일을 업로드하세요.")
+                st.stop()
+            
+            # 데이터프레임 표시
+            st.write("업로드된 데이터:")
+            st.dataframe(df)
+            
+            # 컬럼 이름 확인 및 매핑
+            required_columns = ['question', 'expected_answer']
+            available_columns = df.columns.tolist()
+            
+            # 필수 컬럼이 있는지 확인
+            missing_columns = [col for col in required_columns if col not in available_columns]
+            if missing_columns:
+                st.error(f"CSV 파일에 다음 컬럼이 필요합니다: {', '.join(missing_columns)}")
+                st.info("CSV 파일은 'question'과 'expected_answer' 컬럼을 포함해야 합니다.")
+                st.stop()
+            
+            # 테스트 케이스 생성
+            for _, row in df.iterrows():
+                test_cases.append({
+                    'question': row['question'],
+                    'expected': row['expected_answer']
+                })
+        except Exception as e:
+            st.error(f"CSV 파일 로드 중 오류 발생: {str(e)}")
+            st.info("CSV 파일이 올바른 형식인지 확인하세요. 파일이 비어있거나, 인코딩이 UTF-8이 아닐 수 있습니다.")
+            st.stop()
+    else:
+        st.info("CSV 파일을 업로드하거나 MMLU 데이터셋을 선택하세요.")
+        st.stop()
+
+# 튜닝 시작 버튼
+if st.button("프롬프트 튜닝 시작", type="primary"):
+    # API 키 확인
+    required_keys = {
+        "solar": "SOLAR_API_KEY",
+        "gpt4o": "OPENAI_API_KEY",
+        "claude": "ANTHROPIC_API_KEY"
+    }
+    
+    missing_keys = []
+    for model in [model_name, evaluator_model]:
+        key = required_keys[model]
+        if not os.getenv(key):
+            missing_keys.append(f"{MODEL_INFO[model]['name']} ({key})")
+    
+    if missing_keys:
+        st.error(f"다음 API 키가 필요합니다: {', '.join(missing_keys)}")
+        st.info("API 키를 .env 파일에 설정하세요.")
+    else:
+        # PromptTuner 인스턴스 생성
+        tuner = PromptTuner(
+            model_name=model_name,
+            evaluator_model_name=evaluator_model,
+            meta_prompt_model_name=meta_prompt_model
+        )
+        tuner.set_evaluation_prompt(evaluation_prompt)
+        
+        # 메타프롬프트가 입력된 경우에만 설정
+        if meta_prompt.strip():
+            tuner.set_meta_prompt(meta_prompt)
+        
+        # 프롬프트 튜닝 실행
+        with st.spinner("프롬프트 튜닝 중..."):
+            # 전체 진행 상황을 위한 프로그레스 바
+            progress_bar = st.progress(0)
+            total_steps = iterations * len(test_cases)
+            
+            class ProgressTracker:
+                def __init__(self):
+                    self.current_step = 0
+                    self.progress_text = st.empty()
+                
+                def update(self, iteration, test_case):
+                    self.current_step += 1
+                    progress = self.current_step / total_steps
+                    progress_bar.progress(progress)
+                    self.progress_text.text(f"진행 중: Iteration {iteration}/{iterations}, Test Case {test_case}/{len(test_cases)} ({self.current_step}/{total_steps})")
+                
+                def complete(self):
+                    progress_bar.progress(1.0)
+                    self.progress_text.text("완료!")
+            
+            progress_tracker = ProgressTracker()
+            
+            # 프로그레스 바 업데이트 콜백 설정
+            tuner.progress_callback = lambda i, tc: progress_tracker.update(i, tc)
+            
+            results = tuner.tune_prompt(
+                initial_prompt=initial_prompt,
+                test_cases=test_cases,
+                num_iterations=iterations,
+                score_threshold=score_threshold if use_threshold else None,
+                evaluation_score_threshold=evaluation_threshold,
+                use_meta_prompt=use_meta_prompt
+            )
+            
+            progress_tracker.complete()
+            
+            # 결과 표시
+            st.success("프롬프트 튜닝 완료!")
+            
+            # 최종 프롬프트 표시
+            st.subheader("최종 프롬프트")
+            st.code(results, language="text")
+            
+            # 평가 기록 표시
+            st.subheader("평가 기록")
+            evaluation_history = tuner.evaluation_history
+            
+            # 평가 기록을 데이터프레임으로 변환
+            history_df = pd.DataFrame(evaluation_history)
+            
+            # 컬럼 순서 변경
+            history_df = history_df[['iteration', 'test_case', 'prompt', 'question', 'expected_answer', 'actual_answer', 'score', 'evaluation_reason']]
+            
+            # 최고 점수 하이라이트
+            def highlight_max_row(s):
+                max_score = history_df['score'].max()
+                is_max_row = history_df['score'] == max_score
+                return ['background-color: #e6ffe6' if is_max_row[i] else '' for i in range(len(s))]
+            
+            # 상세 평가 기록 표시
+            st.dataframe(history_df.style.apply(highlight_max_row)) 
