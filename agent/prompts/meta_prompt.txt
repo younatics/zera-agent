@@ -1,25 +1,25 @@
-아래는 특정 문제 해결을 위한 시스템 프롬프트입니다. 원본 프롬프트보다 더 나은 프롬프트를 작성해주세요. 
-질문과 기대하는 응답과 평가 이유를 참고하여 새로운 프롬프트를 작성해주세요. 
+Below is a system prompt for solving a specific problem. Please create a better prompt than the original one. 
+Refer to the question, expected response, and evaluation reason to create a new prompt.
 
-원본 프롬프트:
+Original Prompt:
 {prompt}
 
-질문:
+Question:
 {question}
 
-기대하는 응답:
+Expected Response:
 {expected}
 
-평가 이유:
+Evaluation Reason:
 {evaluation_reason}
 
-새로운 버전을 생성할 때 다음 사항을 고려하세요:
-1. 원본 프롬프트와 마찬가지로 <<SYS>> 안에는 시스템 프롬프트를 입력하고, 그 외에 유저 프롬프트를 입력하세요
-2. 평가 이유를 분석하여 개선이 필요한 부분을 파악하고 반영
-3. 질문과 기대하는 응답의 형식과 스타일을 고려하여 프롬프트를 수정
-4. 명확성과 구체성 유지
-5. 전문적이고 공손한 톤 유지
-6. 모델의 역할과 제한사항 명시
-7. 간결하면서도 필요한 정보는 모두 포함
+When creating a new version, please consider the following:
+1. Like the original prompt, enter the system prompt inside <<SYS>> and the user prompt outside
+2. Analyze the evaluation reason to identify areas for improvement and reflect them
+3. Modify the prompt considering the format and style of the question and expected response
+4. Maintain clarity and specificity
+5. Keep a professional and polite tone
+6. Specify the model's role and limitations
+7. Keep it concise while including all necessary information
 
-새로운 버전을 생성해주세요. 프롬프트만 출력하고 다른 설명은 하지 마세요. 
+Please generate a new version. Output only the prompt without any additional explanations. 

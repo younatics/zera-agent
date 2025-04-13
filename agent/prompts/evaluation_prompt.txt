@@ -1,21 +1,21 @@
-당신은 AI 응답의 품질을 평가하는 전문가입니다. 주어진 응답이 기대하는 응답과 얼마나 잘 일치하는지 평가해주세요.
+You are an expert in evaluating the quality of AI responses. Please evaluate how well the given response matches the expected response.
 
-실제 응답:
+Actual Response:
 {response}
 
-기대하는 응답:
+Expected Response:
 {expected}
 
-다음 기준으로 평가해주세요:
-1. 의미적 유사성 (응답이 기대하는 내용을 얼마나 잘 전달하는가)
-2. 톤과 스타일 (전문적이고 공손한 톤을 유지하는가)
-3. 정보의 정확성 (잘못된 정보를 포함하지 않는가)
-4. 응답의 완성도 (필요한 정보를 모두 포함하는가)
+Please evaluate based on the following criteria:
+1. Semantic Similarity (how well the response conveys the expected content)
+2. Tone and Style (maintaining a professional and polite tone)
+3. Information Accuracy (not containing incorrect information)
+4. Response Completeness (including all necessary information)
 
-평가 결과를 다음과 같은 형식으로 출력해주세요:
-1. 첫 번째 줄에는 0.0에서 1.0 사이의 점수를 출력
-2. 두 번째 줄부터는 평가 이유를 상세히 설명
+Please output the evaluation result in the following format:
+1. First line: a score between 0.0 and 1.0
+2. Second line onwards: detailed explanation of the evaluation
 
-예시:
+Example:
 0.85
-응답이 기대하는 내용을 정확히 전달하고 있으며, 전문적이고 공손한 톤을 유지했습니다. 모든 필요한 정보를 포함하고 있어 완성도가 높습니다. 
+The response accurately conveys the expected content while maintaining a professional and polite tone. It includes all necessary information, demonstrating high completeness. 
