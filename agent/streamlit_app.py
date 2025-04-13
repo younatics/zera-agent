@@ -338,6 +338,9 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
             # 컬럼 순서 변경
             history_df = history_df[['iteration', 'test_case', 'prompt', 'question', 'expected_answer', 'actual_answer', 'score', 'evaluation_reason']]
             
+            # 점수를 소수점 두자리까지만 표시
+            history_df['score'] = history_df['score'].round(2)
+            
             # 최고 점수 하이라이트
             def highlight_max_row(s):
                 max_score = history_df['score'].max()

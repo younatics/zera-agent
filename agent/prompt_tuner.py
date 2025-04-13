@@ -84,7 +84,7 @@ class PromptTuner:
             score = float(score_str)
             self.logger.info(f"Evaluation score: {score}")
             self.logger.info(f"Evaluation reason: {reason}")
-            return score, reason
+            return round(score, 2), reason
         except (ValueError, TypeError):
             # 숫자로 변환할 수 없는 경우 기본 평가 방식 사용
             self.logger.warning("Failed to get valid score from evaluator, using fallback evaluation method")
