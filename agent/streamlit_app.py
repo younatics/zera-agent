@@ -298,6 +298,85 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
         
         # 프롬프트 튜닝 실행
         with st.spinner("프롬프트 튜닝 중..."):
+            # 결과를 저장할 리스트
+            all_results = []
+            
+            # 각 이터레이션마다 결과를 보여주기 위한 컨테이너
+            iteration_containers = []
+            for i in range(iterations):
+                iteration_containers.append(st.container())
+            
+            def iteration_callback(result):
+                iteration_idx = result['iteration'] - 1
+                
+                with iteration_containers[iteration_idx]:
+                    st.subheader(f"Iteration {result['iteration']}")
+                    
+                    # 현재 프롬프트
+                    st.write("Current Prompt:")
+                    st.code(result['prompt'])
+                    
+                    # 평균 점수와 최고 점수
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.metric("Average Score", f"{result['avg_score']:.2f}")
+                    with col2:
+                        st.metric("Best Score So Far", f"{result['best_score']:.2f}")
+                    
+                    # 평가 기록을 데이터프레임으로 변환
+                    history_df = pd.DataFrame(result['responses'])
+                    
+                    # 컬럼 순서 변경 및 필요한 컬럼만 선택
+                    history_df = history_df[['question', 'expected', 'actual', 'score', 'reason']]
+                    
+                    # 컬럼 이름 변경
+                    history_df.columns = ['Question', 'Expected Answer', 'Actual Answer', 'Score', 'Evaluation Reason']
+                    
+                    # 점수를 소수점 두자리까지만 표시
+                    history_df['Score'] = history_df['Score'].round(2)
+                    
+                    # 최고 점수를 가진 행 하이라이트
+                    def highlight_max_row(df):
+                        try:
+                            if df.empty:
+                                return pd.DataFrame('', index=df.index, columns=df.columns)
+                            max_score = df['Score'].max()
+                            is_max = df['Score'] == max_score
+                            
+                            # 현재 테마 확인
+                            is_dark = st.get_option("theme.base") == "dark"
+                            
+                            # 테마에 따른 색상 선택
+                            if not is_dark:
+                                # 라이트모드: 연한 파란색 배경, 진한 파란색 글자
+                                highlight_style = 'background-color: #E3F2FD; color: #0D47A1'
+                            else:
+                                # 다크모드: 어두운 청록색 배경, 밝은 청록색 글자
+                                highlight_style = 'background-color: #006064; color: #80DEEA'
+                            
+                            # 모든 열에 대해 동일한 스타일 적용
+                            styles = np.where(is_max, highlight_style, '')
+                            # 스타일을 2D 배열로 확장
+                            styles_2d = np.tile(styles.reshape(-1, 1), (1, len(df.columns)))
+                            return pd.DataFrame(styles_2d, index=df.index, columns=df.columns)
+                        except Exception as e:
+                            print(f"하이라이트 오류: {str(e)}")
+                            return pd.DataFrame('', index=df.index, columns=df.columns)
+                    
+                    # 테이블 표시
+                    st.dataframe(
+                        history_df.style.apply(highlight_max_row, axis=None),
+                        hide_index=True
+                    )
+                    
+                    st.divider()
+                
+                all_results.append(result)
+            
+            # iteration_callback을 설정
+            tuner.iteration_callback = iteration_callback
+            
+            # 프롬프트 튜닝 실행
             results = tuner.tune_prompt(
                 initial_prompt=initial_prompt,
                 test_cases=test_cases,
@@ -306,69 +385,6 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                 evaluation_score_threshold=evaluation_threshold,
                 use_meta_prompt=use_meta_prompt
             )
-            
-            # 결과 표시
-            for result in results:
-                st.subheader(f"Iteration {result['iteration']}")
-                
-                # 현재 프롬프트
-                st.write("Current Prompt:")
-                st.code(result['prompt'])
-                
-                # 평균 점수와 최고 점수
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("Average Score", f"{result['avg_score']:.2f}")
-                with col2:
-                    st.metric("Best Score So Far", f"{result['best_score']:.2f}")
-                
-                # 평가 기록을 데이터프레임으로 변환
-                history_df = pd.DataFrame(result['responses'])
-                
-                # 컬럼 순서 변경 및 필요한 컬럼만 선택
-                history_df = history_df[['question', 'expected', 'actual', 'score', 'reason']]
-                
-                # 컬럼 이름 변경
-                history_df.columns = ['Question', 'Expected Answer', 'Actual Answer', 'Score', 'Evaluation Reason']
-                
-                # 점수를 소수점 두자리까지만 표시
-                history_df['Score'] = history_df['Score'].round(2)
-                
-                # 최고 점수를 가진 행 하이라이트
-                def highlight_max_row(df):
-                    try:
-                        if df.empty:
-                            return pd.DataFrame('', index=df.index, columns=df.columns)
-                        max_score = df['Score'].max()
-                        is_max = df['Score'] == max_score
-                        
-                        # 현재 테마 확인
-                        is_dark = st.get_option("theme.base") == "dark"
-                        
-                        # 테마에 따른 색상 선택
-                        if not is_dark:
-                            # 라이트모드: 연한 파란색 배경, 진한 파란색 글자
-                            highlight_style = 'background-color: #E3F2FD; color: #0D47A1'
-                        else:
-                            # 다크모드: 어두운 청록색 배경, 밝은 청록색 글자
-                            highlight_style = 'background-color: #006064; color: #80DEEA'
-                        
-                        # 모든 열에 대해 동일한 스타일 적용
-                        styles = np.where(is_max, highlight_style, '')
-                        # 스타일을 2D 배열로 확장
-                        styles_2d = np.tile(styles.reshape(-1, 1), (1, len(df.columns)))
-                        return pd.DataFrame(styles_2d, index=df.index, columns=df.columns)
-                    except Exception as e:
-                        print(f"하이라이트 오류: {str(e)}")
-                        return pd.DataFrame('', index=df.index, columns=df.columns)
-                
-                # 테이블 표시
-                st.dataframe(
-                    history_df.style.apply(highlight_max_row, axis=None),
-                    hide_index=True
-                )
-                
-                st.divider()
             
             # 최종 결과
             st.success("프롬프트 튜닝 완료!")

@@ -24,6 +24,7 @@ class PromptTuner:
         self.best_prompt: Optional[str] = None
         self.best_score: float = 0.0
         self.progress_callback = None
+        self.iteration_callback = None
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
         
@@ -117,24 +118,33 @@ class PromptTuner:
             Dict: Evaluation results including total score and detailed responses
         """
         total_score = 0.0
-        detailed_responses = []
+        responses = []
         
         for test_case in test_cases:
             response = self.model.ask(test_case['question'], system_prompt=prompt)
             score, reason = self._evaluate_response(response, test_case['expected'], test_case['question'])
             total_score += score
             
-            detailed_responses.append({
+            responses.append({
                 'question': test_case['question'],
-                'response': response,
                 'expected': test_case['expected'],
+                'actual': response,
                 'score': score,
-                'evaluation_reason': reason
+                'reason': reason
             })
         
+        avg_score = total_score / len(test_cases)
+        
+        # 현재까지의 최고 점수와 비교
+        if avg_score > self.best_score:
+            self.best_score = avg_score
+            self.best_prompt = prompt
+        
         return {
-            'total_score': total_score / len(test_cases),
-            'detailed_responses': detailed_responses
+            'avg_score': avg_score,
+            'best_score': self.best_score,
+            'best_prompt': self.best_prompt,
+            'responses': responses
         }
     
     def generate_variations(self, prompt: str, num_variations: int = 3) -> List[str]:
@@ -239,16 +249,28 @@ class PromptTuner:
             self.logger.info(f"Iteration {iteration + 1} 평균 점수: {avg_score:.2f}")
             
             # 현재 이터레이션 결과 저장
-            iteration_results.append({
+            result = {
                 'iteration': iteration + 1,
                 'prompt': current_prompt,
                 'avg_score': avg_score,
                 'best_score': best_score,
                 'best_prompt': best_prompt,
                 'responses': iteration_responses
-            })
+            }
+            iteration_results.append(result)
             
-            # 프롬프트 개선 (평균 점수가 임계값 미만인 경우)
+            # 콜백 호출
+            if self.iteration_callback:
+                self.iteration_callback(result)
+            
+            # 점수 임계값 체크
+            if score_threshold is not None and avg_score >= score_threshold:
+                self.logger.info(f"평균 점수가 임계값({score_threshold}) 이상입니다. 튜닝을 종료합니다.")
+                if self.progress_callback:
+                    self.progress_callback(num_iterations, len(test_cases))
+                break
+            
+            # 프롬프트 개선 (평균 점수가 평가 임계값 미만인 경우)
             if use_meta_prompt and avg_score < evaluation_score_threshold:
                 self.logger.info("프롬프트 개선 중...")
                 
@@ -274,12 +296,18 @@ class PromptTuner:
                     worst_reason=worst_case['reason']
                 )
                 improved_prompt = self.meta_prompt_model.ask("", system_prompt=improvement_prompt)
-                current_prompt = improved_prompt
-                self.logger.info(f"개선된 프롬프트: {current_prompt}")
-            
-            # 점수 임계값 체크
-            if score_threshold is not None and avg_score >= score_threshold:
-                self.logger.info(f"평균 점수가 임계값({score_threshold}) 이상입니다. 튜닝을 종료합니다.")
+                if improved_prompt and improved_prompt.strip():
+                    current_prompt = improved_prompt.strip()
+                    self.logger.info(f"개선된 프롬프트: {current_prompt}")
+                else:
+                    self.logger.warning("프롬프트 개선에 실패했습니다. 튜닝을 종료합니다.")
+                    if self.progress_callback:
+                        self.progress_callback(num_iterations, len(test_cases))
+                    break
+            elif use_meta_prompt:
+                self.logger.info(f"평균 점수가 평가 임계값({evaluation_score_threshold}) 이상이므로 프롬프트를 개선하지 않습니다.")
+                if self.progress_callback:
+                    self.progress_callback(num_iterations, len(test_cases))
                 break
         
         return iteration_results 
