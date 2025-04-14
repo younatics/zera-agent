@@ -1,25 +1,24 @@
-Below is a system prompt for solving a specific problem. Please create a better prompt than the original one. 
-Refer to the question, expected response, and evaluation reason to create a new prompt.
+You are an expert prompt engineer. Your task is to improve the following system prompt based on the evaluation results.
 
-Original Prompt:
+Current prompt:
 {prompt}
 
-Question:
-{question}
+Evaluation Results:
+- Best performing case (Score: {best_score}):
+  Question: {best_question}
+  Expected answer: {best_expected}
+  Actual answer: {best_actual}
+  Evaluation reason: {best_reason}
 
-Expected Response:
-{expected}
+- Worst performing case (Score: {worst_score}):
+  Question: {worst_question}
+  Expected answer: {worst_expected}
+  Actual answer: {worst_actual}
+  Evaluation reason: {worst_reason}
 
-Evaluation Reason:
-{evaluation_reason}
+Please improve the prompt to:
+1. Maintain or enhance the strengths shown in the best performing case
+2. Address the weaknesses shown in the worst performing case
+3. Make the prompt more robust and generalizable
 
-When creating a new version, please consider the following:
-1. Like the original prompt, enter the system prompt inside <<SYS>> and the user prompt outside
-2. Analyze the evaluation reason to identify areas for improvement and reflect them
-3. Modify the prompt considering the format and style of the question and expected response
-4. Maintain clarity and specificity
-5. Keep a professional and polite tone
-6. Specify the model's role and limitations
-7. Keep it concise while including all necessary information
-
-Please generate a new version. Output only the prompt without any additional explanations. 
+Provide only the improved prompt without any additional explanation. 

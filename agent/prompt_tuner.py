@@ -162,6 +162,7 @@ class PromptTuner:
         for iteration in range(num_iterations):
             self.logger.info(f"\nIteration {iteration + 1}/{num_iterations}")
             iteration_scores = []
+            iteration_responses = []
             
             # 각 테스트 케이스에 대해 순차적으로 평가
             for i, test_case in enumerate(test_cases):
@@ -177,8 +178,15 @@ class PromptTuner:
                 self.logger.info(f"Score: {score}")
                 self.logger.info(f"Evaluation reason: {reason}")
                 
-                # 점수 저장
+                # 점수와 응답 저장
                 iteration_scores.append(score)
+                iteration_responses.append({
+                    'question': test_case['question'],
+                    'expected': test_case['expected'],
+                    'actual': response,
+                    'score': score,
+                    'reason': reason
+                })
                 
                 # 평가 기록 저장
                 self.evaluation_history.append({
@@ -209,17 +217,26 @@ class PromptTuner:
             if use_meta_prompt and avg_score < evaluation_score_threshold:
                 self.logger.info("프롬프트 개선 중...")
                 
-                # 가장 낮은 점수를 받은 테스트 케이스 찾기
+                # 최고/최저 점수 케이스 찾기
+                best_case_idx = iteration_scores.index(max(iteration_scores))
                 worst_case_idx = iteration_scores.index(min(iteration_scores))
-                worst_case = test_cases[worst_case_idx]
-                worst_score = iteration_scores[worst_case_idx]
+                
+                best_case = iteration_responses[best_case_idx]
+                worst_case = iteration_responses[worst_case_idx]
                 
                 # 메타프롬프트를 사용하여 현재 프롬프트를 개선
                 improvement_prompt = self.meta_prompt_template.format(
                     prompt=current_prompt,
-                    question=worst_case['question'],
-                    expected=worst_case['expected'],
-                    evaluation_reason=self.evaluation_history[-len(test_cases) + worst_case_idx]['evaluation_reason']
+                    best_score=best_case['score'],
+                    best_question=best_case['question'],
+                    best_expected=best_case['expected'],
+                    best_actual=best_case['actual'],
+                    best_reason=best_case['reason'],
+                    worst_score=worst_case['score'],
+                    worst_question=worst_case['question'],
+                    worst_expected=worst_case['expected'],
+                    worst_actual=worst_case['actual'],
+                    worst_reason=worst_case['reason']
                 )
                 improved_prompt = self.meta_prompt_model.ask("", improvement_prompt)
                 current_prompt = improved_prompt
