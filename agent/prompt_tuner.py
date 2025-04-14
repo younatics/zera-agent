@@ -158,10 +158,31 @@ class PromptTuner:
         
         return variations
     
-    def tune_prompt(self, initial_prompt: str, test_cases: List[Dict], num_iterations: int = 3, score_threshold: Optional[float] = None, evaluation_score_threshold: float = 0.8, use_meta_prompt: bool = True) -> str:
+    def tune_prompt(self, initial_prompt: str, test_cases: List[Dict], num_iterations: int = 3, score_threshold: Optional[float] = None, evaluation_score_threshold: float = 0.8, use_meta_prompt: bool = True) -> List[Dict]:
+        """
+        Tune a system prompt using a set of test cases.
+        
+        Args:
+            initial_prompt (str): The initial system prompt
+            test_cases (List[Dict]): List of test cases, each containing 'question' and 'expected'
+            num_iterations (int): Number of iterations to perform
+            score_threshold (Optional[float]): Threshold to stop tuning if average score exceeds this value
+            evaluation_score_threshold (float): Threshold to trigger prompt improvement
+            use_meta_prompt (bool): Whether to use meta prompt for improvement
+            
+        Returns:
+            List[Dict]: List of iteration results, each containing:
+                - iteration: iteration number
+                - prompt: current prompt
+                - avg_score: average score for this iteration
+                - best_score: best score so far
+                - best_prompt: best prompt so far
+                - responses: list of responses for each test case
+        """
         current_prompt = initial_prompt
         best_prompt = initial_prompt
         best_score = 0.0
+        iteration_results = []
         
         for iteration in range(num_iterations):
             self.logger.info(f"\nIteration {iteration + 1}/{num_iterations}")
@@ -217,6 +238,16 @@ class PromptTuner:
             avg_score = sum(iteration_scores) / len(iteration_scores)
             self.logger.info(f"Iteration {iteration + 1} 평균 점수: {avg_score:.2f}")
             
+            # 현재 이터레이션 결과 저장
+            iteration_results.append({
+                'iteration': iteration + 1,
+                'prompt': current_prompt,
+                'avg_score': avg_score,
+                'best_score': best_score,
+                'best_prompt': best_prompt,
+                'responses': iteration_responses
+            })
+            
             # 프롬프트 개선 (평균 점수가 임계값 미만인 경우)
             if use_meta_prompt and avg_score < evaluation_score_threshold:
                 self.logger.info("프롬프트 개선 중...")
@@ -251,4 +282,4 @@ class PromptTuner:
                 self.logger.info(f"평균 점수가 임계값({score_threshold}) 이상입니다. 튜닝을 종료합니다.")
                 break
         
-        return best_prompt 
+        return iteration_results 

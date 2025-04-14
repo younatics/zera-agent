@@ -285,32 +285,19 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
         if meta_prompt.strip():
             tuner.set_meta_prompt(meta_prompt)
         
+        # 프로그레스 바 설정
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        
+        def progress_callback(iteration, test_case):
+            progress = (iteration - 1 + test_case / len(test_cases)) / iterations
+            progress_bar.progress(progress)
+            status_text.text(f"Iteration {iteration}/{iterations}, Test Case {test_case}/{len(test_cases)}")
+        
+        tuner.progress_callback = progress_callback
+        
         # 프롬프트 튜닝 실행
         with st.spinner("프롬프트 튜닝 중..."):
-            # 전체 진행 상황을 위한 프로그레스 바
-            progress_bar = st.progress(0)
-            total_steps = iterations * len(test_cases)
-            
-            class ProgressTracker:
-                def __init__(self):
-                    self.current_step = 0
-                    self.progress_text = st.empty()
-                
-                def update(self, iteration, test_case):
-                    self.current_step += 1
-                    progress = self.current_step / total_steps
-                    progress_bar.progress(progress)
-                    self.progress_text.text(f"진행 중: Iteration {iteration}/{iterations}, Test Case {test_case}/{len(test_cases)} ({self.current_step}/{total_steps})")
-                
-                def complete(self):
-                    progress_bar.progress(1.0)
-                    self.progress_text.text("완료!")
-            
-            progress_tracker = ProgressTracker()
-            
-            # 프로그레스 바 업데이트 콜백 설정
-            tuner.progress_callback = lambda i, tc: progress_tracker.update(i, tc)
-            
             results = tuner.tune_prompt(
                 initial_prompt=initial_prompt,
                 test_cases=test_cases,
@@ -320,73 +307,71 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                 use_meta_prompt=use_meta_prompt
             )
             
-            progress_tracker.complete()
-            
             # 결과 표시
-            st.success("프롬프트 튜닝 완료!")
-            
-            # 평가 기록을 데이터프레임으로 변환
-            history_df = pd.DataFrame(tuner.evaluation_history)
-            
-            # 컬럼 순서 변경
-            history_df = history_df[['iteration', 'test_case', 'prompt', 'question', 'expected_answer', 'actual_answer', 'score', 'evaluation_reason']]
-            
-            # 점수를 소수점 두자리까지만 표시
-            history_df['score'] = history_df['score'].round(2)
-            
-            # 최고 점수를 가진 프롬프트 찾기
-            best_prompt_idx = history_df['score'].idxmax()
-            best_prompt = history_df.loc[best_prompt_idx, 'prompt']
-            
-            # 최종 프롬프트 표시
-            st.subheader("최종 프롬프트")
-            st.code(best_prompt, language="text")
-            
-            # 최고 점수 하이라이트
-            def highlight_max_row(df):
-                try:
-                    if df.empty:
+            for result in results:
+                st.subheader(f"Iteration {result['iteration']}")
+                
+                # 현재 프롬프트
+                st.write("Current Prompt:")
+                st.code(result['prompt'])
+                
+                # 평균 점수와 최고 점수
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Average Score", f"{result['avg_score']:.2f}")
+                with col2:
+                    st.metric("Best Score So Far", f"{result['best_score']:.2f}")
+                
+                # 평가 기록을 데이터프레임으로 변환
+                history_df = pd.DataFrame(result['responses'])
+                
+                # 컬럼 순서 변경 및 필요한 컬럼만 선택
+                history_df = history_df[['question', 'expected', 'actual', 'score', 'reason']]
+                
+                # 컬럼 이름 변경
+                history_df.columns = ['Question', 'Expected Answer', 'Actual Answer', 'Score', 'Evaluation Reason']
+                
+                # 점수를 소수점 두자리까지만 표시
+                history_df['Score'] = history_df['Score'].round(2)
+                
+                # 최고 점수를 가진 행 하이라이트
+                def highlight_max_row(df):
+                    try:
+                        if df.empty:
+                            return pd.DataFrame('', index=df.index, columns=df.columns)
+                        max_score = df['Score'].max()
+                        is_max = df['Score'] == max_score
+                        
+                        # 현재 테마 확인
+                        is_dark = st.get_option("theme.base") == "dark"
+                        
+                        # 테마에 따른 색상 선택
+                        if not is_dark:
+                            # 라이트모드: 연한 파란색 배경, 진한 파란색 글자
+                            highlight_style = 'background-color: #E3F2FD; color: #0D47A1'
+                        else:
+                            # 다크모드: 어두운 청록색 배경, 밝은 청록색 글자
+                            highlight_style = 'background-color: #006064; color: #80DEEA'
+                        
+                        # 모든 열에 대해 동일한 스타일 적용
+                        styles = np.where(is_max, highlight_style, '')
+                        # 스타일을 2D 배열로 확장
+                        styles_2d = np.tile(styles.reshape(-1, 1), (1, len(df.columns)))
+                        return pd.DataFrame(styles_2d, index=df.index, columns=df.columns)
+                    except Exception as e:
+                        print(f"하이라이트 오류: {str(e)}")
                         return pd.DataFrame('', index=df.index, columns=df.columns)
-                    max_score = df['score'].max()
-                    is_max = df['score'] == max_score
-                    
-                    # 현재 테마 확인
-                    is_dark = st.get_option("theme.base") == "dark"
-                    
-                    # 테마에 따른 색상 선택
-                    if not is_dark:
-                        # 라이트모드: 연한 파란색 배경, 진한 파란색 글자
-                        highlight_style = 'background-color: #E3F2FD; color: #0D47A1'
-                    else:
-                        # 다크모드: 어두운 청록색 배경, 밝은 청록색 글자
-                        highlight_style = 'background-color: #006064; color: #80DEEA'
-                    
-                    # 모든 열에 대해 동일한 스타일 적용
-                    styles = np.where(is_max, highlight_style, '')
-                    # 스타일을 2D 배열로 확장
-                    styles_2d = np.tile(styles.reshape(-1, 1), (1, len(df.columns)))
-                    return pd.DataFrame(styles_2d, index=df.index, columns=df.columns)
-                except Exception as e:
-                    print(f"하이라이트 오류: {str(e)}")
-                    return pd.DataFrame('', index=df.index, columns=df.columns)
+                
+                # 테이블 표시
+                st.dataframe(
+                    history_df.style.apply(highlight_max_row, axis=None),
+                    hide_index=True
+                )
+                
+                st.divider()
             
-            # 상세 평가 기록 표시
-            st.subheader("평가 기록")
-            for iteration in range(1, iterations + 1):
-                st.subheader(f"Iteration {iteration}")
-                iteration_df = history_df[history_df['iteration'] == iteration]
-                st.dataframe(iteration_df.style.apply(highlight_max_row, axis=None))
-                
-                # 각 iteration의 평균 점수 계산 및 출력
-                avg_score = iteration_df['score'].mean()
-                st.write(f"평균 점수: {avg_score:.2f}")
-                
-                # 점수 임계값 체크
-                if use_threshold:
-                    if avg_score >= score_threshold:
-                        st.success(f"Iteration {iteration}: 평균 점수가 임계값 이상입니다. 프롬프트 튜닝을 종료합니다.")
-                        break
-                    else:
-                        st.warning(f"Iteration {iteration}: 평균 점수가 임계값 미만입니다. 프롬프트 개선을 계속합니다.")
-                else:
-                    st.info(f"Iteration {iteration}: 점수 임계값이 비활성화되어 프롬프트 개선을 계속합니다.") 
+            # 최종 결과
+            st.success("프롬프트 튜닝 완료!")
+            st.write("Final Best Prompt:")
+            st.code(results[-1]['best_prompt'])
+            st.write(f"Final Best Score: {results[-1]['best_score']:.2f}") 
