@@ -56,22 +56,25 @@ class PromptTuner:
         """
         self.meta_prompt_template = prompt_template
     
-    def _evaluate_response(self, response: str, expected: str) -> float:
+    def _evaluate_response(self, response: str, expected: str, question: str) -> float:
         """
         Evaluate a single response against the expected output using the evaluator model.
         
         Args:
             response (str): The model's response
             expected (str): The expected output
+            question (str): The question that was asked
             
         Returns:
             float: Score between 0.0 and 1.0
         """
         self.logger.info("Evaluating response:")
+        self.logger.info(f"Question: {question}")
         self.logger.info(f"Actual response: {response}")
         self.logger.info(f"Expected response: {expected}")
         
         evaluation_prompt = self.evaluation_prompt_template.format(
+            question=question,
             response=response,
             expected=expected
         )
@@ -90,6 +93,7 @@ class PromptTuner:
             self.logger.warning("Failed to get valid score from evaluator, using fallback evaluation method")
             response = response.lower()
             expected = expected.lower()
+            question = question.lower()
             
             # 기본 키워드 기반 평가
             key_phrases = [
@@ -107,7 +111,7 @@ class PromptTuner:
         
         Args:
             prompt (str): The system prompt to evaluate
-            test_cases (List[Dict]): List of test cases, each containing 'input' and 'expected_output'
+            test_cases (List[Dict]): List of test cases, each containing 'question' and 'expected'
             
         Returns:
             Dict: Evaluation results including total score and detailed responses
@@ -116,14 +120,14 @@ class PromptTuner:
         detailed_responses = []
         
         for test_case in test_cases:
-            response = self.model.ask(test_case['input'], system_message=prompt)
-            score, reason = self._evaluate_response(response, test_case['expected_output'])
+            response = self.model.ask(test_case['question'], system_prompt=prompt)
+            score, reason = self._evaluate_response(response, test_case['expected'], test_case['question'])
             total_score += score
             
             detailed_responses.append({
-                'input': test_case['input'],
+                'question': test_case['question'],
                 'response': response,
-                'expected': test_case['expected_output'],
+                'expected': test_case['expected'],
                 'score': score,
                 'evaluation_reason': reason
             })
@@ -170,11 +174,11 @@ class PromptTuner:
                 self.logger.info(f"Question: {test_case['question']}")
                 
                 # 현재 프롬프트로 응답 생성
-                response = self.model.ask(test_case['question'], current_prompt)
+                response = self.model.ask(test_case['question'], system_prompt=current_prompt)
                 self.logger.info(f"Response: {response}")
                 
                 # 응답 평가
-                score, reason = self._evaluate_response(response, test_case['expected'])
+                score, reason = self._evaluate_response(response, test_case['expected'], test_case['question'])
                 self.logger.info(f"Score: {score}")
                 self.logger.info(f"Evaluation reason: {reason}")
                 
@@ -238,7 +242,7 @@ class PromptTuner:
                     worst_actual=worst_case['actual'],
                     worst_reason=worst_case['reason']
                 )
-                improved_prompt = self.meta_prompt_model.ask("", improvement_prompt)
+                improved_prompt = self.meta_prompt_model.ask("", system_prompt=improvement_prompt)
                 current_prompt = improved_prompt
                 self.logger.info(f"개선된 프롬프트: {current_prompt}")
             

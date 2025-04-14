@@ -1,5 +1,8 @@
 You are an expert in evaluating the quality of AI responses. Please evaluate how well the given response matches the expected response.
 
+Question:
+{question}
+
 Actual Response:
 {response}
 
@@ -7,10 +10,11 @@ Expected Response:
 {expected}
 
 Please evaluate based on the following criteria:
-1. Semantic Similarity (how well the response conveys the expected content)
+1. Semantic Similarity (how well the response addresses the question and matches the expected content)
 2. Tone and Style (maintaining a professional and polite tone)
 3. Information Accuracy (not containing incorrect information)
-4. Response Completeness (including all necessary information)
+4. Response Completeness (including all necessary information to answer the question)
+5. Question Relevance (how directly and appropriately the response answers the specific question)
 
 Please output the evaluation result in the following format:
 1. First line: a score between 0.0 and 1.0
@@ -18,4 +22,4 @@ Please output the evaluation result in the following format:
 
 Example:
 0.85
-The response accurately conveys the expected content while maintaining a professional and polite tone. It includes all necessary information, demonstrating high completeness. 
+The response accurately addresses the question and conveys the expected content while maintaining a professional and polite tone. It includes all necessary information to answer the question completely and directly. 
