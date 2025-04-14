@@ -388,6 +388,9 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
             
             # 최종 결과
             st.success("프롬프트 튜닝 완료!")
+            
+            # 전체 결과에서 가장 높은 평균 점수를 가진 프롬프트 찾기
+            best_result = max(results, key=lambda x: x['avg_score'])
             st.write("Final Best Prompt:")
-            st.code(results[-1]['best_prompt'])
-            st.write(f"Final Best Score: {results[-1]['best_score']:.2f}") 
+            st.code(best_result['prompt'])
+            st.write(f"Final Average Score: {best_result['avg_score']:.2f}") 
