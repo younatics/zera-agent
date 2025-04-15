@@ -37,8 +37,10 @@ MODEL_INFO = {
 
 # 프롬프트 파일 로드
 prompts_dir = os.path.join(os.path.dirname(__file__), 'prompts')
-with open(os.path.join(prompts_dir, 'initial_prompt.txt'), 'r', encoding='utf-8') as f:
-    DEFAULT_INITIAL_PROMPT = f.read()
+with open(os.path.join(prompts_dir, 'initial_system_prompt.txt'), 'r', encoding='utf-8') as f:
+    DEFAULT_SYSTEM_PROMPT = f.read()
+with open(os.path.join(prompts_dir, 'initial_user_prompt.txt'), 'r', encoding='utf-8') as f:
+    DEFAULT_USER_PROMPT = f.read()
 with open(os.path.join(prompts_dir, 'evaluation_prompt.txt'), 'r', encoding='utf-8') as f:
     DEFAULT_EVALUATION_PROMPT = f.read()
 with open(os.path.join(prompts_dir, 'meta_prompt.txt'), 'r', encoding='utf-8') as f:
@@ -118,12 +120,21 @@ with st.sidebar:
 
 # 프롬프트 설정
 with st.expander("초기 프롬프트 설정", expanded=False):
-    initial_prompt = st.text_area(
-        "프롬프트",
-        value=DEFAULT_INITIAL_PROMPT,
-        height=100,
-        help="튜닝을 시작할 초기 프롬프트를 입력하세요."
-    )
+    col1, col2 = st.columns(2)
+    with col1:
+        system_prompt = st.text_area(
+            "시스템 프롬프트",
+            value=DEFAULT_SYSTEM_PROMPT,
+            height=100,
+            help="튜닝을 시작할 초기 시스템 프롬프트를 입력하세요."
+        )
+    with col2:
+        user_prompt = st.text_area(
+            "사용자 프롬프트",
+            value=DEFAULT_USER_PROMPT,
+            height=100,
+            help="튜닝을 시작할 초기 사용자 프롬프트를 입력하세요."
+        )
 
 # 메타프롬프트 설정
 with st.expander("메타프롬프트 설정", expanded=False):
@@ -314,7 +325,13 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                     
                     # 현재 프롬프트
                     st.write("Current Prompt:")
-                    st.code(result['prompt'])
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.write("System Prompt:")
+                        st.code(result['system_prompt'])
+                    with col2:
+                        st.write("User Prompt:")
+                        st.code(result['user_prompt'])
                     
                     # 평균 점수와 최고 점수
                     col1, col2 = st.columns(2)
@@ -378,7 +395,8 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
             
             # 프롬프트 튜닝 실행
             results = tuner.tune_prompt(
-                initial_prompt=initial_prompt,
+                initial_system_prompt=system_prompt,
+                initial_user_prompt=user_prompt,
                 test_cases=test_cases,
                 num_iterations=iterations,
                 score_threshold=score_threshold if use_threshold else None,
@@ -392,5 +410,11 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
             # 전체 결과에서 가장 높은 평균 점수를 가진 프롬프트 찾기
             best_result = max(results, key=lambda x: x['avg_score'])
             st.write("Final Best Prompt:")
-            st.code(best_result['prompt'])
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write("System Prompt:")
+                st.code(best_result['system_prompt'])
+            with col2:
+                st.write("User Prompt:")
+                st.code(best_result['user_prompt'])
             st.write(f"Final Average Score: {best_result['avg_score']:.2f}") 

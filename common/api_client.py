@@ -5,17 +5,23 @@ from openai import OpenAI
 from anthropic import Anthropic
 
 
-def create_messages(prompt, system_message="You are a helpful assistant."):
-    return [
+def create_messages(prompt, system_message, user_message):
+    messages = [
         {
             "role": "system",
             "content": system_message
         },
         {
             "role": "user",
+            "content": user_message
+        },
+        {
+            "role": "user",
             "content": prompt
         }
     ]
+    
+    return messages
 
 
 class Model:
@@ -29,13 +35,14 @@ class Model:
         "solar": "https://api.upstage.ai/v1"
     }
 
-    def __init__(self, model_name, system_prompt=None):
+    def __init__(self, model_name, system_prompt=None, user_prompt=None):
         if model_name not in self.models:
             raise ValueError(f"Model {model_name} not found. Available models: {list(self.models.keys())}")
         
         self.name = model_name
         self.model_id = self.models[model_name]
         self.system_prompt = system_prompt
+        self.user_prompt = user_prompt
         
         # Initialize appropriate client
         if model_name == "claude":
@@ -51,9 +58,11 @@ class Model:
         self.handler = self._create_handler()
 
     def _create_handler(self):
-        def handler(prompt, system_prompt=None):
+        def handler(prompt, system_prompt=None, user_prompt=None):
             try:
-                messages = create_messages(prompt, system_prompt or self.system_prompt or "You are a helpful assistant.")
+                system_message = system_prompt or self.system_prompt or "You are a helpful assistant."
+                user_message = user_prompt or self.user_prompt or "Hello! I'm here to help you. Please let me know what you need assistance with, and I'll do my best to provide clear and helpful responses. Feel free to ask me anything!"
+                messages = create_messages(prompt, system_message, user_message)
                 if "claude" in self.model_id:
                     response = self.client.messages.create(
                         model=self.model_id,
@@ -73,8 +82,8 @@ class Model:
                 return f"Error: {e}"
         return handler
 
-    def ask(self, prompt, system_prompt=None):
-        answer = self.handler(prompt, system_prompt)
+    def ask(self, prompt, system_prompt=None, user_prompt=None):
+        answer = self.handler(prompt, system_prompt, user_prompt)
         print("Done.")
         return answer
 

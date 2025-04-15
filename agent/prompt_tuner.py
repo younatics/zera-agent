@@ -31,6 +31,14 @@ class PromptTuner:
         # 프롬프트 파일 경로
         prompts_dir = os.path.join(os.path.dirname(__file__), 'prompts')
         
+        # 기본 initial_system_prompt 로드
+        with open(os.path.join(prompts_dir, 'initial_system_prompt.txt'), 'r', encoding='utf-8') as f:
+            self.initial_system_prompt = f.read()
+        
+        # 기본 initial_user_prompt 로드
+        with open(os.path.join(prompts_dir, 'initial_user_prompt.txt'), 'r', encoding='utf-8') as f:
+            self.initial_user_prompt = f.read()
+        
         # 기본 평가 프롬프트 로드
         with open(os.path.join(prompts_dir, 'evaluation_prompt.txt'), 'r', encoding='utf-8') as f:
             self.evaluation_prompt_template = f.read()
@@ -57,41 +65,51 @@ class PromptTuner:
         """
         self.meta_prompt_template = prompt_template
     
-    def _evaluate_response(self, response: str, expected: str, question: str) -> float:
+    def _evaluate_response(self, response: str, expected: str, question: str) -> tuple[float, str]:
         """
-        Evaluate a single response against the expected output using the evaluator model.
+        Evaluate a response using the evaluator model.
         
         Args:
-            response (str): The model's response
-            expected (str): The expected output
-            question (str): The question that was asked
+            response (str): The actual response to evaluate
+            expected (str): The expected response
+            question (str): The original question
             
         Returns:
-            float: Score between 0.0 and 1.0
+            tuple[float, str]: A tuple containing the score and evaluation reason
         """
-        self.logger.info("Evaluating response:")
-        self.logger.info(f"Question: {question}")
-        self.logger.info(f"Actual response: {response}")
-        self.logger.info(f"Expected response: {expected}")
-        
-        evaluation_prompt = self.evaluation_prompt_template.format(
-            question=question,
-            response=response,
-            expected=expected
-        )
-        
         try:
-            evaluation_result = self.evaluator.ask(evaluation_prompt).strip()
-            # 평가 결과에서 점수와 이유를 분리
-            score_str = evaluation_result.split('\n')[0]  # 첫 번째 줄은 점수
-            reason = '\n'.join(evaluation_result.split('\n')[1:])  # 나머지는 평가 이유
-            score = float(score_str)
+            # 평가 프롬프트 생성
+            evaluation_prompt = self.evaluation_prompt_template.format(
+                response=response,
+                expected=expected,
+                question=question
+            )
+            
+            # 평가 모델로 평가 수행
+            evaluation = self.evaluator.ask(evaluation_prompt)
+            self.logger.info(f"Evaluating response:")
+            self.logger.info(f"Question: {question}")
+            self.logger.info(f"Actual response: {response}")
+            self.logger.info(f"Expected response: {expected}")
+            self.logger.info(f"Evaluation: {evaluation}")
+            
+            # 평가 결과에서 점수 추출
+            score = float(evaluation.split()[0])
+            reason = " ".join(evaluation.split()[1:])
+            
             self.logger.info(f"Evaluation score: {score}")
             self.logger.info(f"Evaluation reason: {reason}")
-            return round(score, 2), reason
+            
+            return score, reason
+            
         except (ValueError, TypeError):
             # 숫자로 변환할 수 없는 경우 기본 평가 방식 사용
             self.logger.warning("Failed to get valid score from evaluator, using fallback evaluation method")
+            self.logger.info("=== Fallback Evaluation Details ===")
+            self.logger.info(f"Question: {question}")
+            self.logger.info(f"Actual response: {response}")
+            self.logger.info(f"Expected response: {expected}")
+            
             response = response.lower()
             expected = expected.lower()
             question = question.lower()
@@ -101,17 +119,29 @@ class PromptTuner:
                 "ai", "assistant", "help", "안녕하세요", "도와드릴까요",
                 "어떻게", "무엇을", "필요하신가요"
             ]
-            matches = sum(1 for phrase in key_phrases if phrase in response)
-            fallback_score = min(1.0, matches / len(key_phrases))
+            
+            self.logger.info("Checking for key phrases in response:")
+            matches = []
+            for phrase in key_phrases:
+                if phrase in response:
+                    matches.append(phrase)
+                    self.logger.info(f"Found key phrase: {phrase}")
+            
+            fallback_score = min(1.0, len(matches) / len(key_phrases))
+            self.logger.info(f"Total matches: {len(matches)} out of {len(key_phrases)}")
             self.logger.info(f"Fallback evaluation score: {fallback_score}")
-            return fallback_score, "키워드 기반 기본 평가"
+            self.logger.info("=== End Fallback Evaluation ===")
+            
+            # 키워드 기반 평가인 경우 0점 반환 (평가에서 제외)
+            return 0.0, "키워드 기반 기본 평가 (평가 제외)"
     
-    def evaluate_prompt(self, prompt: str, test_cases: List[Dict]) -> Dict:
+    def evaluate_prompt(self, system_prompt: str, user_prompt: str, test_cases: List[Dict]) -> Dict:
         """
         Evaluate a system prompt using a set of test cases.
         
         Args:
-            prompt (str): The system prompt to evaluate
+            system_prompt (str): The system prompt to evaluate
+            user_prompt (str): The user prompt to evaluate
             test_cases (List[Dict]): List of test cases, each containing 'question' and 'expected'
             
         Returns:
@@ -121,7 +151,7 @@ class PromptTuner:
         responses = []
         
         for test_case in test_cases:
-            response = self.model.ask(test_case['question'], system_prompt=prompt)
+            response = self.model.ask(test_case['question'], system_prompt=system_prompt, user_prompt=user_prompt)
             score, reason = self._evaluate_response(response, test_case['expected'], test_case['question'])
             total_score += score
             
@@ -138,12 +168,14 @@ class PromptTuner:
         # 현재까지의 최고 점수와 비교
         if avg_score > self.best_score:
             self.best_score = avg_score
-            self.best_prompt = prompt
+            self.best_prompt = system_prompt
         
         return {
             'avg_score': avg_score,
             'best_score': self.best_score,
             'best_prompt': self.best_prompt,
+            'system_prompt': system_prompt,
+            'user_prompt': user_prompt,
             'responses': responses
         }
     
@@ -168,12 +200,13 @@ class PromptTuner:
         
         return variations
     
-    def tune_prompt(self, initial_prompt: str, test_cases: List[Dict], num_iterations: int = 3, score_threshold: Optional[float] = None, evaluation_score_threshold: float = 0.8, use_meta_prompt: bool = True) -> List[Dict]:
+    def tune_prompt(self, initial_system_prompt: str, initial_user_prompt: str, test_cases: List[Dict], num_iterations: int = 3, score_threshold: Optional[float] = None, evaluation_score_threshold: float = 0.8, use_meta_prompt: bool = True) -> List[Dict]:
         """
         Tune a system prompt using a set of test cases.
         
         Args:
-            initial_prompt (str): The initial system prompt
+            initial_system_prompt (str): The initial system prompt
+            initial_user_prompt (str): The initial user prompt
             test_cases (List[Dict]): List of test cases, each containing 'question' and 'expected'
             num_iterations (int): Number of iterations to perform
             score_threshold (Optional[float]): Threshold to stop tuning if average score exceeds this value
@@ -183,14 +216,16 @@ class PromptTuner:
         Returns:
             List[Dict]: List of iteration results, each containing:
                 - iteration: iteration number
-                - prompt: current prompt
+                - system_prompt: current system prompt
+                - user_prompt: current user prompt
                 - avg_score: average score for this iteration
                 - best_score: best score so far
                 - best_prompt: best prompt so far
                 - responses: list of responses for each test case
         """
-        current_prompt = initial_prompt
-        best_prompt = initial_prompt
+        current_system_prompt = initial_system_prompt
+        current_user_prompt = initial_user_prompt
+        best_prompt = initial_system_prompt
         best_score = 0.0
         iteration_results = []
         
@@ -205,7 +240,7 @@ class PromptTuner:
                 self.logger.info(f"Question: {test_case['question']}")
                 
                 # 현재 프롬프트로 응답 생성
-                response = self.model.ask(test_case['question'], system_prompt=current_prompt)
+                response = self.model.ask(test_case['question'], system_prompt=current_system_prompt, user_prompt=current_user_prompt)
                 self.logger.info(f"Response: {response}")
                 
                 # 응답 평가
@@ -227,7 +262,7 @@ class PromptTuner:
                 self.evaluation_history.append({
                     'iteration': iteration + 1,
                     'test_case': i + 1,
-                    'prompt': current_prompt,
+                    'prompt': current_system_prompt,
                     'question': test_case['question'],
                     'expected_answer': test_case['expected'],
                     'actual_answer': response,
@@ -242,7 +277,7 @@ class PromptTuner:
                 # 현재까지의 최고 점수와 비교
                 if score > best_score:
                     best_score = score
-                    best_prompt = current_prompt
+                    best_prompt = current_system_prompt
             
             # iteration이 끝난 후 평균 점수 계산
             avg_score = sum(iteration_scores) / len(iteration_scores)
@@ -251,7 +286,8 @@ class PromptTuner:
             # 현재 이터레이션 결과 저장
             result = {
                 'iteration': iteration + 1,
-                'prompt': current_prompt,
+                'system_prompt': current_system_prompt,
+                'user_prompt': current_user_prompt,
                 'avg_score': avg_score,
                 'best_score': best_score,
                 'best_prompt': best_prompt,
@@ -283,7 +319,8 @@ class PromptTuner:
                 
                 # 메타프롬프트를 사용하여 현재 프롬프트를 개선
                 improvement_prompt = self.meta_prompt_template.format(
-                    prompt=current_prompt,
+                    system_prompt=current_system_prompt,
+                    user_prompt=current_user_prompt,
                     best_score=best_case['score'],
                     best_question=best_case['question'],
                     best_expected=best_case['expected'],
@@ -295,10 +332,23 @@ class PromptTuner:
                     worst_actual=worst_case['actual'],
                     worst_reason=worst_case['reason']
                 )
-                improved_prompt = self.meta_prompt_model.ask("", system_prompt=improvement_prompt)
-                if improved_prompt and improved_prompt.strip():
-                    current_prompt = improved_prompt.strip()
-                    self.logger.info(f"개선된 프롬프트: {current_prompt}")
+                improved_prompts = self.meta_prompt_model.ask("", system_prompt=improvement_prompt)
+                if improved_prompts and improved_prompts.strip():
+                    # 개선된 프롬프트에서 시스템 프롬프트와 유저 프롬프트 분리
+                    improved_prompts = improved_prompts.strip()
+                    system_prompt_start = improved_prompts.find("SYSTEM_PROMPT:")
+                    user_prompt_start = improved_prompts.find("USER_PROMPT:")
+                    
+                    if system_prompt_start != -1 and user_prompt_start != -1:
+                        current_system_prompt = improved_prompts[system_prompt_start + len("SYSTEM_PROMPT:"):user_prompt_start].strip()
+                        current_user_prompt = improved_prompts[user_prompt_start + len("USER_PROMPT:"):].strip()
+                        self.logger.info(f"개선된 시스템 프롬프트: {current_system_prompt}")
+                        self.logger.info(f"개선된 유저 프롬프트: {current_user_prompt}")
+                    else:
+                        self.logger.warning("프롬프트 개선 결과가 올바른 형식이 아닙니다. 튜닝을 종료합니다.")
+                        if self.progress_callback:
+                            self.progress_callback(num_iterations, len(test_cases))
+                        break
                 else:
                     self.logger.warning("프롬프트 개선에 실패했습니다. 튜닝을 종료합니다.")
                     if self.progress_callback:

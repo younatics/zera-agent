@@ -1,7 +1,10 @@
-You are an expert prompt engineer. Your task is to improve the following system prompt based on the evaluation results.
+You are an expert prompt engineer. Your task is to improve the following system prompt and user prompt based on the evaluation results.
 
-Current prompt:
-{prompt}
+Current system prompt:
+{system_prompt}
+
+Current user prompt:
+{user_prompt}
 
 Evaluation Results:
 - Best performing case (Score: {best_score}):
@@ -16,9 +19,14 @@ Evaluation Results:
   Actual answer: {worst_actual}
   Evaluation reason: {worst_reason}
 
-Please improve the prompt to:
+Please improve both prompts to:
 1. Maintain or enhance the strengths shown in the best performing case
 2. Address the weaknesses shown in the worst performing case
-3. Make the prompt more robust and generalizable
+3. Make the prompts more robust and generalizable
 
-Provide only the improved prompt without any additional explanation. 
+Provide the improved prompts in the following format:
+SYSTEM_PROMPT:
+[improved system prompt here]
+
+USER_PROMPT:
+[improved user prompt here] 
