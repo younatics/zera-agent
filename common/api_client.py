@@ -5,19 +5,15 @@ from openai import OpenAI
 from anthropic import Anthropic
 
 
-def create_messages(prompt, system_message, user_message):
+def create_messages(question, system_prompt, user_prompt):
     messages = [
         {
             "role": "system",
-            "content": system_message
+            "content": system_prompt
         },
         {
             "role": "user",
-            "content": user_message
-        },
-        {
-            "role": "user",
-            "content": prompt
+            "content": f"{user_prompt}\n\n{question}"
         }
     ]
     
@@ -58,16 +54,17 @@ class Model:
         self.handler = self._create_handler()
 
     def _create_handler(self):
-        def handler(prompt, system_prompt=None, user_prompt=None):
+        def handler(question, system_prompt=None, user_prompt=None):
             try:
-                system_message = system_prompt or self.system_prompt or "You are a helpful assistant."
-                user_message = user_prompt or self.user_prompt or "Hello! I'm here to help you. Please let me know what you need assistance with, and I'll do my best to provide clear and helpful responses. Feel free to ask me anything!"
-                messages = create_messages(prompt, system_message, user_message)
+                system_prompt = system_prompt or self.system_prompt or "You are a helpful assistant."
+                user_prompt = user_prompt or self.user_prompt or "Hello! I'm here to help you. Please let me know what you need assistance with, and I'll do my best to provide clear and helpful responses. Feel free to ask me anything!"
+                messages = create_messages(question, system_prompt, user_prompt)
                 if "claude" in self.model_id:
                     response = self.client.messages.create(
                         model=self.model_id,
                         max_tokens=1000,
-                        messages=messages
+                        system=messages[0]["content"],
+                        messages=[messages[1]]
                     )
                     return response.content[0].text
                 else:
@@ -81,8 +78,8 @@ class Model:
                 return f"Error: {e}"
         return handler
 
-    def ask(self, prompt, system_prompt=None, user_prompt=None):
-        answer = self.handler(prompt, system_prompt, user_prompt)
+    def ask(self, question, system_prompt=None, user_prompt=None):
+        answer = self.handler(question, system_prompt, user_prompt)
         print("Done.")
         return answer
 
