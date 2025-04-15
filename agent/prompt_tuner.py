@@ -104,37 +104,8 @@ class PromptTuner:
             return score, reason
             
         except (ValueError, TypeError):
-            # 숫자로 변환할 수 없는 경우 기본 평가 방식 사용
-            self.logger.warning("Failed to get valid score from evaluator, using fallback evaluation method")
-            self.logger.info("=== Fallback Evaluation Details ===")
-            self.logger.info(f"Question: {question}")
-            self.logger.info(f"Actual response: {response}")
-            self.logger.info(f"Expected response: {expected}")
-            
-            response = response.lower()
-            expected = expected.lower()
-            question = question.lower()
-            
-            # 기본 키워드 기반 평가
-            key_phrases = [
-                "ai", "assistant", "help", "안녕하세요", "도와드릴까요",
-                "어떻게", "무엇을", "필요하신가요"
-            ]
-            
-            self.logger.info("Checking for key phrases in response:")
-            matches = []
-            for phrase in key_phrases:
-                if phrase in response:
-                    matches.append(phrase)
-                    self.logger.info(f"Found key phrase: {phrase}")
-            
-            fallback_score = min(1.0, len(matches) / len(key_phrases))
-            self.logger.info(f"Total matches: {len(matches)} out of {len(key_phrases)}")
-            self.logger.info(f"Fallback evaluation score: {fallback_score}")
-            self.logger.info("=== End Fallback Evaluation ===")
-            
-            # 키워드 기반 평가인 경우 None 반환 (평가에서 제외)
-            return None, "키워드 기반 기본 평가 (평가 제외)"
+            # 숫자로 변환할 수 없는 경우 제외
+            return None, "점수 추출 실패, (평가 제외)"
     
     def evaluate_prompt(self, system_prompt: str, user_prompt: str, test_cases: List[Dict]) -> Dict:
         """
@@ -317,8 +288,13 @@ class PromptTuner:
                 self.logger.info("프롬프트 개선 중...")
                 
                 # 랜덤으로 5개의 케이스 선택 (데이터가 5개 미만이면 전부 선택)
-                num_cases = min(5, len(iteration_responses))
-                random_cases = random.sample(iteration_responses, num_cases)
+                valid_responses = [response for response in iteration_responses if response['score'] is not None]
+                num_cases = min(5, len(valid_responses))
+                if num_cases > 0:
+                    random_cases = random.sample(valid_responses, num_cases)
+                else:
+                    self.logger.warning("유효한 평가 결과가 없습니다. 현재 프롬프트를 유지합니다.")
+                    continue
                 
                 # 랜덤 케이스 포맷팅
                 formatted_cases = "\n".join([
@@ -349,15 +325,11 @@ class PromptTuner:
                         self.logger.info(f"개선된 시스템 프롬프트: {current_system_prompt}")
                         self.logger.info(f"개선된 유저 프롬프트: {current_user_prompt}")
                     else:
-                        self.logger.warning("프롬프트 개선 결과가 올바른 형식이 아닙니다. 튜닝을 종료합니다.")
-                        if self.progress_callback:
-                            self.progress_callback(num_iterations, len(test_cases))
-                        break
+                        self.logger.warning("프롬프트 개선 결과가 올바른 형식이 아닙니다. 현재 프롬프트를 유지합니다.")
+                        # 현재 프롬프트를 유지하고 계속 진행
                 else:
-                    self.logger.warning("프롬프트 개선에 실패했습니다. 튜닝을 종료합니다.")
-                    if self.progress_callback:
-                        self.progress_callback(num_iterations, len(test_cases))
-                    break
+                    self.logger.warning("프롬프트 개선에 실패했습니다. 현재 프롬프트를 유지합니다.")
+                    # 현재 프롬프트를 유지하고 계속 진행
             elif use_meta_prompt:
                 self.logger.info(f"평균 점수가 평가 임계값({evaluation_score_threshold}) 이상이므로 프롬프트를 개선하지 않습니다.")
                 if self.progress_callback:
