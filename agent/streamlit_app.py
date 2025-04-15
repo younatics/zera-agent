@@ -323,16 +323,6 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                 with iteration_containers[iteration_idx]:
                     st.subheader(f"Iteration {result['iteration']}")
                     
-                    # 현재 프롬프트
-                    st.write("Current Prompt:")
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.write("System Prompt:")
-                        st.code(result['system_prompt'])
-                    with col2:
-                        st.write("User Prompt:")
-                        st.code(result['user_prompt'])
-                    
                     # 평균 점수와 최고 점수
                     col1, col2 = st.columns(2)
                     with col1:
@@ -385,6 +375,16 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                         history_df.style.apply(highlight_max_row, axis=None),
                         hide_index=True
                     )
+                    
+                    # 현재 프롬프트 표시
+                    st.write("Current Prompts:")
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.write("System Prompt:")
+                        st.code(result['system_prompt'])
+                    with col2:
+                        st.write("User Prompt:")
+                        st.code(result['user_prompt'])
                     
                     st.divider()
                 

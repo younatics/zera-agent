@@ -262,7 +262,8 @@ class PromptTuner:
                 self.evaluation_history.append({
                     'iteration': iteration + 1,
                     'test_case': i + 1,
-                    'prompt': current_system_prompt,
+                    'system_prompt': current_system_prompt,
+                    'user_prompt': current_user_prompt,
                     'question': test_case['question'],
                     'expected_answer': test_case['expected'],
                     'actual_answer': response,

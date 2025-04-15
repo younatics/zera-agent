@@ -44,7 +44,8 @@ def test_prompt_tuner():
     print("\n=== 평가 기록 ===")
     for record in tuner.evaluation_history:
         print(f"Iteration {record['iteration']}: Score {record['score']}")
-        print(f"Prompt: {record['prompt']}\n")
+        print(f"System Prompt: {record['system_prompt']}")
+        print(f"User Prompt: {record['user_prompt']}\n")
 
 if __name__ == "__main__":
     test_prompt_tuner() 

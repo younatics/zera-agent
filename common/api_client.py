@@ -67,8 +67,8 @@ class Model:
                     response = self.client.messages.create(
                         model=self.model_id,
                         max_tokens=1000,
-                        system=messages[0]["content"],
-                        messages=[messages[1]]
+ 
+                        messages=messages
                     )
                     return response.content[0].text
                 else:
