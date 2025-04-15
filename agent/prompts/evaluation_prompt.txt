@@ -10,8 +10,8 @@ Expected Response:
 {expected}
 
 Please evaluate based on the following criteria:
-1. Semantic Similarity (how well the response addresses the question and matches the expected content)
-2. Tone and Style (maintaining a professional and polite tone)
+1. Exact Match (how precisely the response matches the expected answer word for word)
+2. Semantic Similarity (how well the response conveys the same meaning as the expected answer)
 3. Information Accuracy (not containing incorrect information)
 4. Response Completeness (including all necessary information to answer the question)
 5. Question Relevance (how directly and appropriately the response answers the specific question)
@@ -21,5 +21,5 @@ Please output the evaluation result in the following format:
 2. Second line onwards: detailed explanation of the evaluation
 
 Example:
-0.85
-The response accurately addresses the question and conveys the expected content while maintaining a professional and polite tone. It includes all necessary information to answer the question completely and directly. 
+0.95
+The response exactly matches the expected answer word for word, conveying the same meaning while maintaining accuracy and completeness. It directly and appropriately answers the specific question. 
