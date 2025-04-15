@@ -2,6 +2,7 @@ from typing import List, Dict, Optional
 import logging
 from common.api_client import Model
 import os
+import random
 
 class PromptTuner:
     """
@@ -94,8 +95,8 @@ class PromptTuner:
             self.logger.info(f"Evaluation: {evaluation}")
             
             # 평가 결과에서 점수 추출
-            score = float(evaluation.split()[0])
-            reason = " ".join(evaluation.split()[1:])
+            score = float(evaluation.split('\n')[0].strip())
+            reason = '\n'.join(evaluation.split('\n')[1:]).strip()
             
             self.logger.info(f"Evaluation score: {score}")
             self.logger.info(f"Evaluation reason: {reason}")
@@ -311,27 +312,25 @@ class PromptTuner:
             if use_meta_prompt and avg_score < evaluation_score_threshold:
                 self.logger.info("프롬프트 개선 중...")
                 
-                # 최고/최저 점수 케이스 찾기
-                best_case_idx = iteration_scores.index(max(iteration_scores))
-                worst_case_idx = iteration_scores.index(min(iteration_scores))
+                # 랜덤으로 5개의 케이스 선택 (데이터가 5개 미만이면 전부 선택)
+                num_cases = min(5, len(iteration_responses))
+                random_cases = random.sample(iteration_responses, num_cases)
                 
-                best_case = iteration_responses[best_case_idx]
-                worst_case = iteration_responses[worst_case_idx]
+                # 랜덤 케이스 포맷팅
+                formatted_cases = "\n".join([
+                    f"Question: {case['question']}\n"
+                    f"Expected answer: {case['expected']}\n"
+                    f"Actual answer: {case['actual']}\n"
+                    f"Score: {case['score']}\n"
+                    f"Evaluation reason: {case['reason']}\n"
+                    for case in random_cases
+                ])
                 
                 # 메타프롬프트를 사용하여 현재 프롬프트를 개선
                 improvement_prompt = self.meta_prompt_template.format(
                     system_prompt=current_system_prompt,
                     user_prompt=current_user_prompt,
-                    best_score=best_case['score'],
-                    best_question=best_case['question'],
-                    best_expected=best_case['expected'],
-                    best_actual=best_case['actual'],
-                    best_reason=best_case['reason'],
-                    worst_score=worst_case['score'],
-                    worst_question=worst_case['question'],
-                    worst_expected=worst_case['expected'],
-                    worst_actual=worst_case['actual'],
-                    worst_reason=worst_case['reason']
+                    random_cases=formatted_cases
                 )
                 improved_prompts = self.meta_prompt_model.ask("", system_prompt=improvement_prompt)
                 if improved_prompts and improved_prompts.strip():

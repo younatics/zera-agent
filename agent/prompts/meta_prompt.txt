@@ -7,21 +7,12 @@ Current user prompt:
 {user_prompt}
 
 Evaluation Results:
-- Best performing case (Score: {best_score}):
-  Question: {best_question}
-  Expected answer: {best_expected}
-  Actual answer: {best_actual}
-  Evaluation reason: {best_reason}
-
-- Worst performing case (Score: {worst_score}):
-  Question: {worst_question}
-  Expected answer: {worst_expected}
-  Actual answer: {worst_actual}
-  Evaluation reason: {worst_reason}
+- Random cases:
+{random_cases}
 
 Please improve both prompts to:
-1. Maintain or enhance the strengths shown in the best performing case
-2. Address the weaknesses shown in the worst performing case
+1. Analyze the patterns and variations shown in the random cases
+2. Identify common strengths and weaknesses across the cases
 3. Make the prompts more robust and generalizable
 
 Provide the improved prompts in the following format:
