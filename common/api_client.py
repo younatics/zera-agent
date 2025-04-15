@@ -36,7 +36,7 @@ class Model:
         },
         "claude": {
             "name": "Claude",
-            "description": "Anthropic의 Claude 3 Sonnet",
+            "description": "Anthropic의 Claude 3.5 Sonnet",
             "version": "claude-3-5-sonnet-20240620",
             "base_url": None
         }
