@@ -21,22 +21,41 @@ def create_messages(question, system_prompt, user_prompt):
 
 
 class Model:
-    models = {
-        "gpt4o": "gpt-4o",
-        "claude": "claude-3-sonnet-20240229",
-        "solar": "solar-pro"
+    model_info = {
+        "solar": {
+            "name": "Solar",
+            "description": "Upstage의 Solar 모델",
+            "version": "solar-pro",
+            "base_url": "https://api.upstage.ai/v1"
+        },
+        "gpt4o": {
+            "name": "GPT-4",
+            "description": "OpenAI의 GPT-4 모델",
+            "version": "gpt-4o",
+            "base_url": None
+        },
+        "claude": {
+            "name": "Claude",
+            "description": "Anthropic의 Claude 3 Sonnet",
+            "version": "claude-3-5-sonnet-20240620",
+            "base_url": None
+        }
     }
 
-    base_urls = {
-        "solar": "https://api.upstage.ai/v1"
-    }
+    @classmethod
+    def get_model_info(cls, model_name):
+        return cls.model_info.get(model_name)
+
+    @classmethod
+    def get_all_model_info(cls):
+        return cls.model_info
 
     def __init__(self, model_name, system_prompt=None, user_prompt=None):
-        if model_name not in self.models:
-            raise ValueError(f"Model {model_name} not found. Available models: {list(self.models.keys())}")
+        if model_name not in self.model_info:
+            raise ValueError(f"Model {model_name} not found. Available models: {list(self.model_info.keys())}")
         
         self.name = model_name
-        self.model_id = self.models[model_name]
+        self.model_id = self.model_info[model_name]["version"]
         self.system_prompt = system_prompt
         self.user_prompt = user_prompt
         
@@ -46,7 +65,7 @@ class Model:
         elif model_name == "solar":
             self.client = OpenAI(
                 api_key=os.getenv("SOLAR_API_KEY"),
-                base_url=self.base_urls["solar"]
+                base_url=self.model_info[model_name]["base_url"]
             )
         else:  # gpt4o
             self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -85,7 +104,7 @@ class Model:
 
     @classmethod
     def get_available_models(cls):
-        return list(cls.models.keys())
+        return list(cls.model_info.keys())
 
 
 # 사용 예시:

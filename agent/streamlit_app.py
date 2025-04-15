@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from prompt_tuner import PromptTuner
+from common.api_client import Model
 import os
 import logging
 import plotly.graph_objects as go
@@ -17,23 +18,7 @@ st.set_page_config(page_title="Prompt Tuning Visualizer", layout="wide")
 st.title("Prompt Tuning Dashboard")
 
 # 모델 정보 정의
-MODEL_INFO = {
-    "solar": {
-        "name": "Solar",
-        "description": "Upstage의 Solar 모델",
-        "version": "solar-pro"
-    },
-    "gpt4o": {
-        "name": "GPT-4",
-        "description": "OpenAI의 GPT-4 모델",
-        "version": "gpt-4"
-    },
-    "claude": {
-        "name": "Claude",
-        "description": "Anthropic의 Claude 3 Sonnet",
-        "version": "claude-3-sonnet-20240229"
-    }
-}
+MODEL_INFO = Model.get_all_model_info()
 
 # 프롬프트 파일 로드
 prompts_dir = os.path.join(os.path.dirname(__file__), 'prompts')
