@@ -133,8 +133,8 @@ class PromptTuner:
             self.logger.info(f"Fallback evaluation score: {fallback_score}")
             self.logger.info("=== End Fallback Evaluation ===")
             
-            # 키워드 기반 평가인 경우 0점 반환 (평가에서 제외)
-            return 0.0, "키워드 기반 기본 평가 (평가 제외)"
+            # 키워드 기반 평가인 경우 None 반환 (평가에서 제외)
+            return None, "키워드 기반 기본 평가 (평가 제외)"
     
     def evaluate_prompt(self, system_prompt: str, user_prompt: str, test_cases: List[Dict]) -> Dict:
         """
@@ -277,12 +277,16 @@ class PromptTuner:
                     self.progress_callback(iteration + 1, i + 1)
                 
                 # 현재까지의 최고 점수와 비교
-                if score > best_score:
+                if score is not None and (best_score is None or score > best_score):
                     best_score = score
                     best_prompt = current_system_prompt
             
             # iteration이 끝난 후 평균 점수 계산
-            avg_score = sum(iteration_scores) / len(iteration_scores)
+            valid_scores = [score for score in iteration_scores if score is not None]
+            if valid_scores:
+                avg_score = sum(valid_scores) / len(valid_scores)
+            else:
+                avg_score = 0.0
             self.logger.info(f"Iteration {iteration + 1} 평균 점수: {avg_score:.2f}")
             
             # 현재 이터레이션 결과 저장
