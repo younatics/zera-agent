@@ -178,7 +178,17 @@ if dataset_type == "MMLU":
         data = subject_data[split]
         
         # 데이터 표시
-        st.write(f"총 예제 수: {len(data)}")
+        total_examples = len(data)
+        st.write(f"총 예제 수: {total_examples}")
+        
+        # 샘플 수 선택
+        num_samples = st.slider(
+            "Number of random samples to evaluate per iteration",
+            min_value=1,
+            max_value=total_examples,
+            value=min(5, total_examples),
+            help="각 iteration마다 평가할 랜덤 샘플의 개수를 선택하세요."
+        )
         
         # 테스트 케이스 생성 및 데이터프레임 생성
         display_data = []
@@ -224,6 +234,16 @@ else:
             # 데이터프레임 표시
             st.write("업로드된 데이터:")
             st.dataframe(df)
+            
+            # 샘플 수 선택
+            total_examples = len(df)
+            num_samples = st.slider(
+                "Number of random samples to evaluate per iteration",
+                min_value=1,
+                max_value=total_examples,
+                value=min(5, total_examples),
+                help="각 iteration마다 평가할 랜덤 샘플의 개수를 선택하세요."
+            )
             
             # 컬럼 이름 확인 및 매핑
             required_columns = ['question', 'expected_answer']
@@ -286,9 +306,9 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
         status_text = st.empty()
         
         def progress_callback(iteration, test_case):
-            progress = (iteration - 1 + test_case / len(test_cases)) / iterations
+            progress = (iteration - 1 + test_case / num_samples) / iterations
             progress_bar.progress(progress)
-            status_text.text(f"Iteration {iteration}/{iterations}, Test Case {test_case}/{len(test_cases)}")
+            status_text.text(f"Iteration {iteration}/{iterations}, Test Case {test_case}/{num_samples}")
         
         tuner.progress_callback = progress_callback
         
@@ -386,7 +406,8 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                 num_iterations=iterations,
                 score_threshold=score_threshold if use_threshold else None,
                 evaluation_score_threshold=evaluation_threshold,
-                use_meta_prompt=use_meta_prompt
+                use_meta_prompt=use_meta_prompt,
+                num_samples=num_samples
             )
             
             # 최종 결과

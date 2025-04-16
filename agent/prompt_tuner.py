@@ -107,72 +107,7 @@ class PromptTuner:
             # 숫자로 변환할 수 없는 경우 제외
             return None, "점수 추출 실패, (평가 제외)"
     
-    def evaluate_prompt(self, system_prompt: str, user_prompt: str, test_cases: List[Dict]) -> Dict:
-        """
-        Evaluate a system prompt using a set of test cases.
-        
-        Args:
-            system_prompt (str): The system prompt to evaluate
-            user_prompt (str): The user prompt to evaluate
-            test_cases (List[Dict]): List of test cases, each containing 'question' and 'expected'
-            
-        Returns:
-            Dict: Evaluation results including total score and detailed responses
-        """
-        total_score = 0.0
-        responses = []
-        
-        for test_case in test_cases:
-            response = self.model.ask(test_case['question'], system_prompt=system_prompt, user_prompt=user_prompt)
-            score, reason = self._evaluate_response(response, test_case['expected'], test_case['question'])
-            total_score += score
-            
-            responses.append({
-                'question': test_case['question'],
-                'expected': test_case['expected'],
-                'actual': response,
-                'score': score,
-                'reason': reason
-            })
-        
-        avg_score = total_score / len(test_cases)
-        
-        # 현재까지의 최고 점수와 비교
-        if avg_score > self.best_score:
-            self.best_score = avg_score
-            self.best_prompt = system_prompt
-        
-        return {
-            'avg_score': avg_score,
-            'best_score': self.best_score,
-            'best_prompt': self.best_prompt,
-            'system_prompt': system_prompt,
-            'user_prompt': user_prompt,
-            'responses': responses
-        }
-    
-    def generate_variations(self, prompt: str, num_variations: int = 3) -> List[str]:
-        """
-        Generate variations of a given prompt using the model itself.
-        
-        Args:
-            prompt (str): The original prompt
-            num_variations (int): Number of variations to generate
-            
-        Returns:
-            List[str]: List of prompt variations including the original
-        """
-        variations = [prompt]  # Always include the original prompt
-        
-        # 지정된 수만큼 변형 생성
-        for _ in range(num_variations - 1):  # -1 because we already have the original
-            variation = self.meta_prompt_model.ask(self.meta_prompt_template.format(prompt=prompt))
-            if variation and variation.strip():
-                variations.append(variation.strip())
-        
-        return variations
-    
-    def tune_prompt(self, initial_system_prompt: str, initial_user_prompt: str, test_cases: List[Dict], num_iterations: int = 3, score_threshold: Optional[float] = None, evaluation_score_threshold: float = 0.8, use_meta_prompt: bool = True) -> List[Dict]:
+    def tune_prompt(self, initial_system_prompt: str, initial_user_prompt: str, test_cases: List[Dict], num_iterations: int = 3, score_threshold: Optional[float] = None, evaluation_score_threshold: float = 0.8, use_meta_prompt: bool = True, num_samples: Optional[int] = None) -> List[Dict]:
         """
         Tune a system prompt using a set of test cases.
         
@@ -184,6 +119,7 @@ class PromptTuner:
             score_threshold (Optional[float]): Threshold to stop tuning if average score exceeds this value
             evaluation_score_threshold (float): Threshold to trigger prompt improvement
             use_meta_prompt (bool): Whether to use meta prompt for improvement
+            num_samples (Optional[int]): Number of samples to use for evaluate prompt
             
         Returns:
             List[Dict]: List of iteration results, each containing:
@@ -206,9 +142,12 @@ class PromptTuner:
             iteration_scores = []
             iteration_responses = []
             
-            # 각 테스트 케이스에 대해 순차적으로 평가
+            # 각 이터레이션마다 랜덤 샘플링
+            test_cases = random.sample(test_cases, num_samples) if num_samples is not None and num_samples < len(test_cases) else test_cases
+            
+            # 테스트 케이스 실행 및 평가
             for i, test_case in enumerate(test_cases):
-                self.logger.info(f"\nTest Case {i + 1}/{len(test_cases)}")
+                self.logger.info(f"\nTest Case {i}/{len(test_cases)}")
                 self.logger.info(f"Question: {test_case['question']}")
                 
                 # 현재 프롬프트로 응답 생성
@@ -233,7 +172,7 @@ class PromptTuner:
                 # 평가 기록 저장
                 self.evaluation_history.append({
                     'iteration': iteration + 1,
-                    'test_case': i + 1,
+                    'test_case': i,
                     'system_prompt': current_system_prompt,
                     'user_prompt': current_user_prompt,
                     'question': test_case['question'],
@@ -245,7 +184,7 @@ class PromptTuner:
                 
                 # 프로그레스 바 업데이트
                 if self.progress_callback:
-                    self.progress_callback(iteration + 1, i + 1)
+                    self.progress_callback(iteration + 1, i)
                 
                 # 현재까지의 최고 점수와 비교
                 if score is not None and (best_score is None or score > best_score):
