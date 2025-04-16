@@ -285,8 +285,11 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
         "claude": "ANTHROPIC_API_KEY"
     }
     
+    # 사용되는 모델들의 API 키 확인
+    used_models = set([model_name, evaluator_model])
     missing_keys = []
-    for model in [model_name, evaluator_model]:
+    
+    for model in used_models:
         key = required_keys[model]
         if not os.getenv(key):
             missing_keys.append(f"{MODEL_INFO[model]['name']} ({key})")
