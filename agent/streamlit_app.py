@@ -7,6 +7,19 @@ import os
 import logging
 import plotly.graph_objects as go
 import sys
+from dotenv import load_dotenv
+
+# 디버깅 정보 출력
+st.write("Debug Info:")
+st.write(f"Current working directory: {os.getcwd()}")
+st.write(f"Python path: {sys.path}")
+st.write(f"Environment variables: {os.environ.get('SOLAR_API_KEY', 'Not found')}")
+
+# .env 파일 로드
+env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
+st.write(f".env file path: {env_path}")
+st.write(f".env file exists: {os.path.exists(env_path)}")
+load_dotenv(env_path)
 
 # 프로젝트 루트 디렉토리를 Python 경로에 추가
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
