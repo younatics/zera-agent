@@ -13,7 +13,7 @@ import numpy as np
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-st.set_page_config(page_title="Prompt Tuning Visualizer", layout="wide")
+st.set_page_config(page_title="Prompt Auto Tuning Agent", layout="wide")
 
 st.title("Prompt Tuning Dashboard")
 
