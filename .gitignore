@@ -35,4 +35,8 @@ ENV/
 
 # OS
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# AWS PEM keys
+*.pem
+prompt-autotuning-agent.pem 
