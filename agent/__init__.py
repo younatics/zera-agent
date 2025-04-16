@@ -1,4 +1,3 @@
 """
-Prompt Autotuning Agent
-A system for automatically fine-tuning system prompts for LLMs.
+Agent module for prompt autotuning.
 """ 
