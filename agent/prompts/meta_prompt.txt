@@ -13,7 +13,6 @@ Evaluation Results:
 Please improve both prompts to:
 1. Analyze the patterns and variations shown in the random cases
 2. Identify common strengths and weaknesses across the cases
-3. Make the prompts more robust and generalizable
 
 Provide the improved prompts in the following format:
 SYSTEM_PROMPT:
