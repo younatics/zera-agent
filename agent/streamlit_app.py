@@ -306,9 +306,9 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
         status_text = st.empty()
         
         def progress_callback(iteration, test_case):
-            progress = (iteration - 1 + test_case / num_samples) / iterations
+            progress = (iteration - 1 + test_case / len(test_cases)) / iterations
             progress_bar.progress(progress)
-            status_text.text(f"Iteration {iteration}/{iterations}, Test Case {test_case}/{num_samples}")
+            status_text.text(f"Iteration {iteration}/{iterations}, Test Case {test_case}/{len(test_cases)}")
         
         tuner.progress_callback = progress_callback
         
