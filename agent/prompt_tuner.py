@@ -107,14 +107,14 @@ class PromptTuner:
             # 숫자로 변환할 수 없는 경우 제외
             return None, "점수 추출 실패, (평가 제외)"
     
-    def tune_prompt(self, initial_system_prompt: str, initial_user_prompt: str, test_cases: List[Dict], num_iterations: int = 3, score_threshold: Optional[float] = None, evaluation_score_threshold: float = 0.8, use_meta_prompt: bool = True, num_samples: Optional[int] = None) -> List[Dict]:
+    def tune_prompt(self, initial_system_prompt: str, initial_user_prompt: str, initial_test_cases: List[Dict], num_iterations: int = 3, score_threshold: Optional[float] = None, evaluation_score_threshold: float = 0.8, use_meta_prompt: bool = True, num_samples: Optional[int] = None) -> List[Dict]:
         """
         Tune a system prompt using a set of test cases.
         
         Args:
             initial_system_prompt (str): The initial system prompt
             initial_user_prompt (str): The initial user prompt
-            test_cases (List[Dict]): List of test cases, each containing 'question' and 'expected'
+            initial_test_cases (List[Dict]): List of test cases, each containing 'question' and 'expected'
             num_iterations (int): Number of iterations to perform
             score_threshold (Optional[float]): Threshold to stop tuning if average score exceeds this value
             evaluation_score_threshold (float): Threshold to trigger prompt improvement
@@ -143,7 +143,7 @@ class PromptTuner:
             iteration_responses = []
             
             # 각 이터레이션마다 랜덤 샘플링
-            test_cases = random.sample(test_cases, num_samples) if num_samples is not None and num_samples < len(test_cases) else test_cases
+            test_cases = random.sample(initial_test_cases, num_samples) if num_samples is not None and num_samples < len(initial_test_cases) else initial_test_cases
             
             # 테스트 케이스 실행 및 평가
             for i, test_case in enumerate(test_cases):
@@ -184,7 +184,7 @@ class PromptTuner:
                 
                 # 프로그레스 바 업데이트
                 if self.progress_callback:
-                    self.progress_callback(iteration + 1, i)
+                    self.progress_callback(iteration + 1, i + 1)
                 
                 # 현재까지의 최고 점수와 비교
                 if score is not None and (best_score is None or score > best_score):

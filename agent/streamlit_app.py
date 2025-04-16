@@ -305,10 +305,15 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
         progress_bar = st.progress(0)
         status_text = st.empty()
         
-        def progress_callback(iteration, test_case):
-            progress = (iteration - 1 + test_case / len(test_cases)) / iterations
+        def progress_callback(iteration, test_case_index):
+            # 현재 iteration의 진행도 (0부터 시작)
+            iteration_progress = (iteration - 1) / iterations
+            # 현재 test case의 진행도 (0부터 시작)
+            test_case_progress = test_case_index / num_samples
+            # 전체 진행도 계산
+            progress = iteration_progress + (test_case_progress / iterations)
             progress_bar.progress(progress)
-            status_text.text(f"Iteration {iteration}/{iterations}, Test Case {test_case}/{len(test_cases)}")
+            status_text.text(f"Iteration {iteration}/{iterations}, Test Case {test_case_index}/{num_samples}")
         
         tuner.progress_callback = progress_callback
         
@@ -402,7 +407,7 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
             results = tuner.tune_prompt(
                 initial_system_prompt=system_prompt,
                 initial_user_prompt=user_prompt,
-                test_cases=test_cases,
+                initial_test_cases=test_cases,
                 num_iterations=iterations,
                 score_threshold=score_threshold if use_threshold else None,
                 evaluation_score_threshold=evaluation_threshold,
@@ -414,7 +419,7 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
             st.success("프롬프트 튜닝 완료!")
             
             # 전체 결과에서 가장 높은 평균 점수를 가진 프롬프트 찾기
-            best_result = max(results, key=lambda x: x['avg_score'])
+            best_result = max(results, key=lambda progress_callbackx: x['avg_score'])
             st.write("Final Best Prompt:")
             col1, col2 = st.columns(2)
             with col1:
