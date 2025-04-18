@@ -25,19 +25,19 @@ class Model:
         "solar": {
             "name": "Solar",
             "description": "Upstage의 Solar 모델",
-            "version": "solar-pro",
+            "default_version": "solar-pro",
             "base_url": "https://api.upstage.ai/v1"
         },
         "gpt4o": {
             "name": "GPT-4",
             "description": "OpenAI의 GPT-4 모델",
-            "version": "gpt-4o",
+            "default_version": "gpt-4o",
             "base_url": None
         },
         "claude": {
             "name": "Claude",
             "description": "Anthropic의 Claude 3.5 Sonnet",
-            "version": "claude-3-5-sonnet-20240620",
+            "default_version": "claude-3-5-sonnet-20240620",
             "base_url": None
         }
     }
@@ -50,12 +50,12 @@ class Model:
     def get_all_model_info(cls):
         return cls.model_info
 
-    def __init__(self, model_name, system_prompt=None, user_prompt=None):
+    def __init__(self, model_name, system_prompt=None, user_prompt=None, version=None):
         if model_name not in self.model_info:
             raise ValueError(f"Model {model_name} not found. Available models: {list(self.model_info.keys())}")
         
         self.name = model_name
-        self.model_id = self.model_info[model_name]["version"]
+        self.model_id = version or self.model_info[model_name]["default_version"]
         self.system_prompt = system_prompt
         self.user_prompt = user_prompt
         
@@ -71,6 +71,11 @@ class Model:
             self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         
         self.handler = self._create_handler()
+
+    def set_version(self, version: str):
+        """모델 버전을 설정합니다."""
+        self.model_id = version
+        return self
 
     def _create_handler(self):
         def handler(question, system_prompt=None, user_prompt=None):

@@ -9,7 +9,7 @@ class PromptTuner:
     A class for automatically fine-tuning system prompts for LLMs.
     """
     
-    def __init__(self, model_name: str = "solar", evaluator_model_name: str = "solar", meta_prompt_model_name: str = "solar"):
+    def __init__(self, model_name: str = "solar", evaluator_model_name: str = "solar", meta_prompt_model_name: str = "solar", model_version: str = None, evaluator_model_version: str = None, meta_prompt_model_version: str = None):
         """
         Initialize the PromptTuner with specific models.
         
@@ -17,10 +17,13 @@ class PromptTuner:
             model_name (str): The name of the model to use for tuning (default: "solar")
             evaluator_model_name (str): The name of the model to use for evaluation (default: "solar")
             meta_prompt_model_name (str): The name of the model to use for meta prompt generation (default: "solar")
+            model_version (str): The version of the model to use for tuning (default: None)
+            evaluator_model_version (str): The version of the model to use for evaluation (default: None)
+            meta_prompt_model_version (str): The version of the model to use for meta prompt generation (default: None)
         """
-        self.model = Model(model_name)
-        self.evaluator = Model(evaluator_model_name)
-        self.meta_prompt_model = Model(meta_prompt_model_name)
+        self.model = Model(model_name, version=model_version)
+        self.evaluator = Model(evaluator_model_name, version=evaluator_model_version)
+        self.meta_prompt_model = Model(meta_prompt_model_name, version=meta_prompt_model_version)
         self.evaluation_history: List[Dict] = []
         self.best_prompt: Optional[str] = None
         self.best_score: float = 0.0

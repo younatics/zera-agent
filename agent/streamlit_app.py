@@ -92,28 +92,76 @@ with st.sidebar:
     model_name = st.selectbox(
         "모델 선택",
         options=list(MODEL_INFO.keys()),
-        format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['version']})",
+        format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
         help="프롬프트 튜닝에 사용할 모델을 선택하세요."
     )
     st.caption(MODEL_INFO[model_name]['description'])
+    
+    # 튜닝 모델 버전 선택
+    use_custom_tuning_version = st.toggle(
+        "튜닝 모델 커스텀 버전 사용",
+        value=False,
+        help="튜닝 모델의 기본 버전 대신 커스텀 버전을 사용합니다."
+    )
+    
+    if use_custom_tuning_version:
+        tuning_model_version = st.text_input(
+            "튜닝 모델 버전",
+            value=MODEL_INFO[model_name]['default_version'],
+            help="튜닝에 사용할 모델 버전을 입력하세요."
+        )
+    else:
+        tuning_model_version = MODEL_INFO[model_name]['default_version']
     
     # 메타 프롬프트 모델 선택
     meta_prompt_model = st.selectbox(
         "메타 프롬프트 모델 선택",
         options=list(MODEL_INFO.keys()),
-        format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['version']})",
+        format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
         help="메타 프롬프트 생성에 사용할 모델을 선택하세요."
     )
     st.caption(MODEL_INFO[meta_prompt_model]['description'])
+    
+    # 메타 프롬프트 모델 버전 선택
+    use_custom_meta_version = st.toggle(
+        "메타 프롬프트 모델 커스텀 버전 사용",
+        value=False,
+        help="메타 프롬프트 모델의 기본 버전 대신 커스텀 버전을 사용합니다."
+    )
+    
+    if use_custom_meta_version:
+        meta_model_version = st.text_input(
+            "메타 프롬프트 모델 버전",
+            value=MODEL_INFO[meta_prompt_model]['default_version'],
+            help="메타 프롬프트 생성에 사용할 모델 버전을 입력하세요."
+        )
+    else:
+        meta_model_version = MODEL_INFO[meta_prompt_model]['default_version']
 
     # 평가 모델 선택
     evaluator_model = st.selectbox(
         "평가 모델 선택",
         options=list(MODEL_INFO.keys()),
-        format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['version']})",
+        format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
         help="응답 평가에 사용할 모델을 선택하세요."
     )
     st.caption(MODEL_INFO[evaluator_model]['description'])
+    
+    # 평가 모델 버전 선택
+    use_custom_evaluator_version = st.toggle(
+        "평가 모델 커스텀 버전 사용",
+        value=False,
+        help="평가 모델의 기본 버전 대신 커스텀 버전을 사용합니다."
+    )
+    
+    if use_custom_evaluator_version:
+        evaluator_model_version = st.text_input(
+            "평가 모델 버전",
+            value=MODEL_INFO[evaluator_model]['default_version'],
+            help="평가에 사용할 모델 버전을 입력하세요."
+        )
+    else:
+        evaluator_model_version = MODEL_INFO[evaluator_model]['default_version']
 
 # 프롬프트 설정
 with st.expander("초기 프롬프트 설정", expanded=False):
@@ -308,7 +356,10 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
         tuner = PromptTuner(
             model_name=model_name,
             evaluator_model_name=evaluator_model,
-            meta_prompt_model_name=meta_prompt_model
+            meta_prompt_model_name=meta_prompt_model,
+            model_version=tuning_model_version,
+            evaluator_model_version=evaluator_model_version,
+            meta_prompt_model_version=meta_model_version
         )
         tuner.set_evaluation_prompt(evaluation_prompt)
         
