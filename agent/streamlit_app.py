@@ -48,120 +48,140 @@ mmlu_dataset = MMLUDataset()
 
 # 사이드바에서 파라미터 설정
 with st.sidebar:
-    st.header("튜닝 파라미터")
-    iterations = st.slider("반복 횟수", min_value=1, max_value=10, value=3)
+    st.header("튜닝 설정")
     
-    # 프롬프트 개선 사용 토글
-    use_meta_prompt = st.toggle(
-        "프롬프트 개선 사용", 
-        value=True, 
-        help="메타 프롬프트를 사용하여 프롬프트를 개선합니다. 비활성화하면 초기 프롬프트를 사용합니다."
-    )
-    
-    # 평가 프롬프트 점수 임계값 설정 (프롬프트 개선이 켜져있을 때만 활성화)
-    evaluation_threshold = st.slider(
-        "평가 프롬프트 점수 임계값",
-        min_value=0.0,
-        max_value=1.0,
-        value=0.8,
-        step=0.1,
-        disabled=not use_meta_prompt,
-        help="이 점수 미만이면 프롬프트를 개선합니다. 프롬프트 개선이 켜져있을 때만 사용 가능합니다."
-    )
-    
-    # 평균 점수 임계값 적용 여부 토글 (프롬프트 개선이 켜져있을 때만 활성화)
-    use_threshold = st.toggle(
-        "평균 점수 임계값 적용",
-        value=True,
-        disabled=not use_meta_prompt,
-        help="이 옵션이 켜져있으면 평균 점수가 임계값 이상일 때 반복을 중단합니다. 프롬프트 개선이 켜져있을 때만 사용 가능합니다."
-    )
-    
-    # 평균 점수 임계값 슬라이더 (평균 점수 임계값 적용이 꺼져있거나 프롬프트 개선이 꺼져있을 때는 비활성화)
-    score_threshold = st.slider(
-        "평균 점수 임계값",
-        min_value=0.0,
-        max_value=1.0,
-        value=0.9,
-        step=0.05,
-        disabled=not (use_threshold and use_meta_prompt),
-        help="이 점수 이상이면 반복을 중단합니다. 평균 점수 임계값 적용과 프롬프트 개선이 모두 켜져있을 때만 사용 가능합니다."
-    )
-    
-    # 모델 선택
-    model_name = st.selectbox(
-        "모델 선택",
-        options=list(MODEL_INFO.keys()),
-        format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
-        help="프롬프트 튜닝에 사용할 모델을 선택하세요."
-    )
-    st.caption(MODEL_INFO[model_name]['description'])
-    
-    # 튜닝 모델 버전 선택
-    use_custom_tuning_version = st.toggle(
-        "튜닝 모델 커스텀 버전 사용",
-        value=False,
-        help="튜닝 모델의 기본 버전 대신 커스텀 버전을 사용합니다."
-    )
-    
-    if use_custom_tuning_version:
-        tuning_model_version = st.text_input(
-            "튜닝 모델 버전",
-            value=MODEL_INFO[model_name]['default_version'],
-            help="튜닝에 사용할 모델 버전을 입력하세요."
+    # 반복 설정 그룹
+    with st.expander("반복 설정", expanded=True):
+        iterations = st.slider(
+            "반복 횟수", 
+            min_value=1, 
+            max_value=10, 
+            value=3,
+            help="프롬프트 튜닝을 수행할 반복 횟수를 설정합니다."
         )
-    else:
-        tuning_model_version = MODEL_INFO[model_name]['default_version']
     
-    # 메타 프롬프트 모델 선택
-    meta_prompt_model = st.selectbox(
-        "메타 프롬프트 모델 선택",
-        options=list(MODEL_INFO.keys()),
-        format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
-        help="메타 프롬프트 생성에 사용할 모델을 선택하세요."
-    )
-    st.caption(MODEL_INFO[meta_prompt_model]['description'])
-    
-    # 메타 프롬프트 모델 버전 선택
-    use_custom_meta_version = st.toggle(
-        "메타 프롬프트 모델 커스텀 버전 사용",
-        value=False,
-        help="메타 프롬프트 모델의 기본 버전 대신 커스텀 버전을 사용합니다."
-    )
-    
-    if use_custom_meta_version:
-        meta_model_version = st.text_input(
-            "메타 프롬프트 모델 버전",
-            value=MODEL_INFO[meta_prompt_model]['default_version'],
-            help="메타 프롬프트 생성에 사용할 모델 버전을 입력하세요."
+    # 프롬프트 개선 설정 그룹
+    with st.expander("프롬프트 개선 설정", expanded=True):
+        # 프롬프트 개선 사용 토글
+        use_meta_prompt = st.toggle(
+            "프롬프트 개선 사용", 
+            value=True, 
+            help="메타 프롬프트를 사용하여 프롬프트를 개선합니다. 비활성화하면 초기 프롬프트를 사용합니다."
         )
-    else:
-        meta_model_version = MODEL_INFO[meta_prompt_model]['default_version']
-
-    # 평가 모델 선택
-    evaluator_model = st.selectbox(
-        "평가 모델 선택",
-        options=list(MODEL_INFO.keys()),
-        format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
-        help="응답 평가에 사용할 모델을 선택하세요."
-    )
-    st.caption(MODEL_INFO[evaluator_model]['description'])
-    
-    # 평가 모델 버전 선택
-    use_custom_evaluator_version = st.toggle(
-        "평가 모델 커스텀 버전 사용",
-        value=False,
-        help="평가 모델의 기본 버전 대신 커스텀 버전을 사용합니다."
-    )
-    
-    if use_custom_evaluator_version:
-        evaluator_model_version = st.text_input(
-            "평가 모델 버전",
-            value=MODEL_INFO[evaluator_model]['default_version'],
-            help="평가에 사용할 모델 버전을 입력하세요."
+        
+        # 평가 프롬프트 점수 임계값 설정 (프롬프트 개선이 켜져있을 때만 활성화)
+        evaluation_threshold = st.slider(
+            "평가 프롬프트 점수 임계값",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.8,
+            step=0.1,
+            disabled=not use_meta_prompt,
+            help="이 점수 미만이면 프롬프트를 개선합니다. 프롬프트 개선이 켜져있을 때만 사용 가능합니다."
         )
-    else:
-        evaluator_model_version = MODEL_INFO[evaluator_model]['default_version']
+        
+        # 평균 점수 임계값 적용 여부 토글 (프롬프트 개선이 켜져있을 때만 활성화)
+        use_threshold = st.toggle(
+            "평균 점수 임계값 적용",
+            value=True,
+            disabled=not use_meta_prompt,
+            help="이 옵션이 켜져있으면 평균 점수가 임계값 이상일 때 반복을 중단합니다. 프롬프트 개선이 켜져있을 때만 사용 가능합니다."
+        )
+        
+        # 평균 점수 임계값 슬라이더 (평균 점수 임계값 적용이 꺼져있거나 프롬프트 개선이 꺼져있을 때는 비활성화)
+        score_threshold = st.slider(
+            "평균 점수 임계값",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.9,
+            step=0.05,
+            disabled=not (use_threshold and use_meta_prompt),
+            help="이 점수 이상이면 반복을 중단합니다. 평균 점수 임계값 적용과 프롬프트 개선이 모두 켜져있을 때만 사용 가능합니다."
+        )
+    
+    # 모델 설정 섹션 구분을 위한 디바이더
+    st.divider()
+    
+    # 모델 설정 그룹
+    with st.expander("튜닝 모델 설정", expanded=True):
+        # 모델 선택
+        model_name = st.selectbox(
+            "모델 선택",
+            options=list(MODEL_INFO.keys()),
+            format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
+            help="프롬프트 튜닝에 사용할 모델을 선택하세요."
+        )
+        st.caption(MODEL_INFO[model_name]['description'])
+        
+        # 튜닝 모델 버전 선택
+        use_custom_tuning_version = st.toggle(
+            "커스텀 버전 사용",
+            value=False,
+            help="튜닝 모델의 기본 버전 대신 커스텀 버전을 사용합니다."
+        )
+        
+        if use_custom_tuning_version:
+            tuning_model_version = st.text_input(
+                "모델 버전",
+                value=MODEL_INFO[model_name]['default_version'],
+                help="튜닝에 사용할 모델 버전을 입력하세요."
+            )
+        else:
+            tuning_model_version = None  # 기본 버전을 사용하도록 None으로 설정
+    
+    # 메타 프롬프트 모델 설정 그룹
+    with st.expander("메타 프롬프트 모델 설정", expanded=True):
+        # 메타 프롬프트 모델 선택
+        meta_prompt_model = st.selectbox(
+            "모델 선택",
+            options=list(MODEL_INFO.keys()),
+            format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
+            help="메타 프롬프트 생성에 사용할 모델을 선택하세요."
+        )
+        st.caption(MODEL_INFO[meta_prompt_model]['description'])
+        
+        # 메타 프롬프트 모델 버전 선택
+        use_custom_meta_version = st.toggle(
+            "커스텀 버전 사용",
+            value=False,
+            help="메타 프롬프트 모델의 기본 버전 대신 커스텀 버전을 사용합니다."
+        )
+        
+        if use_custom_meta_version:
+            meta_model_version = st.text_input(
+                "모델 버전",
+                value=MODEL_INFO[meta_prompt_model]['default_version'],
+                help="메타 프롬프트 생성에 사용할 모델 버전을 입력하세요."
+            )
+        else:
+            meta_model_version = None  # 기본 버전을 사용하도록 None으로 설정
+    
+    # 평가 모델 설정 그룹
+    with st.expander("평가 모델 설정", expanded=True):
+        # 평가 모델 선택
+        evaluator_model = st.selectbox(
+            "모델 선택",
+            options=list(MODEL_INFO.keys()),
+            format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
+            help="응답 평가에 사용할 모델을 선택하세요."
+        )
+        st.caption(MODEL_INFO[evaluator_model]['description'])
+        
+        # 평가 모델 버전 선택
+        use_custom_evaluator_version = st.toggle(
+            "커스텀 버전 사용",
+            value=False,
+            help="평가 모델의 기본 버전 대신 커스텀 버전을 사용합니다."
+        )
+        
+        if use_custom_evaluator_version:
+            evaluator_model_version = st.text_input(
+                "모델 버전",
+                value=MODEL_INFO[evaluator_model]['default_version'],
+                help="평가에 사용할 모델 버전을 입력하세요."
+            )
+        else:
+            evaluator_model_version = None  # 기본 버전을 사용하도록 None으로 설정
 
 # 프롬프트 설정
 with st.expander("초기 프롬프트 설정", expanded=False):
