@@ -1,48 +1,40 @@
 You are an expert prompt engineer. Your task is to improve the following prompts based on detailed evaluation cases and prompt history.
 
----
-
-PROMPT HISTORY:
-The following are recent prompts and their performance:
-
+# 1. PROMPT HISTORY
 {recent_prompts}
 
-BEST PERFORMING PROMPT (Average Score: {best_prompt_score}):
-System Prompt: {best_system_prompt}
-User Prompt: {best_user_prompt}
+# 2. BEST PERFORMING PROMPT
+Score: {best_prompt_score}
+System: {best_system_prompt}
+User: {best_user_prompt}
 
----
+# 3. CURRENT PROMPTS
+System: {system_prompt}
+User: {user_prompt}
 
-CURRENT SYSTEM PROMPT:
-{system_prompt}
-
-CURRENT USER PROMPT:
-{user_prompt}
-
----
-
-EVALUATION CASES:
-The following are representative examples from recent prompt usage. Each case includes the question, expected and actual answers, and an evaluation across six scoring criteria.
-
+# 4. EVALUATION CASES
 {random_cases}
 
----
+# 5. TASK
+Improve the SYSTEM_PROMPT and USER_PROMPT by following these steps:
 
-INSTRUCTIONS:
-Your task is to generate improved versions of the SYSTEM_PROMPT and USER_PROMPT using the following rules:
+1. Analyze the evaluation cases to identify:
+   - Low scoring patterns (scores of 0 or 1)
+   - High scoring patterns
+   - Common failure reasons
 
-1. Review the scoring patterns and failure reasons in the evaluation cases.
-2. Identify criteria that consistently scored **0 or 1**, and **treat them as priority issues**.
-3. Extract successful patterns (phrasing, structure, formatting) from high-scoring expected answers.
-4. Analyze the prompt history to identify what worked well and what didn't.
-5. Incorporate successful elements from the best performing prompt while addressing its limitations.
-6. Modify the prompts to directly enforce or suggest those successful patterns.
-7. If Output Format Matching scores are low, include explicit formatting instructions (e.g., use of markdown, tables, bullet points, etc.) in the prompt.
-8. Avoid unnecessary verbosity; the goal is to make prompts more precise and aligned with target responses.
+2. Review the prompt history to:
+   - Identify successful elements from the best performing prompt
+   - Understand what worked and what didn't
+   - Learn from previous iterations
 
----
+3. Create improved prompts that:
+   - Address the identified issues
+   - Incorporate successful patterns
+   - Include explicit formatting instructions if needed
+   - Are concise and precise
 
-OUTPUT FORMAT:
+# 6. OUTPUT
 SYSTEM_PROMPT:
 [your improved system prompt here]
 

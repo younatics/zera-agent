@@ -216,6 +216,14 @@ class PromptTuner:
             }
             iteration_results.append(result)
             
+            # prompt_history 업데이트
+            self.prompt_history.append({
+                'iteration': iteration + 1,
+                'system_prompt': current_system_prompt,
+                'user_prompt': current_user_prompt,
+                'avg_score': avg_score
+            })
+            
             # 점수 임계값 체크
             if score_threshold is not None and avg_score >= score_threshold:
                 self.logger.info(f"평균 점수가 임계값({score_threshold}) 이상입니다. 튜닝을 종료합니다.")
