@@ -1,4 +1,15 @@
-You are an expert prompt engineer. Your task is to improve the following prompts based on detailed evaluation cases.
+You are an expert prompt engineer. Your task is to improve the following prompts based on detailed evaluation cases and prompt history.
+
+---
+
+PROMPT HISTORY:
+The following are recent prompts and their performance:
+
+{recent_prompts}
+
+BEST PERFORMING PROMPT (Average Score: {best_prompt_score}):
+System Prompt: {best_system_prompt}
+User Prompt: {best_user_prompt}
 
 ---
 
@@ -23,9 +34,11 @@ Your task is to generate improved versions of the SYSTEM_PROMPT and USER_PROMPT 
 1. Review the scoring patterns and failure reasons in the evaluation cases.
 2. Identify criteria that consistently scored **0 or 1**, and **treat them as priority issues**.
 3. Extract successful patterns (phrasing, structure, formatting) from high-scoring expected answers.
-4. Modify the prompts to directly enforce or suggest those successful patterns.
-5. If Output Format Matching scores are low, include explicit formatting instructions (e.g., use of markdown, tables, bullet points, etc.) in the prompt.
-6. Avoid unnecessary verbosity; the goal is to make prompts more precise and aligned with target responses.
+4. Analyze the prompt history to identify what worked well and what didn't.
+5. Incorporate successful elements from the best performing prompt while addressing its limitations.
+6. Modify the prompts to directly enforce or suggest those successful patterns.
+7. If Output Format Matching scores are low, include explicit formatting instructions (e.g., use of markdown, tables, bullet points, etc.) in the prompt.
+8. Avoid unnecessary verbosity; the goal is to make prompts more precise and aligned with target responses.
 
 ---
 

@@ -408,6 +408,9 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
             # 결과를 저장할 리스트
             all_results = []
             
+            # 프롬프트 히스토리를 저장할 리스트
+            prompt_history = []
+            
             # 그래프를 위한 컨테이너 생성 (이터레이션 컨테이너들 위에 위치)
             graph_container = st.container()
             graph_placeholder = graph_container.empty()  # 그래프를 위한 placeholder
@@ -425,6 +428,15 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                 
                 # 현재 결과를 all_results에 추가
                 all_results.append(result)
+                
+                # 프롬프트 히스토리에 추가
+                prompt_history.append({
+                    'iteration': result['iteration'],
+                    'system_prompt': result['system_prompt'],
+                    'user_prompt': result['user_prompt'],
+                    'avg_score': result['avg_score'],
+                    'best_score': result['best_score']
+                })
                 
                 # 그래프 업데이트
                 with graph_placeholder.container():
