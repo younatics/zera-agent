@@ -540,9 +540,8 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                             st.code(result['user_prompt'])
                         
                         # 메타프롬프트 표시 (expander 사용)
-                        if 'meta_prompt' in result and result['meta_prompt']:
-                            with st.expander("Meta Prompt", expanded=False):
-                                st.code(result['meta_prompt'])
+                        with st.expander("Meta Prompt", expanded=False):
+                            st.code(result['meta_prompt'])
                         
                         st.divider()
             

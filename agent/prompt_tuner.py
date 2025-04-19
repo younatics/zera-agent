@@ -211,7 +211,8 @@ class PromptTuner:
                 'avg_score': avg_score,
                 'best_score': best_score,
                 'best_prompt': best_prompt,
-                'responses': iteration_responses
+                'responses': iteration_responses,
+                'meta_prompt': None  # 초기값 설정
             }
             iteration_results.append(result)
             
@@ -264,6 +265,10 @@ class PromptTuner:
                     best_system_prompt=self._get_best_prompt()['system_prompt'],
                     best_user_prompt=self._get_best_prompt()['user_prompt']
                 )
+                
+                # 결과에 메타프롬프트 추가
+                result['meta_prompt'] = improvement_prompt
+                
                 improved_prompts = self.meta_prompt_model.ask("", system_prompt=improvement_prompt)
                 if improved_prompts and improved_prompts.strip():
                     # 개선된 프롬프트에서 시스템 프롬프트와 유저 프롬프트 분리
@@ -284,6 +289,7 @@ class PromptTuner:
                     # 현재 프롬프트를 유지하고 계속 진행
             elif use_meta_prompt:
                 self.logger.info(f"평균 점수가 평가 임계값({evaluation_score_threshold}) 이상이므로 프롬프트를 개선하지 않습니다.")
+                result['meta_prompt'] = None  # 메타프롬프트가 없음을 명시
                 if self.progress_callback:
                     self.progress_callback(num_iterations, len(test_cases))
                 break
@@ -300,7 +306,7 @@ class PromptTuner:
         Returns:
             List[Dict]: 최근 프롬프트들의 리스트
         """
-        return self.evaluation_history[-num_prompts:] if len(self.evaluation_history) >= num_prompts else self.evaluation_history
+        return self.prompt_history[-num_prompts:] if len(self.prompt_history) >= num_prompts else self.prompt_history
 
     def _get_best_prompt(self) -> Dict:
         """
@@ -309,10 +315,10 @@ class PromptTuner:
         Returns:
             Dict: 최고 점수를 가진 프롬프트 정보
         """
-        if not self.evaluation_history:
+        if not self.prompt_history:
             return {
                 'avg_score': 0.0,
                 'system_prompt': self.initial_system_prompt,
                 'user_prompt': self.initial_user_prompt
             }
-        return max(self.evaluation_history, key=lambda x: x['score']) 
+        return max(self.prompt_history, key=lambda x: x['avg_score']) 
