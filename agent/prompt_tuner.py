@@ -216,10 +216,6 @@ class PromptTuner:
             }
             iteration_results.append(result)
             
-            # 콜백 호출
-            if self.iteration_callback:
-                self.iteration_callback(result)
-            
             # 점수 임계값 체크
             if score_threshold is not None and avg_score >= score_threshold:
                 self.logger.info(f"평균 점수가 임계값({score_threshold}) 이상입니다. 튜닝을 종료합니다.")
@@ -289,11 +285,14 @@ class PromptTuner:
                     # 현재 프롬프트를 유지하고 계속 진행
             elif use_meta_prompt:
                 self.logger.info(f"평균 점수가 평가 임계값({evaluation_score_threshold}) 이상이므로 프롬프트를 개선하지 않습니다.")
-                result['meta_prompt'] = None  # 메타프롬프트가 없음을 명시
                 if self.progress_callback:
                     self.progress_callback(num_iterations, len(test_cases))
                 break
         
+                    # 콜백 호출 (메타프롬프트 설정 이후)
+            if self.iteration_callback:
+                self.iteration_callback(result)
+
         return iteration_results 
 
     def _get_recent_prompts(self, num_prompts: int = 3) -> List[Dict]:
