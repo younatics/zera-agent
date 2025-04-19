@@ -55,7 +55,7 @@ with st.sidebar:
         iterations = st.slider(
             "반복 횟수", 
             min_value=1, 
-            max_value=10, 
+            max_value=20, 
             value=3,
             help="프롬프트 튜닝을 수행할 반복 횟수를 설정합니다."
         )
@@ -557,4 +557,17 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
             with col2:
                 st.write("User Prompt:")
                 st.code(best_result['user_prompt'])
-            st.write(f"최종 결과: 평균 점수 {best_result['avg_score']:.2f}, 최고 점수 {best_result['best_score']:.2f}") 
+            st.write(f"최종 결과: 평균 점수 {best_result['avg_score']:.2f}, 최고 점수 {best_result['best_score']:.2f}")
+            
+            # CSV 출력 기능
+            df = pd.DataFrame(all_results)
+            df = df[['iteration', 'avg_score', 'best_score', 'system_prompt', 'user_prompt']]
+            df.columns = ['Iteration', 'Average Score', 'Best Score', 'System Prompt', 'User Prompt']
+            csv = df.to_csv(index=False)
+            
+            st.download_button(
+                label="결과를 CSV로 저장",
+                data=csv,
+                file_name="prompt_tuning_results.csv",
+                mime="text/csv"
+            ) 
