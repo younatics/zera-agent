@@ -11,7 +11,7 @@ Evaluation Results:
 {random_cases}
 
 Please improve both prompts to:
-Analyze the patterns and variations shown in the random cases, with special attention to the desired response patterns and formats. Focus on identifying and replicating successful response structures that lead to better outcomes.
+Analyze the patterns and variations shown in the random cases, with special attention to the desired expected response patterns and formats. Focus on identifying and replicating successful response structures that lead to better outcomes.
 
 Provide the improved prompts in the following format:
 SYSTEM_PROMPT:

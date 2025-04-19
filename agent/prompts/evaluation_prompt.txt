@@ -15,9 +15,24 @@ Please evaluate based on the following criteria:
 3. Information Accuracy (not containing incorrect information)
 4. Response Completeness (including all necessary information to answer the question)
 5. Question Relevance (how directly and appropriately the response answers the specific question)
+6. Output Format Matching (how well the response follows the expected output format and structure, including:
+   - Consistent formatting (e.g., bullet points, numbered lists, tables)
+   - Proper section organization
+   - Appropriate use of markdown or other formatting elements
+   - Clear visual hierarchy
+   - Consistent style throughout the response)
+
+Scoring Guidelines:
+- For each criterion, score from 0 to 2 points:
+  - 0: Does not meet the criterion
+  - 1: Partially meets the criterion
+  - 2: Fully meets the criterion
+- For Output Format Matching, additional bonus points (0-1) can be awarded for exceptional formatting that enhances readability and clarity
+- The total raw score will be the sum of all criteria scores plus any bonus points
+- The final score will be automatically normalized to a 0-1 scale by dividing the total raw score by the maximum possible score (13 points: 6 criteria × 2 points + 1 bonus point)
 
 Please output the evaluation result in the following format:
-1. First line: a score between 0.0 and 1.0
+1. First line: a score between 0.0 and 1.0 (automatically normalized)
 2. Second line onwards: detailed explanation of the evaluation
 
 Example:
