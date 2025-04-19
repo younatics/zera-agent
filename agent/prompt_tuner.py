@@ -25,7 +25,6 @@ class PromptTuner:
         self.evaluator = Model(evaluator_model_name, version=evaluator_model_version)
         self.meta_prompt_model = Model(meta_prompt_model_name, version=meta_prompt_model_version)
         self.evaluation_history: List[Dict] = []
-        self.prompt_history: List[Dict] = []  # 프롬프트 히스토리 추가
         self.best_prompt: Optional[str] = None
         self.best_score: float = 0.0
         self.progress_callback = None
@@ -111,29 +110,6 @@ class PromptTuner:
             # 숫자로 변환할 수 없는 경우 제외
             return None, "점수 추출 실패, (평가 제외)"
     
-    def _get_recent_prompts(self, num_prompts: int = 3) -> List[Dict]:
-        """
-        최근 num_prompts개의 프롬프트를 반환합니다.
-        
-        Args:
-            num_prompts (int): 반환할 프롬프트의 개수 (default: 3)
-            
-        Returns:
-            List[Dict]: 최근 프롬프트들의 리스트
-        """
-        return self.prompt_history[-num_prompts:] if len(self.prompt_history) >= num_prompts else self.prompt_history
-
-    def _get_best_prompt(self) -> Dict:
-        """
-        현재까지의 최고 점수를 가진 프롬프트를 반환합니다.
-        
-        Returns:
-            Dict: 최고 점수를 가진 프롬프트 정보
-        """
-        if not self.prompt_history:
-            return None
-        return max(self.prompt_history, key=lambda x: x['avg_score'])
-
     def tune_prompt(self, initial_system_prompt: str, initial_user_prompt: str, initial_test_cases: List[Dict], num_iterations: int = 3, score_threshold: Optional[float] = None, evaluation_score_threshold: float = 0.8, use_meta_prompt: bool = True, num_samples: Optional[int] = None) -> List[Dict]:
         """
         Tune a system prompt using a set of test cases.
@@ -163,15 +139,6 @@ class PromptTuner:
         best_prompt = initial_system_prompt
         best_score = 0.0
         iteration_results = []
-        
-        # 초기 프롬프트를 히스토리에 추가
-        self.prompt_history.append({
-            'iteration': 0,
-            'system_prompt': current_system_prompt,
-            'user_prompt': current_user_prompt,
-            'avg_score': 0.0,
-            'best_score': 0.0
-        })
         
         for iteration in range(num_iterations):
             self.logger.info(f"\nIteration {iteration + 1}/{num_iterations}")
@@ -247,15 +214,6 @@ class PromptTuner:
             }
             iteration_results.append(result)
             
-            # 프롬프트 히스토리에 추가
-            self.prompt_history.append({
-                'iteration': iteration + 1,
-                'system_prompt': current_system_prompt,
-                'user_prompt': current_user_prompt,
-                'avg_score': avg_score,
-                'best_score': best_score
-            })
-            
             # 콜백 호출
             if self.iteration_callback:
                 self.iteration_callback(result)
@@ -294,16 +252,7 @@ class PromptTuner:
                 improvement_prompt = self.meta_prompt_template.format(
                     system_prompt=current_system_prompt,
                     user_prompt=current_user_prompt,
-                    random_cases=formatted_cases,
-                    recent_prompts=chr(10).join([
-                        f"Iteration {p['iteration']} (Average Score: {p['avg_score']:.2f}):{chr(10)}"
-                        f"System Prompt: {p['system_prompt']}{chr(10)}"
-                        f"User Prompt: {p['user_prompt']}"
-                        for p in self._get_recent_prompts()
-                    ]),
-                    best_prompt_score=self._get_best_prompt()['avg_score'],
-                    best_system_prompt=self._get_best_prompt()['system_prompt'],
-                    best_user_prompt=self._get_best_prompt()['user_prompt']
+                    random_cases=formatted_cases
                 )
                 improved_prompts = self.meta_prompt_model.ask("", system_prompt=improvement_prompt)
                 if improved_prompts and improved_prompts.strip():

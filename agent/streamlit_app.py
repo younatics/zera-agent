@@ -539,6 +539,11 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                             st.write("User Prompt:")
                             st.code(result['user_prompt'])
                         
+                        # 메타프롬프트 표시 (expander 사용)
+                        if 'meta_prompt' in result and result['meta_prompt']:
+                            with st.expander("Meta Prompt", expanded=False):
+                                st.code(result['meta_prompt'])
+                        
                         st.divider()
             
             # iteration_callback을 설정
@@ -559,27 +564,30 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
             # 최종 결과
             st.success("프롬프트 튜닝 완료!")
             
-            # 전체 결과에서 가장 높은 평균 점수를 가진 프롬프트 찾기
-            best_result = max(all_results, key=lambda x: x['avg_score'])
-            st.write("Final Best Prompt:")
-            col1, col2 = st.columns(2)
-            with col1:
-                st.write("System Prompt:")
-                st.code(best_result['system_prompt'])
-            with col2:
-                st.write("User Prompt:")
-                st.code(best_result['user_prompt'])
-            st.write(f"최종 결과: 평균 점수 {best_result['avg_score']:.2f}, 최고 점수 {best_result['best_score']:.2f}")
-            
-            # CSV 출력 기능
-            df = pd.DataFrame(all_results)
-            df = df[['iteration', 'avg_score', 'best_score', 'system_prompt', 'user_prompt']]
-            df.columns = ['Iteration', 'Average Score', 'Best Score', 'System Prompt', 'User Prompt']
-            csv = df.to_csv(index=False)
-            
-            st.download_button(
-                label="결과를 CSV로 저장",
-                data=csv,
-                file_name="prompt_tuning_results.csv",
-                mime="text/csv"
-            ) 
+            if results:  # 결과가 있을 때만 처리
+                # 전체 결과에서 가장 높은 평균 점수를 가진 프롬프트 찾기
+                best_result = max(results, key=lambda x: x['avg_score'])
+                st.write("Final Best Prompt:")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.write("System Prompt:")
+                    st.code(best_result['system_prompt'])
+                with col2:
+                    st.write("User Prompt:")
+                    st.code(best_result['user_prompt'])
+                st.write(f"최종 결과: 평균 점수 {best_result['avg_score']:.2f}, 최고 점수 {best_result['best_score']:.2f}")
+                
+                # CSV 출력 기능
+                df = pd.DataFrame(results)
+                df = df[['iteration', 'avg_score', 'best_score', 'system_prompt', 'user_prompt', 'meta_prompt']]
+                df.columns = ['Iteration', 'Average Score', 'Best Score', 'System Prompt', 'User Prompt', 'Meta Prompt']
+                csv = df.to_csv(index=False)
+                
+                st.download_button(
+                    label="결과를 CSV로 저장",
+                    data=csv,
+                    file_name="prompt_tuning_results.csv",
+                    mime="text/csv"
+                )
+            else:
+                st.warning("튜닝 결과가 없습니다.") 
