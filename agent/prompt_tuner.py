@@ -221,6 +221,10 @@ class PromptTuner:
                 self.logger.info(f"평균 점수가 임계값({score_threshold}) 이상입니다. 튜닝을 종료합니다.")
                 if self.progress_callback:
                     self.progress_callback(num_iterations, len(test_cases))
+
+                if self.iteration_callback:
+                    self.iteration_callback(result)
+
                 break
             
             # 프롬프트 개선 (평균 점수가 평가 임계값 미만인 경우)
@@ -287,6 +291,10 @@ class PromptTuner:
                 self.logger.info(f"평균 점수가 평가 임계값({evaluation_score_threshold}) 이상이므로 프롬프트를 개선하지 않습니다.")
                 if self.progress_callback:
                     self.progress_callback(num_iterations, len(test_cases))
+
+                if self.iteration_callback:
+                    self.iteration_callback(result)
+
                 break
         
                     # 콜백 호출 (메타프롬프트 설정 이후)
