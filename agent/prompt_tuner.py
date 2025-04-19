@@ -25,6 +25,7 @@ class PromptTuner:
         self.evaluator = Model(evaluator_model_name, version=evaluator_model_version)
         self.meta_prompt_model = Model(meta_prompt_model_name, version=meta_prompt_model_version)
         self.evaluation_history: List[Dict] = []
+        self.prompt_history: List[Dict] = []
         self.best_prompt: Optional[str] = None
         self.best_score: float = 0.0
         self.progress_callback = None
@@ -252,7 +253,16 @@ class PromptTuner:
                 improvement_prompt = self.meta_prompt_template.format(
                     system_prompt=current_system_prompt,
                     user_prompt=current_user_prompt,
-                    random_cases=formatted_cases
+                    random_cases=formatted_cases,
+                    recent_prompts=chr(10).join([
+                        f"Iteration {p['iteration']} (Average Score: {p['avg_score']:.2f}):{chr(10)}"
+                        f"System Prompt: {p['system_prompt']}{chr(10)}"
+                        f"User Prompt: {p['user_prompt']}"
+                        for p in self._get_recent_prompts()[:-1]  # 현재 프롬프트를 제외한 최근 3개
+                    ]),
+                    best_prompt_score=self._get_best_prompt()['avg_score'],
+                    best_system_prompt=self._get_best_prompt()['system_prompt'],
+                    best_user_prompt=self._get_best_prompt()['user_prompt']
                 )
                 improved_prompts = self.meta_prompt_model.ask("", system_prompt=improvement_prompt)
                 if improved_prompts and improved_prompts.strip():
@@ -279,3 +289,30 @@ class PromptTuner:
                 break
         
         return iteration_results 
+
+    def _get_recent_prompts(self, num_prompts: int = 3) -> List[Dict]:
+        """
+        최근 num_prompts개의 프롬프트를 반환합니다.
+        
+        Args:
+            num_prompts (int): 반환할 프롬프트의 개수 (default: 3)
+            
+        Returns:
+            List[Dict]: 최근 프롬프트들의 리스트
+        """
+        return self.evaluation_history[-num_prompts:] if len(self.evaluation_history) >= num_prompts else self.evaluation_history
+
+    def _get_best_prompt(self) -> Dict:
+        """
+        현재까지의 최고 점수를 가진 프롬프트를 반환합니다.
+        
+        Returns:
+            Dict: 최고 점수를 가진 프롬프트 정보
+        """
+        if not self.evaluation_history:
+            return {
+                'avg_score': 0.0,
+                'system_prompt': self.initial_system_prompt,
+                'user_prompt': self.initial_user_prompt
+            }
+        return max(self.evaluation_history, key=lambda x: x['score']) 
