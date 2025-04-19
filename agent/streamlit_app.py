@@ -408,83 +408,126 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
             # 결과를 저장할 리스트
             all_results = []
             
+            # 그래프를 위한 컨테이너 생성 (이터레이션 컨테이너들 위에 위치)
+            graph_container = st.container()
+            graph_placeholder = graph_container.empty()  # 그래프를 위한 placeholder
+            
             # 각 이터레이션마다 결과를 보여주기 위한 컨테이너
             iteration_containers = []
             for i in range(iterations):
                 iteration_containers.append(st.container())
             
+            # 이터레이션 결과를 위한 컨테이너 생성
+            iteration_results_container = st.container()
+            
             def iteration_callback(result):
                 iteration_idx = result['iteration'] - 1
                 
-                with iteration_containers[iteration_idx]:
-                    st.subheader(f"Iteration {result['iteration']}")
-                    
-                    # 평균 점수와 최고 점수
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.metric("Average Score", f"{result['avg_score']:.2f}")
-                    with col2:
-                        st.metric("Best Score So Far", f"{result['best_score']:.2f}")
-                    
-                    # 평가 기록을 데이터프레임으로 변환
-                    history_df = pd.DataFrame(result['responses'])
-                    
-                    # 컬럼 순서 변경 및 필요한 컬럼만 선택
-                    history_df = history_df[['question', 'expected', 'actual', 'score', 'reason']]
-                    
-                    # 컬럼 이름 변경
-                    history_df.columns = ['Question', 'Expected Answer', 'Actual Answer', 'Score', 'Evaluation Reason']
-                    
-                    # 점수를 소수점 두자리까지만 표시
-                    history_df['Score'] = history_df['Score'].round(2)
-                    
-                    # 최고 점수를 가진 행 하이라이트
-                    def highlight_max_row(df):
-                        try:
-                            if df.empty:
-                                return pd.DataFrame('', index=df.index, columns=df.columns)
-                            max_score = df['Score'].max()
-                            is_max = df['Score'] == max_score
-                            
-                            # 현재 테마 확인
-                            is_dark = st.get_option("theme.base") == "dark"
-                            
-                            # 테마에 따른 색상 선택
-                            if not is_dark:
-                                # 라이트모드: 연한 파란색 배경, 진한 파란색 글자
-                                highlight_style = 'background-color: #E3F2FD; color: #0D47A1'
-                            else:
-                                # 다크모드: 어두운 청록색 배경, 밝은 청록색 글자
-                                highlight_style = 'background-color: #006064; color: #80DEEA'
-                            
-                            # 모든 열에 대해 동일한 스타일 적용
-                            styles = np.where(is_max, highlight_style, '')
-                            # 스타일을 2D 배열로 확장
-                            styles_2d = np.tile(styles.reshape(-1, 1), (1, len(df.columns)))
-                            return pd.DataFrame(styles_2d, index=df.index, columns=df.columns)
-                        except Exception as e:
-                            print(f"하이라이트 오류: {str(e)}")
-                            return pd.DataFrame('', index=df.index, columns=df.columns)
-                    
-                    # 테이블 표시
-                    st.dataframe(
-                        history_df.style.apply(highlight_max_row, axis=None),
-                        hide_index=True
-                    )
-                    
-                    # 현재 프롬프트 표시
-                    st.write("Current Prompts:")
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.write("System Prompt:")
-                        st.code(result['system_prompt'])
-                    with col2:
-                        st.write("User Prompt:")
-                        st.code(result['user_prompt'])
-                    
-                    st.divider()
-                
+                # 현재 결과를 all_results에 추가
                 all_results.append(result)
+                
+                # 그래프 업데이트
+                with graph_placeholder.container():
+                    fig = go.Figure()
+                    x_values = list(range(1, iteration_idx + 2))
+                    avg_scores = [r['avg_score'] for r in all_results]
+                    best_scores = [r['best_score'] for r in all_results]
+                    
+                    fig.add_trace(go.Scatter(
+                        x=x_values,
+                        y=avg_scores,
+                        name='평균 점수',
+                        mode='lines+markers'
+                    ))
+                    fig.add_trace(go.Scatter(
+                        x=x_values,
+                        y=best_scores,
+                        name='최고 점수',
+                        mode='lines+markers'
+                    ))
+                    fig.update_layout(
+                        title='점수 추이',
+                        xaxis_title='이터레이션',
+                        yaxis_title='점수',
+                        yaxis_range=[0, 1],
+                        xaxis=dict(
+                            tickmode='array',
+                            tickvals=x_values,
+                            ticktext=x_values
+                        ),
+                        height=300  # 그래프 높이를 300px로 설정
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                
+                # 이터레이션 결과 표시
+                with iteration_results_container:
+                    with iteration_containers[iteration_idx]:
+                        st.subheader(f"Iteration {result['iteration']}")
+                        
+                        # 평균 점수와 최고 점수
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.metric("Average Score", f"{result['avg_score']:.2f}")
+                        with col2:
+                            st.metric("Best Score So Far", f"{result['best_score']:.2f}")
+                        
+                        # 평가 기록을 데이터프레임으로 변환
+                        history_df = pd.DataFrame(result['responses'])
+                        
+                        # 컬럼 순서 변경 및 필요한 컬럼만 선택
+                        history_df = history_df[['question', 'expected', 'actual', 'score', 'reason']]
+                        
+                        # 컬럼 이름 변경
+                        history_df.columns = ['Question', 'Expected Answer', 'Actual Answer', 'Score', 'Evaluation Reason']
+                        
+                        # 점수를 소수점 두자리까지만 표시
+                        history_df['Score'] = history_df['Score'].round(2)
+                        
+                        # 최고 점수를 가진 행 하이라이트
+                        def highlight_max_row(df):
+                            try:
+                                if df.empty:
+                                    return pd.DataFrame('', index=df.index, columns=df.columns)
+                                max_score = df['Score'].max()
+                                is_max = df['Score'] == max_score
+                                
+                                # 현재 테마 확인
+                                is_dark = st.get_option("theme.base") == "dark"
+                                
+                                # 테마에 따른 색상 선택
+                                if not is_dark:
+                                    # 라이트모드: 연한 파란색 배경, 진한 파란색 글자
+                                    highlight_style = 'background-color: #E3F2FD; color: #0D47A1'
+                                else:
+                                    # 다크모드: 어두운 청록색 배경, 밝은 청록색 글자
+                                    highlight_style = 'background-color: #006064; color: #80DEEA'
+                                
+                                # 모든 열에 대해 동일한 스타일 적용
+                                styles = np.where(is_max, highlight_style, '')
+                                # 스타일을 2D 배열로 확장
+                                styles_2d = np.tile(styles.reshape(-1, 1), (1, len(df.columns)))
+                                return pd.DataFrame(styles_2d, index=df.index, columns=df.columns)
+                            except Exception as e:
+                                print(f"하이라이트 오류: {str(e)}")
+                                return pd.DataFrame('', index=df.index, columns=df.columns)
+                        
+                        # 테이블 표시
+                        st.dataframe(
+                            history_df.style.apply(highlight_max_row, axis=None),
+                            hide_index=True
+                        )
+                        
+                        # 현재 프롬프트 표시
+                        st.write("Current Prompts:")
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.write("System Prompt:")
+                            st.code(result['system_prompt'])
+                        with col2:
+                            st.write("User Prompt:")
+                            st.code(result['user_prompt'])
+                        
+                        st.divider()
             
             # iteration_callback을 설정
             tuner.iteration_callback = iteration_callback
@@ -505,7 +548,7 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
             st.success("프롬프트 튜닝 완료!")
             
             # 전체 결과에서 가장 높은 평균 점수를 가진 프롬프트 찾기
-            best_result = max(results, key=lambda x: x['avg_score'])
+            best_result = max(all_results, key=lambda x: x['avg_score'])
             st.write("Final Best Prompt:")
             col1, col2 = st.columns(2)
             with col1:
@@ -514,4 +557,4 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
             with col2:
                 st.write("User Prompt:")
                 st.code(best_result['user_prompt'])
-            st.write(f"Final Average Score: {best_result['avg_score']:.2f}") 
+            st.write(f"최종 결과: 평균 점수 {best_result['avg_score']:.2f}, 최고 점수 {best_result['best_score']:.2f}") 
