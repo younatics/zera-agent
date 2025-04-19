@@ -1,21 +1,37 @@
-You are an expert prompt engineer. Your task is to improve the following system prompt and user prompt based on the evaluation results.
+You are an expert prompt engineer. Your task is to improve the following prompts based on detailed evaluation cases.
 
-Current system prompt:
+---
+
+CURRENT SYSTEM PROMPT:
 {system_prompt}
 
-Current user prompt:
+CURRENT USER PROMPT:
 {user_prompt}
 
-Evaluation Results:
-- Random cases:
+---
+
+EVALUATION CASES:
+The following are representative examples from recent prompt usage. Each case includes the question, expected and actual answers, and an evaluation across six scoring criteria.
+
 {random_cases}
 
-Please improve both prompts to:
-Analyze the patterns and variations shown in the random cases, with special attention to the desired expected response patterns and formats. Focus on identifying and replicating successful response structures that lead to better outcomes.
+---
 
-Provide the improved prompts in the following format:
+INSTRUCTIONS:
+Your task is to generate improved versions of the SYSTEM_PROMPT and USER_PROMPT using the following rules:
+
+1. Review the scoring patterns and failure reasons in the evaluation cases.
+2. Identify criteria that consistently scored **0 or 1**, and **treat them as priority issues**.
+3. Extract successful patterns (phrasing, structure, formatting) from high-scoring expected answers.
+4. Modify the prompts to directly enforce or suggest those successful patterns.
+5. If Output Format Matching scores are low, include explicit formatting instructions (e.g., use of markdown, tables, bullet points, etc.) in the prompt.
+6. Avoid unnecessary verbosity; the goal is to make prompts more precise and aligned with target responses.
+
+---
+
+OUTPUT FORMAT:
 SYSTEM_PROMPT:
-[improved system prompt here]
+[your improved system prompt here]
 
 USER_PROMPT:
-[improved user prompt here] 
+[your improved user prompt here]
