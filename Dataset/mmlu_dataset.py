@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 
 class MMLUDataset:
-    def __init__(self, base_dir: str = "Dataset/mmlu_data"):
+    def __init__(self, base_dir: str = "dataset/mmlu_data"):
         self.base_dir = base_dir
         self.subjects = [
             "abstract_algebra", "anatomy", "astronomy", "business_ethics", "clinical_knowledge",
