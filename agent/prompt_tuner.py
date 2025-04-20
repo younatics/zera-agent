@@ -252,16 +252,6 @@ class PromptTuner:
                     self.logger.warning("유효한 평가 결과가 없습니다. 현재 프롬프트를 유지합니다.")
                     continue
                 
-                # 랜덤 케이스 포맷팅
-                formatted_cases = "\n".join([
-                    f"Question: {case['question']}\n"
-                    f"Expected answer: {case['expected']}\n"
-                    f"Actual answer: {case['actual']}\n"
-                    f"Score: {case['score']}\n"
-                    f"Evaluation reason: {case['reason']}\n"
-                    for case in random_cases
-                ])
-                
                 # 메타프롬프트를 사용하여 현재 프롬프트를 개선
                 improvement_prompt = self._generate_meta_prompt(current_system_prompt, current_user_prompt, self._get_recent_prompts(), {'avg_score': best_score, 'system_prompt': best_prompt, 'user_prompt': current_user_prompt}, random_cases)
                 
@@ -348,13 +338,14 @@ class PromptTuner:
             str: 생성된 메타프롬프트 템플릿
         """
         # 랜덤 케이스 포맷팅
-        formatted_cases = "\n".join([
+        formatted_cases = "\n\n".join([
+            f"[Sample {i+1}]\n"
             f"Question: {case['question']}\n"
-            f"Expected answer: {case['expected']}\n"
-            f"Actual answer: {case['actual']}\n"
-            f"Score: {case['score']}\n"
-            f"Evaluation reason: {case['reason']}\n"
-            for case in random_cases
+            f"Expected Answer: {case['expected']}\n"
+            f"Actual Answer: {case['actual']}\n"
+            f"Score: {case['score']:.2f}\n"
+            f"Evaluation: {case['reason']}"
+            for i, case in enumerate(random_cases)
         ])
         
         # 최근 프롬프트 포맷팅
