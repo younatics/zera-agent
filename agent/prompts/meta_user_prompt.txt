@@ -1,8 +1,11 @@
 # TASK
 Based on the information below, generate an improved SYSTEM_PROMPT and USER_PROMPT.
 
-You must first infer the type of task from the prompts and evaluation data.  
-Then apply the most appropriate improvement strategy based on that task type.
+First, infer the type of task and the characteristics of effective responses.  
+Then, use what you've learned to create new prompts that are aligned with the task and optimized for quality.
+
+Your goal is not to copy the best prompt,  
+but to learn what made it effective and generalize those strategies into a more robust and adaptable version.
 
 # 1. BEST PROMPT
 Score: {best_prompt_score}  
