@@ -170,6 +170,7 @@ class PromptTuner:
             self.logger.info(f"\nIteration {iteration + 1}/{num_iterations}")
             iteration_scores = []
             iteration_responses = []
+            iteration_best_sample_score = 0.0  # 이터레이션별 최고 점수 초기화
             
             # 각 이터레이션마다 랜덤 샘플링
             test_cases = random.sample(initial_test_cases, num_samples) if num_samples is not None and num_samples < len(initial_test_cases) else initial_test_cases
@@ -199,8 +200,8 @@ class PromptTuner:
                 })
                 
                 # 최고 개별 점수 업데이트
-                if score is not None and score > best_sample_score:
-                    best_sample_score = score
+                if score is not None and score > iteration_best_sample_score:
+                    iteration_best_sample_score = score
                 
                 # 평가 기록 저장
                 self.evaluation_history.append({
@@ -240,7 +241,7 @@ class PromptTuner:
                 'user_prompt': current_user_prompt,
                 'avg_score': avg_score,
                 'best_avg_score': best_avg_score,
-                'best_sample_score': best_sample_score,
+                'best_sample_score': iteration_best_sample_score,  # 이터레이션별 최고 점수 사용
                 'best_system_prompt': best_system_prompt,
                 'best_user_prompt': best_user_prompt,
                 'responses': iteration_responses,
