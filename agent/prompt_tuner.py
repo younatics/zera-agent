@@ -4,6 +4,9 @@ from common.api_client import Model
 import os
 import random
 import statistics
+import csv
+from datetime import datetime
+import io
 
 class PromptTuner:
     """
@@ -56,6 +59,8 @@ class PromptTuner:
             self.meta_system_prompt_template = f.read()
         with open(os.path.join(prompts_dir, 'meta_user_prompt.txt'), 'r', encoding='utf-8') as f:
             self.meta_user_prompt_template = f.read()
+        
+        self.results = []  # Add this line to store results
     
     def set_evaluation_prompt(self, system_prompt_template: str, user_prompt_template: str):
         """
@@ -168,6 +173,7 @@ class PromptTuner:
         best_avg_score = 0.0
         best_sample_score = 0.0
         iteration_results = []
+        self.results = []  # 결과 리스트 초기화
         
         for iteration in range(num_iterations):
             self.logger.info(f"\nIteration {iteration + 1}/{num_iterations}")
@@ -218,6 +224,17 @@ class PromptTuner:
                     'score': score,
                     'evaluation_reason': reason
                 })
+                
+                # 상세 결과 저장
+                result = {
+                    'iteration': iteration + 1,
+                    'question': test_case['question'],
+                    'expected_response': test_case['expected'],
+                    'actual_response': response,
+                    'score': score,
+                    'evaluation_reason': reason
+                }
+                self.results.append(result)
                 
                 # 프로그레스 바 업데이트
                 if self.progress_callback:
@@ -415,3 +432,35 @@ class PromptTuner:
         )
         
         return improvement_prompt 
+
+    def save_results_to_csv(self, filename=None):
+        """Save iteration results to a CSV file.
+        
+        Args:
+            filename (str, optional): The name of the CSV file. If None, a default name will be used.
+            
+        Returns:
+            str: The CSV content as a string
+        """
+        if not self.results:
+            return ""
+            
+        # CSV 내용 생성
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # 헤더 작성
+        writer.writerow(['iteration', 'question', 'expected_response', 'actual_response', 'score', 'evaluation_reason'])
+        
+        # 데이터 작성
+        for result in self.results:
+            writer.writerow([
+                result['iteration'],
+                result['question'],
+                result['expected_response'],
+                result['actual_response'],
+                result['score'],
+                result['evaluation_reason']
+            ])
+        
+        return output.getvalue() 

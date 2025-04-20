@@ -7,4 +7,4 @@ Actual Response:
 Expected Response:
 {expected}
 
-Please evaluate this response.
+Please evaluate the response and return a score on the first line, and issue explanations on the second line.

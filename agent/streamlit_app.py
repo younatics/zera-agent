@@ -8,6 +8,10 @@ import logging
 import plotly.graph_objects as go
 import sys
 from dotenv import load_dotenv
+import tempfile
+import base64
+import zipfile
+import io
 
 # set_page_config은 반드시 첫 번째 Streamlit 명령어여야 함
 st.set_page_config(page_title="Prompt Auto Tuning Agent", layout="wide")
@@ -682,13 +686,23 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                 df = pd.DataFrame(results)
                 df = df[['iteration', 'avg_score', 'best_avg_score', 'best_sample_score', 'system_prompt', 'user_prompt', 'meta_prompt']]
                 df.columns = ['Iteration', 'Average Score', 'Best Average Score', 'Best Sample Score', 'System Prompt', 'User Prompt', 'Meta Prompt']
-                csv = df.to_csv(index=False)
+                summary_csv = df.to_csv(index=False)
                 
+                # 상세 결과 CSV 생성
+                detailed_csv = tuner.save_results_to_csv()
+                
+                # ZIP 파일 생성
+                zip_buffer = io.BytesIO()
+                with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+                    zip_file.writestr("prompt_tuning_results.csv", summary_csv)
+                    zip_file.writestr("detailed_iteration_results.csv", detailed_csv)
+                
+                # 다운로드 버튼
                 st.download_button(
                     label="결과를 CSV로 저장",
-                    data=csv,
-                    file_name="prompt_tuning_results.csv",
-                    mime="text/csv"
+                    data=zip_buffer.getvalue(),
+                    file_name="prompt_tuning_results.zip",
+                    mime="application/zip"
                 )
             else:
                 st.warning("튜닝 결과가 없습니다.") 
