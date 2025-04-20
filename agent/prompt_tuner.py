@@ -39,14 +39,15 @@ class PromptTuner:
         # 기본 initial_system_prompt 로드
         with open(os.path.join(prompts_dir, 'initial_system_prompt.txt'), 'r', encoding='utf-8') as f:
             self.initial_system_prompt = f.read()
-        
         # 기본 initial_user_prompt 로드
         with open(os.path.join(prompts_dir, 'initial_user_prompt.txt'), 'r', encoding='utf-8') as f:
             self.initial_user_prompt = f.read()
         
         # 기본 평가 프롬프트 로드
-        with open(os.path.join(prompts_dir, 'evaluation_prompt.txt'), 'r', encoding='utf-8') as f:
-            self.evaluation_prompt_template = f.read()
+        with open(os.path.join(prompts_dir, 'evaluation_system_prompt.txt'), 'r', encoding='utf-8') as f:
+            self.evaluation_system_prompt_template = f.read()
+        with open(os.path.join(prompts_dir, 'evaluation_user_prompt.txt'), 'r', encoding='utf-8') as f:
+            self.evaluation_user_prompt_template = f.read()
         
         # 기본 메타프롬프트 로드
         with open(os.path.join(prompts_dir, 'meta_system_prompt.txt'), 'r', encoding='utf-8') as f:
@@ -54,14 +55,16 @@ class PromptTuner:
         with open(os.path.join(prompts_dir, 'meta_user_prompt.txt'), 'r', encoding='utf-8') as f:
             self.meta_user_prompt_template = f.read()
     
-    def set_evaluation_prompt(self, prompt_template: str):
+    def set_evaluation_prompt(self, system_prompt_template: str, user_prompt_template: str):
         """
         평가 프롬프트 템플릿을 설정합니다.
         
         Args:
-            prompt_template (str): 평가 프롬프트 템플릿. {response}와 {expected}를 포함해야 합니다.
+            system_prompt_template (str): 평가 시스템 프롬프트 템플릿
+            user_prompt_template (str): 평가 유저 프롬프트 템플릿
         """
-        self.evaluation_prompt_template = prompt_template
+        self.evaluation_system_prompt_template = system_prompt_template
+        self.evaluation_user_prompt_template = user_prompt_template
     
     def set_meta_prompt(self, system_prompt_template: str, user_prompt_template: str):
         """
@@ -73,6 +76,17 @@ class PromptTuner:
         """
         self.meta_system_prompt_template = system_prompt_template
         self.meta_user_prompt_template = user_prompt_template
+    
+    def set_initial_prompt(self, system_prompt: str, user_prompt: str):
+        """
+        초기 프롬프트를 설정합니다.
+        
+        Args:
+            system_prompt (str): 초기 시스템 프롬프트
+            user_prompt (str): 초기 유저 프롬프트
+        """
+        self.initial_system_prompt = system_prompt
+        self.initial_user_prompt = user_prompt
     
     def _evaluate_response(self, response: str, expected: str, question: str) -> tuple[float, str]:
         """
@@ -87,15 +101,18 @@ class PromptTuner:
             tuple[float, str]: A tuple containing the score and evaluation reason
         """
         try:
-            # 평가 프롬프트 생성
-            evaluation_prompt = self.evaluation_prompt_template.format(
+            # 평가 유저 프롬프트 생성
+            evaluation_prompt = self.evaluation_user_prompt_template.format(
                 response=response,
                 expected=expected,
                 question=question
             )
             
             # 평가 모델로 평가 수행
-            evaluation = self.evaluator.ask(evaluation_prompt)
+            evaluation = self.evaluator.ask(
+                question=evaluation_prompt,
+                system_prompt=self.evaluation_system_prompt_template
+            )
             self.logger.info(f"Evaluating response:")
             self.logger.info(f"Question: {question}")
             self.logger.info(f"Actual response: {response}")

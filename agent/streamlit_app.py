@@ -39,8 +39,10 @@ with open(os.path.join(prompts_dir, 'initial_system_prompt.txt'), 'r', encoding=
     DEFAULT_SYSTEM_PROMPT = f.read()
 with open(os.path.join(prompts_dir, 'initial_user_prompt.txt'), 'r', encoding='utf-8') as f:
     DEFAULT_USER_PROMPT = f.read()
-with open(os.path.join(prompts_dir, 'evaluation_prompt.txt'), 'r', encoding='utf-8') as f:
-    DEFAULT_EVALUATION_PROMPT = f.read()
+with open(os.path.join(prompts_dir, 'evaluation_system_prompt.txt'), 'r', encoding='utf-8') as f:
+    DEFAULT_EVALUATION_SYSTEM_PROMPT = f.read()
+with open(os.path.join(prompts_dir, 'evaluation_user_prompt.txt'), 'r', encoding='utf-8') as f:
+    DEFAULT_EVALUATION_USER_PROMPT = f.read()
 with open(os.path.join(prompts_dir, 'meta_system_prompt.txt'), 'r', encoding='utf-8') as f:
     DEFAULT_META_SYSTEM_PROMPT = f.read()
 with open(os.path.join(prompts_dir, 'meta_user_prompt.txt'), 'r', encoding='utf-8') as f:
@@ -186,6 +188,16 @@ with st.sidebar:
         else:
             evaluator_model_version = None  # 기본 버전을 사용하도록 None으로 설정
 
+# PromptTuner 객체 생성
+tuner = PromptTuner(
+    model_name=model_name,
+    evaluator_model_name=evaluator_model,
+    meta_prompt_model_name=meta_prompt_model,
+    model_version=tuning_model_version,
+    evaluator_model_version=evaluator_model_version,
+    meta_prompt_model_version=meta_model_version
+)
+
 # 프롬프트 설정
 with st.expander("초기 프롬프트 설정", expanded=False):
     col1, col2 = st.columns(2)
@@ -203,6 +215,10 @@ with st.expander("초기 프롬프트 설정", expanded=False):
             height=100,
             help="튜닝을 시작할 초기 사용자 프롬프트를 입력하세요."
         )
+    
+    if st.button("초기 프롬프트 업데이트", key="initial_prompt_update"):
+        tuner.set_initial_prompt(system_prompt, user_prompt)
+        st.success("초기 프롬프트가 업데이트되었습니다.")
 
 # 메타프롬프트 설정
 with st.expander("메타프롬프트 설정", expanded=False):
@@ -221,16 +237,32 @@ with st.expander("메타프롬프트 설정", expanded=False):
             height=300,
             help="프롬프트 개선을 위한 입력 데이터와 출력 형식을 정의하는 유저 프롬프트를 입력하세요."
         )
+    
+    if st.button("메타 프롬프트 업데이트", key="meta_prompt_update"):
+        tuner.set_meta_prompt(meta_system_prompt, meta_user_prompt)
+        st.success("메타 프롬프트가 업데이트되었습니다.")
 
 # 평가 프롬프트 설정
 with st.expander("평가 프롬프트 설정", expanded=False):
-    evaluation_prompt = st.text_area(
-        "평가 프롬프트 입력",
-        value=DEFAULT_EVALUATION_PROMPT,
-        height=300,
-        help="""응답을 평가할 때 사용하는 프롬프트를 입력하세요.
-{response}와 {expected}는 실제 응답과 기대 응답으로 대체됩니다."""
-    )
+    col1, col2 = st.columns(2)
+    with col1:
+        evaluation_system_prompt = st.text_area(
+            "평가 시스템 프롬프트",
+            value=DEFAULT_EVALUATION_SYSTEM_PROMPT,
+            height=200,
+            help="평가 모델의 시스템 프롬프트를 설정합니다."
+        )
+    with col2:
+        evaluation_user_prompt = st.text_area(
+            "평가 유저 프롬프트",
+            value=DEFAULT_EVALUATION_USER_PROMPT,
+            height=200,
+            help="평가 모델의 유저 프롬프트를 설정합니다. {question}, {response}, {expected}를 포함해야 합니다."
+        )
+    
+    if st.button("평가 프롬프트 업데이트", key="eval_prompt_update"):
+        tuner.set_evaluation_prompt(evaluation_system_prompt, evaluation_user_prompt)
+        st.success("평가 프롬프트가 업데이트되었습니다.")
 
 # 데이터셋 처리 공통 함수
 def process_dataset(data, dataset_type):
@@ -423,17 +455,6 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
         st.error(f"다음 API 키가 필요합니다: {', '.join(missing_keys)}")
         st.info("API 키를 .env 파일에 설정하세요.")
     else:
-        # PromptTuner 인스턴스 생성
-        tuner = PromptTuner(
-            model_name=model_name,
-            evaluator_model_name=evaluator_model,
-            meta_prompt_model_name=meta_prompt_model,
-            model_version=tuning_model_version,
-            evaluator_model_version=evaluator_model_version,
-            meta_prompt_model_version=meta_model_version
-        )
-        tuner.set_evaluation_prompt(evaluation_prompt)
-        
         # 메타프롬프트가 입력된 경우에만 설정
         if meta_system_prompt.strip() and meta_user_prompt.strip():
             tuner.set_meta_prompt(meta_system_prompt, meta_user_prompt)
