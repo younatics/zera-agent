@@ -1,6 +1,8 @@
 # TASK
-Based on the information below, generate improved SYSTEM_PROMPT and USER_PROMPT.  
-Focus on fixing key issues observed in the evaluation, and improving alignment with high-performing patterns.
+Based on the information below, generate an improved SYSTEM_PROMPT and USER_PROMPT.
+
+You must first infer the type of task from the prompts and evaluation data.  
+Then apply the most appropriate improvement strategy based on that task type.
 
 # 1. BEST PROMPT
 Score: {best_prompt_score}  
