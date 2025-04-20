@@ -158,8 +158,9 @@ class PromptTuner:
         """
         current_system_prompt = initial_system_prompt
         current_user_prompt = initial_user_prompt
-        best_prompt = initial_system_prompt
-        best_score = 0.0
+        best_system_prompt = initial_system_prompt
+        best_user_prompt = initial_user_prompt
+        best_avg_score = 0.0
         iteration_results = []
         
         for iteration in range(num_iterations):
@@ -210,11 +211,6 @@ class PromptTuner:
                 # 프로그레스 바 업데이트
                 if self.progress_callback:
                     self.progress_callback(iteration + 1, i + 1)
-                
-                # 현재까지의 최고 점수와 비교
-                if score is not None and (best_score is None or score > best_score):
-                    best_score = score
-                    best_prompt = current_system_prompt
             
             # iteration이 끝난 후 평균 점수 계산
             valid_scores = [score for score in iteration_scores if score is not None]
@@ -224,14 +220,21 @@ class PromptTuner:
                 avg_score = 0.0
             self.logger.info(f"Iteration {iteration + 1} 평균 점수: {avg_score:.2f}")
             
+            # 현재까지의 최고 평균 점수와 비교
+            if avg_score > best_avg_score:
+                best_avg_score = avg_score
+                best_system_prompt = current_system_prompt
+                best_user_prompt = current_user_prompt
+            
             # 현재 이터레이션 결과 저장
             result = {
                 'iteration': iteration + 1,
                 'system_prompt': current_system_prompt,
                 'user_prompt': current_user_prompt,
                 'avg_score': avg_score,
-                'best_score': best_score,
-                'best_prompt': best_prompt,
+                'best_score': best_avg_score,
+                'best_system_prompt': best_system_prompt,
+                'best_user_prompt': best_user_prompt,
                 'responses': iteration_responses,
                 'meta_prompt': None  # 초기값 설정
             }
@@ -270,7 +273,13 @@ class PromptTuner:
                     continue
                 
                 # 메타프롬프트를 사용하여 현재 프롬프트를 개선
-                improvement_prompt = self._generate_meta_prompt(current_system_prompt, current_user_prompt, self._get_recent_prompts(), {'avg_score': best_score, 'system_prompt': best_prompt, 'user_prompt': current_user_prompt}, random_cases)
+                improvement_prompt = self._generate_meta_prompt(
+                    current_system_prompt, 
+                    current_user_prompt, 
+                    self._get_recent_prompts(), 
+                    {'avg_score': best_avg_score, 'system_prompt': best_system_prompt, 'user_prompt': best_user_prompt}, 
+                    random_cases
+                )
                 
                 # 결과에 메타프롬프트 추가
                 result['meta_prompt'] = improvement_prompt
@@ -307,7 +316,7 @@ class PromptTuner:
 
                 break
         
-                    # 콜백 호출 (메타프롬프트 설정 이후)
+            # 콜백 호출 (메타프롬프트 설정 이후)
             if self.iteration_callback:
                 self.iteration_callback(result)
 
