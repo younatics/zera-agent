@@ -3,6 +3,7 @@ import pandas as pd
 from typing import Dict, Optional
 from datasets import load_dataset
 from pathlib import Path
+import shutil
 
 class CNNDataset:
     """
@@ -118,6 +119,45 @@ class CNNDataset:
         except Exception as e:
             print(f"Error downloading dataset: {e}")
 
+    def split_and_save_chunks(self, chunk_size: int = 200):
+        """
+        데이터셋을 지정된 크기(chunk_size)로 나누어 저장합니다.
+        
+        Args:
+            chunk_size (int): 각 청크의 크기 (기본값: 200)
+        """
+        # 각 split에 대해 처리
+        for split in ['train', 'validation', 'test']:
+            # 원본 CSV 파일 경로
+            csv_path = os.path.join(self.data_dir, f"{split}.csv")
+            
+            if not os.path.exists(csv_path):
+                print(f"{split} split 파일이 존재하지 않습니다: {csv_path}")
+                continue
+                
+            # 청크를 저장할 디렉토리
+            chunk_dir = os.path.join(self.data_dir, f"{split}_chunks")
+            if os.path.exists(chunk_dir):
+                shutil.rmtree(chunk_dir)  # 기존 디렉토리 삭제
+            os.makedirs(chunk_dir)
+            
+            # 데이터 로드
+            df = pd.read_csv(csv_path)
+            total_examples = len(df)
+            
+            # 청크로 나누기
+            for i in range(0, total_examples, chunk_size):
+                chunk = df.iloc[i:i+chunk_size]
+                chunk_path = os.path.join(chunk_dir, f"{split}_chunk_{i//chunk_size}.csv")
+                chunk.to_csv(chunk_path, index=False)
+                print(f"{split} split의 {i//chunk_size}번째 청크 저장 완료: {len(chunk)}개 예제")
+            
+            print(f"\n{split} split 처리 완료:")
+            print(f"- 총 예제 수: {total_examples}")
+            print(f"- 청크 크기: {chunk_size}")
+            print(f"- 총 청크 수: {(total_examples + chunk_size - 1) // chunk_size}")
+            print(f"- 저장 위치: {chunk_dir}")
+
 if __name__ == "__main__":
     # 데이터 디렉토리 설정
     data_dir = os.path.join(os.path.dirname(__file__), 'cnn_data')
@@ -125,6 +165,10 @@ if __name__ == "__main__":
     # CNNDataset 인스턴스 생성 및 다운로드
     dataset = CNNDataset(data_dir=data_dir)
     dataset.download_dataset()
+    
+    # 데이터를 200개 단위로 나누어 저장
+    print("\n데이터셋을 200개 단위로 나누어 저장합니다...")
+    dataset.split_and_save_chunks(chunk_size=200)
     
     # 데이터 로드 예시
     try:
