@@ -507,7 +507,8 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                     'system_prompt': result['system_prompt'],
                     'user_prompt': result['user_prompt'],
                     'avg_score': result['avg_score'],
-                    'best_score': result['best_score']
+                    'best_avg_score': result['best_avg_score'],
+                    'best_sample_score': result['best_sample_score']
                 })
                 
                 # 그래프 업데이트
@@ -515,7 +516,8 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                     fig = go.Figure()
                     x_values = list(range(1, iteration_idx + 2))
                     avg_scores = [r['avg_score'] for r in all_results]
-                    best_scores = [r['best_score'] for r in all_results]
+                    best_avg_scores = [r['best_avg_score'] for r in all_results]
+                    best_sample_scores = [r['best_sample_score'] for r in all_results]
                     
                     fig.add_trace(go.Scatter(
                         x=x_values,
@@ -525,8 +527,14 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                     ))
                     fig.add_trace(go.Scatter(
                         x=x_values,
-                        y=best_scores,
-                        name='최고 점수',
+                        y=best_avg_scores,
+                        name='최고 평균 점수',
+                        mode='lines+markers'
+                    ))
+                    fig.add_trace(go.Scatter(
+                        x=x_values,
+                        y=best_sample_scores,
+                        name='최고 개별 점수',
                         mode='lines+markers'
                     ))
                     fig.update_layout(
@@ -549,11 +557,13 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                         st.subheader(f"Iteration {result['iteration']}")
                         
                         # 평균 점수와 최고 점수
-                        col1, col2 = st.columns(2)
+                        col1, col2, col3 = st.columns(3)
                         with col1:
                             st.metric("Average Score", f"{result['avg_score']:.2f}")
                         with col2:
-                            st.metric("Best Score So Far", f"{result['best_score']:.2f}")
+                            st.metric("Best Average Score So Far", f"{result['best_avg_score']:.2f}")
+                        with col3:
+                            st.metric("Best Sample Score So Far", f"{result['best_sample_score']:.2f}")
                         
                         # 평가 기록을 데이터프레임으로 변환
                         history_df = pd.DataFrame(result['responses'])
@@ -646,12 +656,12 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                 with col2:
                     st.write("User Prompt:")
                     st.code(best_result['user_prompt'])
-                st.write(f"최종 결과: 평균 점수 {best_result['avg_score']:.2f}, 최고 점수 {best_result['best_score']:.2f}")
+                st.write(f"최종 결과: 평균 점수 {best_result['avg_score']:.2f}, 최고 평균 점수 {best_result['best_avg_score']:.2f}, 최고 개별 점수 {best_result['best_sample_score']:.2f}")
                 
                 # CSV 출력 기능
                 df = pd.DataFrame(results)
-                df = df[['iteration', 'avg_score', 'best_score', 'system_prompt', 'user_prompt', 'meta_prompt']]
-                df.columns = ['Iteration', 'Average Score', 'Best Score', 'System Prompt', 'User Prompt', 'Meta Prompt']
+                df = df[['iteration', 'avg_score', 'best_avg_score', 'best_sample_score', 'system_prompt', 'user_prompt', 'meta_prompt']]
+                df.columns = ['Iteration', 'Average Score', 'Best Average Score', 'Best Sample Score', 'System Prompt', 'User Prompt', 'Meta Prompt']
                 csv = df.to_csv(index=False)
                 
                 st.download_button(

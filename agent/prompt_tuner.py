@@ -27,7 +27,8 @@ class PromptTuner:
         self.evaluation_history: List[Dict] = []
         self.prompt_history: List[Dict] = []
         self.best_prompt: Optional[str] = None
-        self.best_score: float = 0.0
+        self.best_avg_score: float = 0.0
+        self.best_sample_score: float = 0.0
         self.progress_callback = None
         self.iteration_callback = None
         logging.basicConfig(level=logging.INFO)
@@ -152,7 +153,8 @@ class PromptTuner:
                 - system_prompt: current system prompt
                 - user_prompt: current user prompt
                 - avg_score: average score for this iteration
-                - best_score: best score so far
+                - best_avg_score: best average score so far
+                - best_sample_score: best individual test case score so far
                 - best_prompt: best prompt so far
                 - responses: list of responses for each test case
         """
@@ -161,6 +163,7 @@ class PromptTuner:
         best_system_prompt = initial_system_prompt
         best_user_prompt = initial_user_prompt
         best_avg_score = 0.0
+        best_sample_score = 0.0
         iteration_results = []
         
         for iteration in range(num_iterations):
@@ -194,6 +197,10 @@ class PromptTuner:
                     'score': score,
                     'reason': reason
                 })
+                
+                # 최고 개별 점수 업데이트
+                if score is not None and score > best_sample_score:
+                    best_sample_score = score
                 
                 # 평가 기록 저장
                 self.evaluation_history.append({
@@ -232,7 +239,8 @@ class PromptTuner:
                 'system_prompt': current_system_prompt,
                 'user_prompt': current_user_prompt,
                 'avg_score': avg_score,
-                'best_score': best_avg_score,
+                'best_avg_score': best_avg_score,
+                'best_sample_score': best_sample_score,
                 'best_system_prompt': best_system_prompt,
                 'best_user_prompt': best_user_prompt,
                 'responses': iteration_responses,
