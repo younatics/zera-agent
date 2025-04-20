@@ -340,17 +340,40 @@ if dataset_type == "CSV":
         st.info("CSV 파일을 업로드하거나 MMLU 데이터셋을 선택하세요.")
         st.stop()
 elif dataset_type == "CNN":
-    # CNN 데이터셋 로드
+    # CNN 데이터셋 인스턴스 생성
     cnn_dataset = CNNDataset()
+    
+    # 데이터셋 선택
     split = st.selectbox(
-        "Select Data Split",
+        "데이터셋 선택",
         ["train", "validation", "test"],
         index=0
     )
+    
+    # 청크 수 확인
+    total_chunks = cnn_dataset.get_num_chunks(split)
+    
+    if total_chunks == 0:
+        st.error(f"{split} 데이터셋에 청크 파일이 없습니다.")
+        st.stop()
+    
+    # 청크 선택
+    st.write(f"총 {total_chunks}개의 청크가 있습니다.")
+    chunk_index = st.number_input(
+        "청크 선택",
+        min_value=0,
+        max_value=total_chunks-1,
+        value=0,
+        help="처리할 청크의 인덱스를 선택하세요."
+    )
+    
     try:
-        # CNN 데이터셋 로드
-        data = cnn_dataset.load_data(split)
+        # 선택된 청크 로드
+        data = cnn_dataset.load_data(split, chunk_index)
         test_cases, num_samples = process_dataset(data, "CNN")
+        
+        # 선택된 청크 정보 표시
+        st.info(f"선택된 청크: {chunk_index} ({len(data):,}개 예제)")
     except Exception as e:
         st.error(f"CNN 데이터셋 로드 중 오류 발생: {str(e)}")
         st.stop()

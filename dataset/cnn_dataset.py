@@ -4,6 +4,7 @@ from typing import Dict, Optional
 from datasets import load_dataset
 from pathlib import Path
 import shutil
+import glob
 
 class CNNDataset:
     """
@@ -26,13 +27,24 @@ class CNNDataset:
         # Create data directory if it doesn't exist
         Path(self.data_dir).mkdir(parents=True, exist_ok=True)
         
-        # Try to load from Hugging Face first
-        try:
-            self._load_from_huggingface(hf_dataset_name)
-        except Exception as e:
-            print(f"Failed to load from Hugging Face: {e}")
-            # Fall back to local files
-            self.load_data()
+        # Check if chunk directories exist
+        all_chunks_exist = True
+        for split in ['train', 'validation', 'test']:
+            chunk_dir = os.path.join(self.data_dir, f"{split}_chunks")
+            if not os.path.exists(chunk_dir):
+                all_chunks_exist = False
+                break
+        
+        if not all_chunks_exist:
+            print("Chunk directories not found. Downloading and processing dataset...")
+            try:
+                self._load_from_huggingface(hf_dataset_name)
+                self.split_and_save_chunks(chunk_size=200)
+            except Exception as e:
+                print(f"Error downloading and processing dataset: {e}")
+                raise
+        else:
+            print("Using existing chunk files...")
     
     def _load_from_huggingface(self, dataset_name: str):
         """
@@ -61,64 +73,6 @@ class CNNDataset:
                 df.to_csv(csv_path, index=False)
                 print(f"Saved {split} split to {csv_path}")
     
-    def load_data(self, split: str = None) -> pd.DataFrame:
-        """
-        Load CNN articles from CSV files.
-        
-        Args:
-            split (str, optional): Which split to load ('train', 'validation', 'test').
-                                If None, loads all splits.
-        
-        Returns:
-            pd.DataFrame: DataFrame containing the articles
-        """
-        if not os.path.exists(self.data_dir):
-            raise FileNotFoundError(f"Data directory not found: {self.data_dir}")
-        
-        if split is not None:
-            # Load specific split
-            csv_path = os.path.join(self.data_dir, f"{split}.csv")
-            if not os.path.exists(csv_path):
-                raise FileNotFoundError(f"Split file not found: {csv_path}")
-            return pd.read_csv(csv_path)
-        else:
-            # Load all splits
-            data = {}
-            for split_name in ['train', 'validation', 'test']:
-                csv_path = os.path.join(self.data_dir, f"{split_name}.csv")
-                if os.path.exists(csv_path):
-                    data[split_name] = pd.read_csv(csv_path)
-            return data
-    
-    def get_split_sizes(self) -> Dict[str, int]:
-        """
-        Get the number of examples in each split.
-        
-        Returns:
-            Dict[str, int]: Dictionary containing the size of each split
-        """
-        sizes = {}
-        for split in ['train', 'validation', 'test']:
-            csv_path = os.path.join(self.data_dir, f"{split}.csv")
-            if os.path.exists(csv_path):
-                df = pd.read_csv(csv_path)
-                sizes[split] = len(df)
-        return sizes
-
-    def download_dataset(self):
-        """Download the dataset from Hugging Face and save it locally."""
-        print("Downloading CNN dataset from Hugging Face...")
-        try:
-            self._load_from_huggingface("cnn_dailymail")
-            sizes = self.get_split_sizes()
-            print("\nDataset downloaded and processed successfully!")
-            print("Split sizes:")
-            for split, size in sizes.items():
-                print(f"- {split}: {size:,} examples")
-            print(f"Data saved in: {self.data_dir}")
-        except Exception as e:
-            print(f"Error downloading dataset: {e}")
-
     def split_and_save_chunks(self, chunk_size: int = 200):
         """
         데이터셋을 지정된 크기(chunk_size)로 나누어 저장합니다.
@@ -157,31 +111,66 @@ class CNNDataset:
             print(f"- 청크 크기: {chunk_size}")
             print(f"- 총 청크 수: {(total_examples + chunk_size - 1) // chunk_size}")
             print(f"- 저장 위치: {chunk_dir}")
+            
+            # 원본 CSV 파일 삭제
+            os.remove(csv_path)
+            print(f"원본 {split}.csv 파일 삭제 완료")
+
+    def load_data(self, split: str, chunk_index: int = None) -> pd.DataFrame:
+        """
+        Load data from chunk files.
+        
+        Args:
+            split (str): One of 'train', 'validation', or 'test'
+            chunk_index (int, optional): Index of the chunk to load. If None, loads all chunks.
+        
+        Returns:
+            pd.DataFrame: Loaded data
+        """
+        if split not in ['train', 'validation', 'test']:
+            raise ValueError("split must be one of 'train', 'validation', or 'test'")
+            
+        chunk_dir = os.path.join(self.data_dir, f"{split}_chunks")
+        if not os.path.exists(chunk_dir):
+            raise FileNotFoundError(f"Chunk directory not found: {chunk_dir}")
+            
+        if chunk_index is not None:
+            # Load specific chunk
+            chunk_file = os.path.join(chunk_dir, f"{split}_chunk_{chunk_index}.csv")
+            if not os.path.exists(chunk_file):
+                raise FileNotFoundError(f"Chunk file not found: {chunk_file}")
+            return pd.read_csv(chunk_file)
+        else:
+            # Load all chunks
+            all_chunks = []
+            chunk_files = sorted(glob.glob(os.path.join(chunk_dir, f"{split}_chunk_*.csv")))
+            for chunk_file in chunk_files:
+                all_chunks.append(pd.read_csv(chunk_file))
+            return pd.concat(all_chunks, ignore_index=True)
+
+    def get_num_chunks(self, split: str) -> int:
+        """
+        Get the number of chunks for a given split.
+        
+        Args:
+            split (str): One of 'train', 'validation', or 'test'
+            
+        Returns:
+            int: Number of chunks
+        """
+        chunk_dir = os.path.join(self.data_dir, f"{split}_chunks")
+        return len(glob.glob(os.path.join(chunk_dir, f"{split}_chunk_*.csv")))
 
 if __name__ == "__main__":
-    # 데이터 디렉토리 설정
-    data_dir = os.path.join(os.path.dirname(__file__), 'cnn_data')
+    # Example usage
+    dataset = CNNDataset()
     
-    # CNNDataset 인스턴스 생성 및 다운로드
-    dataset = CNNDataset(data_dir=data_dir)
-    dataset.download_dataset()
-    
-    # 데이터를 200개 단위로 나누어 저장
-    print("\n데이터셋을 200개 단위로 나누어 저장합니다...")
-    dataset.split_and_save_chunks(chunk_size=200)
-    
-    # 데이터 로드 예시
-    try:
-        # 특정 split 로드
-        train_data = dataset.load_data('train')
-        print("\n첫 번째 학습 예제:")
-        print(f"입력: {train_data['input'].iloc[0][:200]}...")
-        print(f"기대 출력: {train_data['expected_answer'].iloc[0]}")
+    # Get number of chunks for each split
+    for split in ['train', 'validation', 'test']:
+        num_chunks = dataset.get_num_chunks(split)
+        print(f"Number of chunks in {split} split: {num_chunks}")
         
-        # 모든 split 크기 확인
-        sizes = dataset.get_split_sizes()
-        print("\n각 split 크기:")
-        for split, size in sizes.items():
-            print(f"{split}: {size:,} examples")
-    except Exception as e:
-        print(f"Error loading data: {e}") 
+        # Load first chunk as example
+        if num_chunks > 0:
+            chunk_data = dataset.load_data(split, chunk_index=0)
+            print(f"First chunk of {split} split has {len(chunk_data)} examples") 
