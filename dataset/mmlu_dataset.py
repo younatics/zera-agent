@@ -3,10 +3,12 @@ from typing import Dict, List
 from datasets import load_dataset
 import pandas as pd
 import numpy as np
+from pathlib import Path
+import shutil
+import glob
 
 class MMLUDataset:
     def __init__(self, base_dir: str = None):
-        # 현재 파일의 위치에서 상위 디렉토리를 찾아 dataset 폴더를 가리키도록 설정
         if base_dir is None:
             current_dir = os.path.dirname(os.path.abspath(__file__))
             base_dir = os.path.join(current_dir, 'mmlu_data')
@@ -29,12 +31,32 @@ class MMLUDataset:
         ]
         
         # 기본 디렉토리 생성
-        os.makedirs(base_dir, exist_ok=True)
+        Path(self.base_dir).mkdir(parents=True, exist_ok=True)
         
-    def download_dataset(self) -> None:
-        """모든 과목의 MMLU 데이터셋을 Hugging Face에서 다운로드"""
+        # 데이터셋이 이미 다운로드되어 있는지 확인
+        if not self._check_dataset_exists():
+            print("Dataset not found. Downloading and processing dataset...")
+            try:
+                self._download_and_process_dataset()
+            except Exception as e:
+                print(f"Error downloading and processing dataset: {e}")
+                raise
+    
+    def _check_dataset_exists(self) -> bool:
+        """모든 과목의 데이터가 존재하는지 확인"""
         for subject in self.subjects:
-            print(f"{subject} 과목 다운로드 중...")
+            subject_dir = os.path.join(self.base_dir, subject)
+            if not os.path.exists(subject_dir):
+                return False
+            for split in ['test', 'validation']:
+                if not os.path.exists(os.path.join(subject_dir, f"{split}.csv")):
+                    return False
+        return True
+    
+    def _download_and_process_dataset(self) -> None:
+        """모든 과목의 MMLU 데이터셋을 다운로드하고 처리"""
+        for subject in self.subjects:
+            print(f"Processing {subject} subject...")
             subject_dir = os.path.join(self.base_dir, subject)
             os.makedirs(subject_dir, exist_ok=True)
             
@@ -55,27 +77,35 @@ class MMLUDataset:
                     # 데이터를 CSV로 저장
                     df = pd.DataFrame(data)
                     df.to_csv(os.path.join(subject_dir, f"{split}.csv"), index=False)
-                    print(f"{subject}의 {split} 데이터 저장 완료")
+                    print(f"Saved {subject}'s {split} data")
                     
             except Exception as e:
-                print(f"{subject} 과목 다운로드 중 오류 발생: {str(e)}")
+                print(f"Error processing {subject} subject: {str(e)}")
     
     def get_subject_data(self, subject: str) -> Dict[str, List[Dict]]:
         """특정 과목의 데이터를 가져옴"""
         if subject not in self.subjects:
             raise ValueError(f"MMLU 데이터셋에서 {subject} 과목을 찾을 수 없습니다")
         
-        # Hugging Face에서 직접 데이터셋 로드
-        dataset = load_dataset("cais/mmlu", subject)
+        subject_dir = os.path.join(self.base_dir, subject)
         data = {}
         
         for split in ['test', 'validation']:
+            csv_path = os.path.join(subject_dir, f"{split}.csv")
+            if not os.path.exists(csv_path):
+                raise FileNotFoundError(f"Data file not found: {csv_path}")
+            
+            # CSV 파일에서 데이터 로드
+            df = pd.read_csv(csv_path)
             data[split] = []
-            for item in dataset[split]:
+            
+            for _, row in df.iterrows():
+                # choices 문자열을 리스트로 변환
+                choices = eval(row['choices']) if isinstance(row['choices'], str) else row['choices']
                 data[split].append({
-                    'question': item['question'],
-                    'choices': item['choices'],
-                    'answer': item['answer']
+                    'question': row['question'],
+                    'choices': choices,
+                    'answer': row['answer']
                 })
         
         return data
@@ -83,9 +113,6 @@ class MMLUDataset:
 if __name__ == "__main__":
     # 사용 예시
     dataset = MMLUDataset()
-    print("MMLU 데이터셋 다운로드 중...")
-    dataset.download_dataset()
-    print("다운로드 완료!")
     
     # 특정 과목 데이터 접근 예시
     try:
