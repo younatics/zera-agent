@@ -301,9 +301,9 @@ def process_dataset(data, dataset_type):
                     'expected_answer': row['expected_answer']
                 })
     
-    # 전체 데이터 표시 (최대 100개만 표시)
-    st.write("데이터셋 내용 (최대 100개 표시):")
-    st.dataframe(pd.DataFrame(display_data[:100]))
+    # 전체 데이터 표시
+    st.write("데이터셋 내용:")
+    st.dataframe(pd.DataFrame(display_data))
     
     return test_cases, num_samples
 
