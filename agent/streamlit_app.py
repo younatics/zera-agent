@@ -537,6 +537,14 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                         name='최고 개별 점수',
                         mode='lines+markers'
                     ))
+                    # 표준편차 그래프 추가
+                    std_devs = [r['std_dev'] for r in all_results]
+                    fig.add_trace(go.Scatter(
+                        x=x_values,
+                        y=std_devs,
+                        name='표준편차',
+                        mode='lines+markers'
+                    ))
                     fig.update_layout(
                         title='점수 추이',
                         xaxis_title='이터레이션',
@@ -557,13 +565,15 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                         st.subheader(f"Iteration {result['iteration']}")
                         
                         # 평균 점수와 최고 점수
-                        col1, col2, col3 = st.columns(3)
+                        col1, col2, col3, col4 = st.columns(4)
                         with col1:
                             st.metric("Average Score", f"{result['avg_score']:.2f}")
                         with col2:
                             st.metric("Best Average Score So Far", f"{result['best_avg_score']:.2f}")
                         with col3:
                             st.metric("Best Sample Score So Far", f"{result['best_sample_score']:.2f}")
+                        with col4:
+                            st.metric("Standard Deviation", f"{result['std_dev']:.2f}")
                         
                         # 평가 기록을 데이터프레임으로 변환
                         history_df = pd.DataFrame(result['responses'])

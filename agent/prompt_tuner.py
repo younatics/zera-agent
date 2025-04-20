@@ -3,6 +3,7 @@ import logging
 from common.api_client import Model
 import os
 import random
+import statistics
 
 class PromptTuner:
     """
@@ -153,6 +154,7 @@ class PromptTuner:
                 - system_prompt: current system prompt
                 - user_prompt: current user prompt
                 - avg_score: average score for this iteration
+                - std_dev: standard deviation for this iteration
                 - best_avg_score: best average score so far
                 - best_sample_score: best individual test case score so far
                 - best_prompt: best prompt so far
@@ -224,9 +226,12 @@ class PromptTuner:
             valid_scores = [score for score in iteration_scores if score is not None]
             if valid_scores:
                 avg_score = sum(valid_scores) / len(valid_scores)
+                # 표준편차 계산
+                std_dev = statistics.stdev(valid_scores) if len(valid_scores) > 1 else 0.0
             else:
                 avg_score = 0.0
-            self.logger.info(f"Iteration {iteration + 1} 평균 점수: {avg_score:.2f}")
+                std_dev = 0.0
+            self.logger.info(f"Iteration {iteration + 1} 평균 점수: {avg_score:.2f}, 표준편차: {std_dev:.2f}")
             
             # 현재까지의 최고 평균 점수와 비교
             if avg_score > best_avg_score:
@@ -240,6 +245,7 @@ class PromptTuner:
                 'system_prompt': current_system_prompt,
                 'user_prompt': current_user_prompt,
                 'avg_score': avg_score,
+                'std_dev': std_dev,  # 표준편차 추가
                 'best_avg_score': best_avg_score,
                 'best_sample_score': iteration_best_sample_score,  # 이터레이션별 최고 점수 사용
                 'best_system_prompt': best_system_prompt,
