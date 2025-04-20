@@ -1,0 +1,25 @@
+# TASK
+Based on the information below, generate improved SYSTEM_PROMPT and USER_PROMPT.  
+Focus on fixing key issues observed in the evaluation, and improving alignment with high-performing patterns.
+
+# 1. BEST PROMPT
+Score: {best_prompt_score}  
+System: {best_system_prompt}  
+User: {best_user_prompt}
+
+# 2. CURRENT PROMPT (to improve)
+System: {system_prompt}  
+User: {user_prompt}
+
+# 3. PROMPT HISTORY (recent attempts)
+{recent_prompts}
+
+# 4. EVALUATION SNAPSHOTS (sampled)
+{random_cases}
+
+# OUTPUT FORMAT
+SYSTEM_PROMPT:
+[your improved system prompt here]
+
+USER_PROMPT:
+[your improved user prompt here]

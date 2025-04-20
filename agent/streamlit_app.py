@@ -41,8 +41,10 @@ with open(os.path.join(prompts_dir, 'initial_user_prompt.txt'), 'r', encoding='u
     DEFAULT_USER_PROMPT = f.read()
 with open(os.path.join(prompts_dir, 'evaluation_prompt.txt'), 'r', encoding='utf-8') as f:
     DEFAULT_EVALUATION_PROMPT = f.read()
-with open(os.path.join(prompts_dir, 'meta_prompt.txt'), 'r', encoding='utf-8') as f:
-    DEFAULT_META_PROMPT = f.read()
+with open(os.path.join(prompts_dir, 'meta_system_prompt.txt'), 'r', encoding='utf-8') as f:
+    DEFAULT_META_SYSTEM_PROMPT = f.read()
+with open(os.path.join(prompts_dir, 'meta_user_prompt.txt'), 'r', encoding='utf-8') as f:
+    DEFAULT_META_USER_PROMPT = f.read()
 
 # MMLU 데이터셋 인스턴스 생성
 mmlu_dataset = MMLUDataset()
@@ -204,19 +206,21 @@ with st.expander("초기 프롬프트 설정", expanded=False):
 
 # 메타프롬프트 설정
 with st.expander("메타프롬프트 설정", expanded=False):
-    meta_prompt = st.text_area(
-        "메타프롬프트 입력",
-        value=DEFAULT_META_PROMPT,
-        height=300,
-        help="""프롬프트 변형을 생성할 때 사용하는 프롬프트를 입력하세요.
-다음 변수들이 사용됩니다:
-- {prompt}: 원본 프롬프트
-- {question}: 테스트 케이스의 질문
-- {expected}: 기대하는 응답
-- {evaluation_reason}: 평가 모델이 내린 평가의 이유
-
-평가 이유를 바탕으로 프롬프트를 개선하는 방향성을 제시할 수 있습니다."""
-    )
+    col1, col2 = st.columns(2)
+    with col1:
+        meta_system_prompt = st.text_area(
+            "메타 시스템 프롬프트",
+            value=DEFAULT_META_SYSTEM_PROMPT,
+            height=300,
+            help="프롬프트 엔지니어의 역할과 책임을 정의하는 시스템 프롬프트를 입력하세요."
+        )
+    with col2:
+        meta_user_prompt = st.text_area(
+            "메타 유저 프롬프트",
+            value=DEFAULT_META_USER_PROMPT,
+            height=300,
+            help="프롬프트 개선을 위한 입력 데이터와 출력 형식을 정의하는 유저 프롬프트를 입력하세요."
+        )
 
 # 평가 프롬프트 설정
 with st.expander("평가 프롬프트 설정", expanded=False):
@@ -431,8 +435,8 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
         tuner.set_evaluation_prompt(evaluation_prompt)
         
         # 메타프롬프트가 입력된 경우에만 설정
-        if meta_prompt.strip():
-            tuner.set_meta_prompt(meta_prompt)
+        if meta_system_prompt.strip() and meta_user_prompt.strip():
+            tuner.set_meta_prompt(meta_system_prompt, meta_user_prompt)
         
         # 프로그레스 바 설정
         progress_bar = st.progress(0)

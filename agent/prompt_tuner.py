@@ -49,8 +49,10 @@ class PromptTuner:
             self.evaluation_prompt_template = f.read()
         
         # 기본 메타프롬프트 로드
-        with open(os.path.join(prompts_dir, 'meta_prompt.txt'), 'r', encoding='utf-8') as f:
-            self.meta_prompt_template = f.read()
+        with open(os.path.join(prompts_dir, 'meta_system_prompt.txt'), 'r', encoding='utf-8') as f:
+            self.meta_system_prompt_template = f.read()
+        with open(os.path.join(prompts_dir, 'meta_user_prompt.txt'), 'r', encoding='utf-8') as f:
+            self.meta_user_prompt_template = f.read()
     
     def set_evaluation_prompt(self, prompt_template: str):
         """
@@ -61,14 +63,16 @@ class PromptTuner:
         """
         self.evaluation_prompt_template = prompt_template
     
-    def set_meta_prompt(self, prompt_template: str):
+    def set_meta_prompt(self, system_prompt_template: str, user_prompt_template: str):
         """
         메타프롬프트 템플릿을 설정합니다.
         
         Args:
-            prompt_template (str): 메타프롬프트 템플릿. {prompt}를 포함해야 합니다.
+            system_prompt_template (str): 메타 시스템 프롬프트 템플릿
+            user_prompt_template (str): 메타 유저 프롬프트 템플릿
         """
-        self.meta_prompt_template = prompt_template
+        self.meta_system_prompt_template = system_prompt_template
+        self.meta_user_prompt_template = user_prompt_template
     
     def _evaluate_response(self, response: str, expected: str, question: str) -> tuple[float, str]:
         """
@@ -259,25 +263,16 @@ class PromptTuner:
                 ])
                 
                 # 메타프롬프트를 사용하여 현재 프롬프트를 개선
-                improvement_prompt = self.meta_prompt_template.format(
-                    system_prompt=current_system_prompt,
-                    user_prompt=current_user_prompt,
-                    random_cases=formatted_cases,
-                    recent_prompts=chr(10).join([
-                        f"Iteration {p['iteration']} (Average Score: {p['avg_score']:.2f}):{chr(10)}"
-                        f"System Prompt: {p['system_prompt']}{chr(10)}"
-                        f"User Prompt: {p['user_prompt']}"
-                        for p in self._get_recent_prompts()[:-1]  # 현재 프롬프트를 제외한 최근 3개
-                    ]),
-                    best_prompt_score=self._get_best_prompt()['avg_score'],
-                    best_system_prompt=self._get_best_prompt()['system_prompt'],
-                    best_user_prompt=self._get_best_prompt()['user_prompt']
-                )
+                improvement_prompt = self._generate_meta_prompt(current_system_prompt, current_user_prompt, self._get_recent_prompts(), {'avg_score': best_score, 'system_prompt': best_prompt, 'user_prompt': current_user_prompt}, random_cases)
                 
                 # 결과에 메타프롬프트 추가
                 result['meta_prompt'] = improvement_prompt
                 
-                improved_prompts = self.meta_prompt_model.ask("", system_prompt=improvement_prompt)
+                # 메타프롬프트를 사용하여 프롬프트 개선
+                improved_prompts = self.meta_prompt_model.ask(
+                    question=improvement_prompt,  # 질문
+                    system_prompt=self.meta_system_prompt_template  # 시스템 프롬프트
+                )
                 if improved_prompts and improved_prompts.strip():
                     # 개선된 프롬프트에서 시스템 프롬프트와 유저 프롬프트 분리
                     improved_prompts = improved_prompts.strip()
@@ -336,4 +331,49 @@ class PromptTuner:
                 'system_prompt': self.initial_system_prompt,
                 'user_prompt': self.initial_user_prompt
             }
-        return max(self.prompt_history, key=lambda x: x['avg_score']) 
+        return max(self.prompt_history, key=lambda x: x['avg_score'])
+
+    def _generate_meta_prompt(self, system_prompt: str, user_prompt: str, recent_prompts: List[Dict], best_prompt: Dict, random_cases: List[Dict]) -> str:
+        """
+        메타프롬프트 템플릿을 생성합니다.
+        
+        Args:
+            system_prompt (str): 현재 시스템 프롬프트
+            user_prompt (str): 현재 유저 프롬프트
+            recent_prompts (List[Dict]): 최근 프롬프트 히스토리
+            best_prompt (Dict): 최고 성능 프롬프트
+            random_cases (List[Dict]): 랜덤 평가 케이스
+            
+        Returns:
+            str: 생성된 메타프롬프트 템플릿
+        """
+        # 랜덤 케이스 포맷팅
+        formatted_cases = "\n".join([
+            f"Question: {case['question']}\n"
+            f"Expected answer: {case['expected']}\n"
+            f"Actual answer: {case['actual']}\n"
+            f"Score: {case['score']}\n"
+            f"Evaluation reason: {case['reason']}\n"
+            for case in random_cases
+        ])
+        
+        # 최근 프롬프트 포맷팅
+        formatted_recent_prompts = chr(10).join([
+            f"Iteration {p['iteration']} (Average Score: {p['avg_score']:.2f}):{chr(10)}"
+            f"System Prompt: {p['system_prompt']}{chr(10)}"
+            f"User Prompt: {p['user_prompt']}"
+            for p in recent_prompts[:-1]  # 현재 프롬프트를 제외한 최근 3개
+        ])
+        
+        # 메타프롬프트 템플릿 생성
+        improvement_prompt = self.meta_user_prompt_template.format(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            random_cases=formatted_cases,
+            recent_prompts=formatted_recent_prompts,
+            best_prompt_score=best_prompt['avg_score'],
+            best_system_prompt=best_prompt['system_prompt'],
+            best_user_prompt=best_prompt['user_prompt']
+        )
+        
+        return improvement_prompt 
