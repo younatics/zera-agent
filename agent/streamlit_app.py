@@ -545,6 +545,14 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                         name='표준편차',
                         mode='lines+markers'
                     ))
+                    # top3 평균 점수 그래프 추가
+                    top3_scores = [r['top3_avg_score'] for r in all_results]
+                    fig.add_trace(go.Scatter(
+                        x=x_values,
+                        y=top3_scores,
+                        name='Top3 평균 점수',
+                        mode='lines+markers'
+                    ))
                     fig.update_layout(
                         title='점수 추이',
                         xaxis_title='이터레이션',
@@ -565,7 +573,7 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                         st.subheader(f"Iteration {result['iteration']}")
                         
                         # 평균 점수와 최고 점수
-                        col1, col2, col3, col4 = st.columns(4)
+                        col1, col2, col3, col4, col5 = st.columns(5)
                         with col1:
                             st.metric("Average Score", f"{result['avg_score']:.2f}")
                         with col2:
@@ -574,6 +582,8 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                             st.metric("Best Sample Score So Far", f"{result['best_sample_score']:.2f}")
                         with col4:
                             st.metric("Standard Deviation", f"{result['std_dev']:.2f}")
+                        with col5:
+                            st.metric("Top3 Average Score", f"{result['top3_avg_score']:.2f}")
                         
                         # 평가 기록을 데이터프레임으로 변환
                         history_df = pd.DataFrame(result['responses'])

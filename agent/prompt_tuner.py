@@ -155,6 +155,7 @@ class PromptTuner:
                 - user_prompt: current user prompt
                 - avg_score: average score for this iteration
                 - std_dev: standard deviation for this iteration
+                - top3_avg_score: top 3 average score for this iteration
                 - best_avg_score: best average score so far
                 - best_sample_score: best individual test case score so far
                 - best_prompt: best prompt so far
@@ -228,10 +229,14 @@ class PromptTuner:
                 avg_score = sum(valid_scores) / len(valid_scores)
                 # 표준편차 계산
                 std_dev = statistics.stdev(valid_scores) if len(valid_scores) > 1 else 0.0
+                # top3 평균 점수 계산
+                top3_scores = sorted(valid_scores, reverse=True)[:3]
+                top3_avg_score = sum(top3_scores) / len(top3_scores)
             else:
                 avg_score = 0.0
                 std_dev = 0.0
-            self.logger.info(f"Iteration {iteration + 1} 평균 점수: {avg_score:.2f}, 표준편차: {std_dev:.2f}")
+                top3_avg_score = 0.0
+            self.logger.info(f"Iteration {iteration + 1} 평균 점수: {avg_score:.2f}, 표준편차: {std_dev:.2f}, Top3 평균 점수: {top3_avg_score:.2f}")
             
             # 현재까지의 최고 평균 점수와 비교
             if avg_score > best_avg_score:
@@ -246,6 +251,7 @@ class PromptTuner:
                 'user_prompt': current_user_prompt,
                 'avg_score': avg_score,
                 'std_dev': std_dev,  # 표준편차 추가
+                'top3_avg_score': top3_avg_score,  # top3 평균 점수 추가
                 'best_avg_score': best_avg_score,
                 'best_sample_score': iteration_best_sample_score,  # 이터레이션별 최고 점수 사용
                 'best_system_prompt': best_system_prompt,
