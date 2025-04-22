@@ -110,6 +110,18 @@ class MMLUDataset:
         
         return data
 
+    def get_all_subjects_data(self) -> Dict[str, Dict[str, List[Dict]]]:
+        """모든 과목의 데이터를 가져옴"""
+        all_data = {}
+        for subject in self.subjects:
+            try:
+                subject_data = self.get_subject_data(subject)
+                all_data[subject] = subject_data
+            except Exception as e:
+                print(f"Error loading data for {subject}: {str(e)}")
+                continue
+        return all_data
+
 if __name__ == "__main__":
     # 사용 예시
     dataset = MMLUDataset()

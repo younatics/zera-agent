@@ -418,9 +418,11 @@ elif dataset_type == "CNN":
         st.error(f"CNN 데이터셋 로드 중 오류 발생: {str(e)}")
         st.stop()
 else:
+    # MMLU 데이터셋 선택에 '모든 과목' 옵션 추가
+    subject_options = ["모든 과목"] + mmlu_dataset.subjects
     subject = st.selectbox(
         "Select MMLU Subject",
-        mmlu_dataset.subjects,
+        subject_options,
         index=0
     )
     split = st.selectbox(
@@ -429,9 +431,18 @@ else:
         index=0
     )
     try:
-        # MMLU 데이터셋 로드
-        subject_data = mmlu_dataset.get_subject_data(subject)
-        data = subject_data[split]
+        if subject == "모든 과목":
+            # 모든 과목의 데이터 로드
+            all_subjects_data = mmlu_dataset.get_all_subjects_data()
+            # 모든 과목의 데이터를 하나의 리스트로 합치기
+            data = []
+            for subject_data in all_subjects_data.values():
+                data.extend(subject_data[split])
+        else:
+            # 특정 과목의 데이터 로드
+            subject_data = mmlu_dataset.get_subject_data(subject)
+            data = subject_data[split]
+        
         test_cases, num_samples = process_dataset(data, "MMLU")
     except Exception as e:
         st.error(f"MMLU 데이터셋 로드 중 오류 발생: {str(e)}")

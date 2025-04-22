@@ -51,13 +51,13 @@ class Model:
     def get_all_model_info(cls):
         return cls.model_info
 
-    def __init__(self, model_name: str):
+    def __init__(self, model_name: str, version: Optional[str] = None):
         """모델 초기화"""
         if model_name not in self.model_info:
             raise ValueError(f"Model {model_name} not found. Available models: {list(self.model_info.keys())}")
         
         self.name = model_name
-        self.model_id = self.model_info[model_name]["default_version"]
+        self.model_id = version or self.model_info[model_name]["default_version"]
         self.system_prompt = None
         self.user_prompt = None
         self.temperature = None  # 기본값 None으로 설정
@@ -104,7 +104,7 @@ class Model:
                 if "claude" in self.model_id:
                     response = self.client.messages.create(
                         model=self.model_id,
-                        max_tokens=10000,
+                        max_tokens=8192,
                         system=messages[0]["content"],
                         messages=[messages[1]]
                     )
