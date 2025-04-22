@@ -1,6 +1,5 @@
 from typing import List, Dict, Any
-import json
-from .evaluator import BaseEvaluator
+from evaluation.evaluator import BaseEvaluator
 
 class MMLUEvaluator(BaseEvaluator):
     def load_dataset(self, dataset_path: str) -> List[Dict[str, Any]]:

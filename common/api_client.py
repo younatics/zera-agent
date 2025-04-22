@@ -3,6 +3,11 @@ import json
 import os
 from openai import OpenAI
 from anthropic import Anthropic
+from dotenv import load_dotenv
+from typing import Optional, Dict, Any
+
+# .env 파일 로드
+load_dotenv()
 
 
 def create_messages(question, system_prompt, user_prompt):
@@ -50,14 +55,19 @@ class Model:
     def get_all_model_info(cls):
         return cls.model_info
 
-    def __init__(self, model_name, system_prompt=None, user_prompt=None, version=None):
+    def __init__(self, model_name: str):
+        """모델 초기화"""
+        self.model_name = model_name
+        self.model_version = None
+        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        
         if model_name not in self.model_info:
             raise ValueError(f"Model {model_name} not found. Available models: {list(self.model_info.keys())}")
         
         self.name = model_name
-        self.model_id = version or self.model_info[model_name]["default_version"]
-        self.system_prompt = system_prompt
-        self.user_prompt = user_prompt
+        self.model_id = self.model_info[model_name]["default_version"]
+        self.system_prompt = None
+        self.user_prompt = None
         
         # Initialize appropriate client
         if model_name == "claude":

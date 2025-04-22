@@ -1,6 +1,5 @@
 from typing import List, Dict, Any
-import json
-from .evaluator import BaseEvaluator
+from evaluation.evaluator import BaseEvaluator
 
 class BBHEvaluator(BaseEvaluator):
     def load_dataset(self, dataset_path: str) -> List[Dict[str, Any]]:
@@ -15,9 +14,4 @@ class BBHEvaluator(BaseEvaluator):
     
     def evaluate_response(self, response: str, ground_truth: Dict[str, Any]) -> bool:
         """BBH 응답을 평가합니다."""
-        # 정답과 모델 응답을 소문자로 변환하고 공백 제거
-        model_answer = response.strip().lower()
-        correct_answer = ground_truth['answer'].strip().lower()
-        
-        # 정확한 문자열 매칭
-        return model_answer == correct_answer 
+        return response.strip().lower() == ground_truth['answer'].strip().lower() 

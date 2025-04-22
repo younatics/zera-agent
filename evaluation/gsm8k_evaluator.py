@@ -1,7 +1,7 @@
 from typing import List, Dict, Any
 import json
 import re
-from .evaluator import BaseEvaluator
+from evaluation.evaluator import BaseEvaluator
 
 class GSM8KEvaluator(BaseEvaluator):
     def load_dataset(self, dataset_path: str) -> List[Dict[str, Any]]:
