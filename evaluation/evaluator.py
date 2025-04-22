@@ -27,7 +27,7 @@ class BaseEvaluator(ABC):
             data = json.load(f)
             
         if num_samples is not None:
-            data = data[:num_samples]
+            data = random.sample(data, min(num_samples, len(data)))
             
         return data
         
@@ -56,7 +56,7 @@ class BaseEvaluator(ABC):
         results = {
             "total": len(dataset),
             "correct": 0,
-            "responses": [],
+            "samples": [],  # 각 샘플의 상세 정보를 저장
             "system_prompt": system_prompt,
             "user_prompt": user_prompt
         }
@@ -70,12 +70,23 @@ class BaseEvaluator(ABC):
                 is_correct = self.evaluate_response(response, item)
                 
                 results["correct"] += 1 if is_correct else 0
-                results["responses"].append({
+                
+                # 각 샘플의 상세 정보 저장
+                sample_info = {
                     "question": question,
-                    "response": response,
-                    "ground_truth": item,
+                    "model_response": response,
+                    "actual_answer": item.get("answer", item),  # answer 필드가 있으면 사용, 없으면 전체 item
                     "is_correct": is_correct
-                })
+                }
+                results["samples"].append(sample_info)
+                
+                # 상세 정보 출력
+                print(f"\n샘플 {idx+1}/{len(dataset)}:")
+                print(f"문제: {question}")
+                print(f"모델 답변: {response}")
+                print(f"실제 답변: {sample_info['actual_answer']}")
+                print(f"정답 여부: {'정답' if is_correct else '오답'}")
+                print("-" * 50)
                 
                 logger.info(f"Processed {idx+1}/{len(dataset)} samples")
                 time.sleep(1)  # API rate limit 방지

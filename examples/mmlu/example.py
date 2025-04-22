@@ -16,7 +16,7 @@ def run_mmlu_example():
         "--model_version", "gpt-3.5-turbo",
         "--system_prompt", "You are a multiple-choice question solver. Choose the best answer among A, B, C, or D. Give only the letter.",
         "--user_prompt", "Question:",
-        "--num_samples", "1000"
+        "--num_samples", "100"
     ]
     
     # 평가 실행
