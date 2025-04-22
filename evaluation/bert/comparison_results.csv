@@ -1,0 +1,4 @@
+Metric,ZERA,Baseline,Difference
+Precision,tensor(0.8512),tensor(0.8741),tensor(-0.0228)
+Recall,tensor(0.8779),tensor(0.8699),tensor(0.0080)
+F1,tensor(0.8643),tensor(0.8719),tensor(-0.0076)

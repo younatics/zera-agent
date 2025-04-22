@@ -54,6 +54,13 @@ def main():
     print(f"총 샘플 수: {results['total']}")
     print(f"정답 수: {results['correct']}")
     print(f"정확도: {results['accuracy']:.2%}")
+    
+    # ROUGE 점수 출력
+    if "rouge_scores" in results:
+        print("\nROUGE 점수 (평균):")
+        for metric, scores in results["rouge_scores"].items():
+            print(f"  {metric}:")
+            print(f"    F1: {scores['f']:.3f}")
 
 if __name__ == "__main__":
     main() 

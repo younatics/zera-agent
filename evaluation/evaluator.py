@@ -17,8 +17,8 @@ class BaseEvaluator(ABC):
         self.model_name = model_name
         self.model_version = model_version
         self.model = Model(model_name).set_version(model_version)
-        self.model.set_temperature(0.0)
-        self.model.set_top_p(1.0)
+        self.model.set_temperature(0.7)
+        self.model.set_top_p(0.9)
 
         self.results_dir = Path("evaluation/results")
         self.results_dir.mkdir(parents=True, exist_ok=True)

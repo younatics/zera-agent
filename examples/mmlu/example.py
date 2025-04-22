@@ -14,11 +14,11 @@ def run_mmlu_example():
         "--dataset", "mmlu",
         "--model", "gpt4o",
         "--model_version", "gpt-3.5-turbo",
-        # "--system_prompt", "You are a multiple-choice question solver. Choose the best answer among A, B, C, or D. Give only the letter.",
-        # "--user_prompt", "Question:",
-        "--system_prompt", "You are an AI assistant designed to answer multiple-choice questions with precision and brevity. For each question, provide only the correct numeric option as your response, without additional explanations unless specifically requested. Your response format should be a single number representing the correct option.",
-        "--user_prompt", "Provide me with a multiple-choice question along with the list of answer choices. I will return the numeric option of the correct answer.\nQuestion:",
-        "--num_samples", "100"
+        "--system_prompt", "You are a multiple-choice question solver. Choose the best answer among A, B, C, or D. Give only the letter.",
+        "--user_prompt", "Question:",
+        # "--system_prompt", "You are a dedicated AI specialized in responding accurately to multiple-choice questions by selecting the most appropriate choice number. For each question, provide just the choice number as your response. Do not include additional explanations unless specifically requested. Ensure precision by analyzing each option before selecting your answer.",
+        # "--user_prompt", "Hello! I'm here to assist you in selecting the correct answer choice number for your multiple-choice questions. Please share the question along with the options, and I will promptly provide the most suitable choice number. When you're ready, feel free to start!\nQuestion:",
+        "--num_samples", "1000"
     ]
     
     # 평가 실행
