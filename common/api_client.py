@@ -60,6 +60,8 @@ class Model:
         self.model_id = self.model_info[model_name]["default_version"]
         self.system_prompt = None
         self.user_prompt = None
+        self.temperature = None  # 기본값 None으로 설정
+        self.top_p = None  # 기본값 None으로 설정
         
         # Initialize appropriate client
         if model_name == "claude":
@@ -79,6 +81,20 @@ class Model:
         self.model_id = version
         return self
 
+    def set_temperature(self, temperature: float):
+        """temperature 값을 설정합니다. (0.0 ~ 1.0)"""
+        if not 0.0 <= temperature <= 1.0:
+            raise ValueError("Temperature must be between 0.0 and 1.0")
+        self.temperature = temperature
+        return self
+
+    def set_top_p(self, top_p: float):
+        """top_p 값을 설정합니다. (0.0 ~ 1.0)"""
+        if not 0.0 <= top_p <= 1.0:
+            raise ValueError("Top_p must be between 0.0 and 1.0")
+        self.top_p = top_p
+        return self
+
     def _create_handler(self):
         def handler(question, system_prompt=None, user_prompt=None):
             try:
@@ -94,11 +110,25 @@ class Model:
                     )
                     return response.content[0].text
                 else:
-                    response = self.client.chat.completions.create(
-                        model=self.model_id,
-                        messages=messages,
-                        stream=False if "solar" in self.model_id else None,
-                    )
+                    # API 파라미터 준비
+                    api_params = {
+                        "model": self.model_id,
+                        "messages": messages,
+                    }
+                    
+                    # temperature가 설정된 경우에만 추가
+                    if self.temperature is not None:
+                        api_params["temperature"] = self.temperature
+                    
+                    # top_p가 설정된 경우에만 추가
+                    if self.top_p is not None:
+                        api_params["top_p"] = self.top_p
+                    
+                    # Solar 모델의 경우 stream=False 설정
+                    if "solar" in self.model_id:
+                        api_params["stream"] = False
+                    
+                    response = self.client.chat.completions.create(**api_params)
                     return response.choices[0].message.content
             except Exception as e:
                 return f"Error: {e}"
