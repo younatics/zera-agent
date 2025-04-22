@@ -1,12 +1,26 @@
 from typing import List, Dict, Any
 from evaluation.evaluator import BaseEvaluator
+from datasets import load_dataset
+import json
 
 class MMLUEvaluator(BaseEvaluator):
     def load_dataset(self, dataset_path: str) -> List[Dict[str, Any]]:
         """MMLU 데이터셋을 로드합니다."""
-        with open(dataset_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        return data
+        # Hugging Face에서 MMLU 데이터셋 로드
+        dataset = load_dataset("cais/mmlu", "all")
+        test_data = dataset["test"]
+        
+        # 필요한 형식으로 변환
+        formatted_data = []
+        for item in test_data:
+            formatted_item = {
+                "question": item["question"],
+                "choices": item["choices"],
+                "answer": item["answer"]
+            }
+            formatted_data.append(formatted_item)
+            
+        return formatted_data
     
     def format_question(self, item: Dict[str, Any]) -> str:
         """MMLU 질문을 포맷팅합니다."""

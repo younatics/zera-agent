@@ -7,6 +7,7 @@ from pathlib import Path
 import logging
 from .dataset_loader import DatasetLoader
 import os
+import random
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -46,18 +47,26 @@ class BaseEvaluator(ABC):
                       user_prompt: Optional[str] = None,
                       num_samples: Optional[int] = None) -> Dict[str, Any]:
         """전체 평가를 실행하는 메서드"""
-        dataset = self.load_dataset(dataset_name, num_samples)
+        dataset = self.load_dataset(dataset_name)
+        
+        # 랜덤 샘플링
+        if num_samples:
+            dataset = random.sample(dataset, min(num_samples, len(dataset)))
             
         results = {
             "total": len(dataset),
             "correct": 0,
-            "responses": []
+            "responses": [],
+            "system_prompt": system_prompt,
+            "user_prompt": user_prompt
         }
         
         for idx, item in enumerate(dataset):
             try:
                 question = self.format_question(item)
+                
                 response = self.model.ask(question, system_prompt, user_prompt)
+                
                 is_correct = self.evaluate_response(response, item)
                 
                 results["correct"] += 1 if is_correct else 0
@@ -81,7 +90,7 @@ class BaseEvaluator(ABC):
         # 결과 저장
         timestamp = time.strftime("%Y%m%d_%H%M%S")
         result_file = self.results_dir / f"{self.__class__.__name__}_{timestamp}.json"
-        self.save_results(results, result_file)
+        self.save_results(results, str(result_file))
             
         return results 
 

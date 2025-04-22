@@ -1,10 +1,15 @@
 import argparse
+from dotenv import load_dotenv
+import os
 from evaluation.gsm8k_evaluator import GSM8KEvaluator
 from evaluation.mmlu_evaluator import MMLUEvaluator
 from evaluation.bbh_evaluator import BBHEvaluator
 from evaluation.cnn_dailymail_evaluator import CNNDailyMailEvaluator
 from evaluation.samsum_evaluator import SAMSumEvaluator
 from evaluation.mbpp_evaluator import MBPPEvaluator
+
+# .env 파일 로드
+load_dotenv()
 
 def main():
     parser = argparse.ArgumentParser(description="LLM 평가 스크립트")
