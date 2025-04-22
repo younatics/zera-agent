@@ -42,4 +42,4 @@ Thumbs.db
 prompt-autotuning-agent.pem 
 
 # Evaluation results
-evaluation/result/ 
+evaluation/results/ 
