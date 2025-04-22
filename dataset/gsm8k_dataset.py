@@ -73,6 +73,12 @@ class GSM8KDataset:
             })
         
         return data
+    
+    def load_data(self, split: str = 'train') -> List[Dict]:
+        """Streamlit 앱과의 호환성을 위한 get_data의 래퍼 메서드"""
+        if split == 'validation':
+            split = 'test'  # GSM8K는 validation set이 없으므로 test set을 사용
+        return self.get_data(split)
 
 if __name__ == "__main__":
     # 사용 예시

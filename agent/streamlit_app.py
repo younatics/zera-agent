@@ -26,6 +26,7 @@ sys.path.append(project_root)
 
 from dataset.mmlu_dataset import MMLUDataset
 from dataset.cnn_dataset import CNNDataset
+from dataset.gsm8k_dataset import GSM8KDataset
 import numpy as np
 
 # 로깅 설정
@@ -325,6 +326,32 @@ def process_dataset(data, dataset_type):
                 'question': row['question'],
                 'expected_answer': row['expected_answer']
             })
+    elif dataset_type == "CNN":
+        # 데이터를 청크 단위로 처리
+        chunk_size = 1000  # 한 번에 처리할 데이터 크기
+        for i in range(0, len(data), chunk_size):
+            chunk = data.iloc[i:i+chunk_size]
+            for _, row in chunk.iterrows():
+                test_cases.append({
+                    'question': row['input'],
+                    'expected': row['expected_answer']
+                })
+                
+                display_data.append({
+                    'question': row['input'],
+                    'expected_answer': row['expected_answer']
+                })
+    elif dataset_type == "GSM8K":
+        for item in data:
+            test_cases.append({
+                'question': item['question'],
+                'expected': item['answer']
+            })
+            
+            display_data.append({
+                'question': item['question'],
+                'expected_answer': item['answer']
+            })
     else:  # CNN 데이터셋
         # 데이터를 청크 단위로 처리
         chunk_size = 1000  # 한 번에 처리할 데이터 크기
@@ -351,7 +378,7 @@ def process_dataset(data, dataset_type):
 st.header("Dataset Selection")
 dataset_type = st.radio(
     "Select Dataset Type",
-    ["CSV", "MMLU", "CNN"],
+    ["CSV", "MMLU", "CNN", "GSM8K"],
     horizontal=True
 )
 
@@ -416,6 +443,27 @@ elif dataset_type == "CNN":
         st.info(f"선택된 청크: {chunk_index} ({len(data):,}개 예제)")
     except Exception as e:
         st.error(f"CNN 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.stop()
+elif dataset_type == "GSM8K":
+    # GSM8K 데이터셋 인스턴스 생성
+    gsm8k_dataset = GSM8KDataset()
+    
+    # 데이터셋 선택
+    split = st.selectbox(
+        "데이터셋 선택",
+        ["train", "validation", "test"],
+        index=0
+    )
+    
+    try:
+        # 데이터 로드
+        data = gsm8k_dataset.load_data(split)
+        test_cases, num_samples = process_dataset(data, "GSM8K")
+        
+        # 데이터셋 정보 표시
+        st.info(f"GSM8K {split} 데이터셋: {len(data):,}개 예제")
+    except Exception as e:
+        st.error(f"GSM8K 데이터셋 로드 중 오류 발생: {str(e)}")
         st.stop()
 else:
     # MMLU 데이터셋 선택에 '모든 과목' 옵션 추가
