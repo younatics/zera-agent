@@ -40,3 +40,6 @@ Thumbs.db
 # AWS PEM keys
 *.pem
 prompt-autotuning-agent.pem 
+
+# Evaluation results
+evaluation/result/ 
