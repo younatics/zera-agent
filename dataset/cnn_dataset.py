@@ -160,6 +160,18 @@ class CNNDataset:
         """
         chunk_dir = os.path.join(self.data_dir, f"{split}_chunks")
         return len(glob.glob(os.path.join(chunk_dir, f"{split}_chunk_*.csv")))
+    
+    def load_all_data(self, split: str) -> pd.DataFrame:
+        """
+        Load all data from a given split.
+        
+        Args:
+            split (str): One of 'train', 'validation', or 'test'
+            
+        Returns:
+            pd.DataFrame: All data from the specified split
+        """
+        return self.load_data(split, chunk_index=None)
 
 if __name__ == "__main__":
     # Example usage

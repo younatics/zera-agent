@@ -451,7 +451,7 @@ elif dataset_type == "GSM8K":
     # 데이터셋 선택
     split = st.selectbox(
         "데이터셋 선택",
-        ["train", "validation", "test"],
+        ["train", "test"],
         index=0
     )
     
