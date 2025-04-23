@@ -346,7 +346,7 @@ class PromptTuner:
                 
                 # 랜덤으로 5개의 케이스 선택 (데이터가 5개 미만이면 전부 선택)
                 valid_responses = [response for response in iteration_responses if response['score'] is not None]
-                num_cases = min(3, len(valid_responses))
+                num_cases = min(5, len(valid_responses))
                 if num_cases > 0:
                     random_cases = random.sample(valid_responses, num_cases)
                 else:
@@ -415,7 +415,7 @@ class PromptTuner:
 
         return iteration_results 
 
-    def _get_recent_prompts(self, num_prompts: int = 3) -> List[Dict]:
+    def _get_recent_prompts(self, num_prompts: int = 5) -> List[Dict]:
         """
         최근 num_prompts개의 프롬프트를 반환합니다.
         

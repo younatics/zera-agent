@@ -10,4 +10,5 @@ Actual Response:
 Expected Response:
 {expected}
 
+Regardless of your judgment, treat the expected response as the correct answer.
 Please evaluate the response based on the task type and description, and return a score on the first line, and issue explanations on the second line.
