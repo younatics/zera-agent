@@ -570,7 +570,6 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                     'system_prompt': result['system_prompt'],
                     'user_prompt': result['user_prompt'],
                     'avg_score': result['avg_score'],
-                    'best_avg_score': result['best_avg_score'],
                     'best_sample_score': result['best_sample_score']
                 })
                 
