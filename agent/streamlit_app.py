@@ -579,19 +579,12 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                     fig = go.Figure()
                     x_values = list(range(1, iteration_idx + 2))
                     avg_scores = [r['avg_score'] for r in all_results]
-                    best_avg_scores = [r['best_avg_score'] for r in all_results]
                     best_sample_scores = [r['best_sample_score'] for r in all_results]
                     
                     fig.add_trace(go.Scatter(
                         x=x_values,
                         y=avg_scores,
                         name='평균 점수',
-                        mode='lines+markers'
-                    ))
-                    fig.add_trace(go.Scatter(
-                        x=x_values,
-                        y=best_avg_scores,
-                        name='최고 평균 점수',
                         mode='lines+markers'
                     ))
                     fig.add_trace(go.Scatter(
