@@ -346,14 +346,13 @@ class PromptTuner:
                 
                 # 랜덤으로 5개의 케이스 선택 (데이터가 5개 미만이면 전부 선택)
                 valid_responses = [response for response in iteration_responses if response['score'] is not None]
-                num_cases = len(valid_responses)
                 
                 # 메타프롬프트를 사용하여 현재 프롬프트를 개선
                 improvement_prompt = self._generate_meta_prompt(
                     current_system_prompt, 
                     current_user_prompt, 
                     self._get_recent_prompts(), 
-                    num_cases,
+                    valid_responses,
                     current_task_type,
                     current_task_description
                 )
@@ -437,7 +436,7 @@ class PromptTuner:
             }
         return max(self.prompt_history, key=lambda x: x['avg_score'])
 
-    def _generate_meta_prompt(self, system_prompt: str, user_prompt: str, recent_prompts: List[Dict], num_cases: List[Dict], task_type: str, task_description: str) -> str:
+    def _generate_meta_prompt(self, system_prompt: str, user_prompt: str, recent_prompts: List[Dict], valid_responses: List[Dict], task_type: str, task_description: str) -> str:
         """
         메타프롬프트 템플릿을 생성합니다.
         
@@ -445,7 +444,7 @@ class PromptTuner:
             system_prompt (str): 현재 시스템 프롬프트
             user_prompt (str): 현재 유저 프롬프트
             recent_prompts (List[Dict]): 최근 프롬프트 히스토리
-            random_cases (List[Dict]): 랜덤 평가 케이스
+            valid_responses (List[Dict]): 전체 평가 케이스
             task_type (str): 현재 테스크 타입
             task_description (str): 현재 테스크 설명
             
@@ -453,7 +452,7 @@ class PromptTuner:
             str: 생성된 메타프롬프트 템플릿
         """
         # 케이스를 점수순으로 정렬
-        sorted_cases = sorted(num_cases, key=lambda x: x['score'])
+        sorted_cases = sorted(valid_responses, key=lambda x: x['score'])
         
         # 상위 3개 케이스 포맷팅
         formatted_top3_cases = "\n\n".join([
@@ -463,7 +462,7 @@ class PromptTuner:
             f"Actual Answer: {case['actual']}\n"
             f"Score: {case['score']:.2f}\n"
             f"Reasons: {case['reasons']}"
-            for i, case in enumerate(sorted_cases[-3:])  # 상위 3개
+            for i, case in enumerate(reversed(sorted_cases[-3:]))  # 상위 3개를 역순으로
         ])
         
         # 하위 3개 케이스 포맷팅
