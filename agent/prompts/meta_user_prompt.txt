@@ -1,28 +1,45 @@
-# TASK
-Based on the information below, generate an improved SYSTEM_PROMPT and USER_PROMPT.
+# TASK ANALYSIS & PROMPT OPTIMIZATION
 
-First, infer the type of task and the characteristics of effective responses.  
-Then, use what you've learned to create new prompts that are aligned with the task and optimized for quality.
+Your task is to analyze the provided information and generate optimized SYSTEM_PROMPT and USER_PROMPT pairs.
 
-Your goal is not to copy the best prompt,  
-but to learn what made it effective and generalize those strategies into a more robust and adaptable version.
+## 1. TASK DEFINITION & ANALYSIS
+Begin by thoroughly analyzing the evaluation snapshots below. These cases represent examples of prompt performance:
 
-# 1. BEST PROMPT
-Score: {best_prompt_score}  
-System: {best_system_prompt}  
-User: {best_user_prompt}
-
-# 2. CURRENT PROMPT (to improve)
-System: {system_prompt}  
-User: {user_prompt}
-
-# 3. PROMPT HISTORY (recent attempts)
-{recent_prompts}
-
-# 4. EVALUATION SNAPSHOTS (sampled)
 {random_cases}
 
-# OUTPUT FORMAT
+From these cases and the recent prompt history below, identify and document:
+- The fundamental task type and its core requirements
+- Patterns that consistently lead to high-quality outputs
+- Common failure modes and their root causes
+- Effective response structures and formats
+- Key differences between successful and unsuccessful cases
+- Evolution of prompt effectiveness over time
+- Consistent success patterns from the prompt history
+- Areas needing improvement based on historical performance
+
+Recent prompt history:
+{recent_prompts}
+
+Use these insights to form a clear understanding of what makes prompts effective for this specific task.
+
+## 2. CURRENT STATE
+Current prompts to improve:
+System: {system_prompt}
+User: {user_prompt}
+
+Best performing prompt (Score: {best_prompt_score}):
+System: {best_system_prompt}
+User: {best_user_prompt}
+
+## 3. OPTIMIZATION REQUIREMENTS
+Based on your analysis, create new prompts that:
+- Address identified success factors
+- Mitigate common failure patterns
+- Maintain or improve upon the best performing prompt's strengths
+- Generalize effective patterns for broader applicability
+- Ensure clear alignment between instructions and expected outputs
+
+## OUTPUT FORMAT
 SYSTEM_PROMPT:
 [your improved system prompt here]
 
