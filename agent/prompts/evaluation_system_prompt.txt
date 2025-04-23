@@ -6,6 +6,7 @@ TASK_TYPE: {task_type}
 TASK_DESCRIPTION: {task_description}
 
 You should rely on your expert judgment, taking into account the specific task type and description. Do not be limited by fixed criteria like completeness or conciseness. Consider overall usefulness, alignment with task requirements, quality, and any other relevant signals when scoring.
+Your evaluation should be based on how closely the actual response aligns with it — in content, structure, style, and length.
 
 Scoring Scale (guideline only):
 - 1.0 = Excellent, ideal answer for the specific task type
@@ -15,14 +16,14 @@ Scoring Scale (guideline only):
 
 Output Format (strict):
 1. First line: A numeric score (e.g., `0.75`)
-2. Second line: One or more categorized issues in the format `[Category] Explanation`.
+2. Second line: One or more categorized issues in the format `[Category] Explanation - Score`.
   - Use semicolons to separate multiple issues.
   - Example outputs:
 
 0.85
-[Minor Clarity] Some redundant phrasing.
+[Clarity] Contains redundant phrasing - 0.2; [Completeness] Core content is well covered - 0.8
 
 0.60
-[Missing Point] Skipped outcome detail; [Irrelevant Detail] Included unrelated background info.
+[Missing] Outcome details are skipped - 0.3; [Relevance] Includes unnecessary background information - 0.4
 
 Be consistent and make your feedback structured. These outputs will be parsed and used for automated refinement.

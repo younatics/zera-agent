@@ -12,6 +12,7 @@ import tempfile
 import base64
 import zipfile
 import io
+import time
 
 # set_page_config은 반드시 첫 번째 Streamlit 명령어여야 함
 st.set_page_config(page_title="Prompt Auto Tuning Agent", layout="wide")

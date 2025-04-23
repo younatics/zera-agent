@@ -346,19 +346,14 @@ class PromptTuner:
                 
                 # 랜덤으로 5개의 케이스 선택 (데이터가 5개 미만이면 전부 선택)
                 valid_responses = [response for response in iteration_responses if response['score'] is not None]
-                num_cases = min(5, len(valid_responses))
-                if num_cases > 0:
-                    random_cases = random.sample(valid_responses, num_cases)
-                else:
-                    self.logger.warning("유효한 평가 결과가 없습니다. 현재 프롬프트를 유지합니다.")
-                    continue
+                num_cases = len(valid_responses)
                 
                 # 메타프롬프트를 사용하여 현재 프롬프트를 개선
                 improvement_prompt = self._generate_meta_prompt(
                     current_system_prompt, 
                     current_user_prompt, 
                     self._get_recent_prompts(), 
-                    random_cases,
+                    num_cases,
                     current_task_type,
                     current_task_description
                 )
@@ -442,7 +437,7 @@ class PromptTuner:
             }
         return max(self.prompt_history, key=lambda x: x['avg_score'])
 
-    def _generate_meta_prompt(self, system_prompt: str, user_prompt: str, recent_prompts: List[Dict], random_cases: List[Dict], task_type: str, task_description: str) -> str:
+    def _generate_meta_prompt(self, system_prompt: str, user_prompt: str, recent_prompts: List[Dict], num_cases: List[Dict], task_type: str, task_description: str) -> str:
         """
         메타프롬프트 템플릿을 생성합니다.
         
@@ -457,15 +452,29 @@ class PromptTuner:
         Returns:
             str: 생성된 메타프롬프트 템플릿
         """
-        # 랜덤 케이스 포맷팅
-        formatted_cases = "\n\n".join([
-            f"[Sample {i+1}]\n"
+        # 케이스를 점수순으로 정렬
+        sorted_cases = sorted(num_cases, key=lambda x: x['score'])
+        
+        # 상위 3개 케이스 포맷팅
+        formatted_top3_cases = "\n\n".join([
+            f"[Top Case {i+1}]\n"
             f"Question: {case['question']}\n"
             f"Expected Answer: {case['expected']}\n"
             f"Actual Answer: {case['actual']}\n"
             f"Score: {case['score']:.2f}\n"
             f"Reasons: {case['reasons']}"
-            for i, case in enumerate(random_cases)
+            for i, case in enumerate(sorted_cases[-3:])  # 상위 3개
+        ])
+        
+        # 하위 3개 케이스 포맷팅
+        formatted_bottom3_cases = "\n\n".join([
+            f"[Bottom Case {i+1}]\n"
+            f"Question: {case['question']}\n"
+            f"Expected Answer: {case['expected']}\n"
+            f"Actual Answer: {case['actual']}\n"
+            f"Score: {case['score']:.2f}\n"
+            f"Reasons: {case['reasons']}"
+            for i, case in enumerate(sorted_cases[:3])  # 하위 3개
         ])
         
         # 최근 프롬프트 포맷팅
@@ -493,7 +502,7 @@ Evaluation Reasons: {best_prompt.get('evaluation_reasons', 'No evaluation reason
         improvement_prompt = self.meta_user_prompt_template.format(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            random_cases=formatted_cases,
+            random_cases=formatted_top3_cases + "\n\n" + formatted_bottom3_cases,  # 상위/하위 케이스 결합
             recent_prompts=formatted_recent_prompts,
             formatted_best_prompt=formatted_best_prompt,
             task_type=task_type,
