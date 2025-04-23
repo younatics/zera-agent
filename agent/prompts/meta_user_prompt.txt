@@ -1,55 +1,52 @@
-# TASK ANALYSIS & PROMPT OPTIMIZATION
+# PROMPT OPTIMIZATION TASK
 
-Your task is to analyze the provided information and generate optimized SYSTEM_PROMPT and USER_PROMPT pairs.
-
-## 1. TASK DEFINITION & ANALYSIS
-Begin by thoroughly analyzing the evaluation snapshots below. These cases represent examples of prompt performance:
-
-{random_cases}
-
-From these cases and the recent prompt history below, identify and document:
-- The fundamental task type and its core requirements
-- Patterns that consistently lead to high-quality outputs
-- Common failure modes and their root causes
-- Effective response structures and formats
-- Key differences between successful and unsuccessful cases
-- Evolution of prompt effectiveness over time
-- Consistent success patterns from the prompt history
-- Areas needing improvement based on historical performance
-
+## 1. TASK CONTEXT
 Current Task Type: {task_type}
 Current Task Description: {task_description}
 
-Recent prompt history:
+## 2. PERFORMANCE ANALYSIS
+Review these evaluation cases:
+{random_cases}
+
+Key Analysis Points:
+- Task alignment: Does the current task definition match actual requirements?
+- Success patterns: What consistently works well?
+- Failure patterns: What needs improvement?
+- Response quality: What makes responses effective?
+
+Recent History:
 {recent_prompts}
 
-Use these insights to form a clear understanding of what makes prompts effective for this specific task.
+## 3. CURRENT STATE
+System Prompt: {system_prompt}
+User Prompt: {user_prompt}
 
-## 2. CURRENT STATE
-Current prompts to improve:
-System: {system_prompt}
-User: {user_prompt}
-
-Best Performing Prompt:
+Best Performing:
 {formatted_best_prompt}
 
-## 3. OPTIMIZATION REQUIREMENTS
-Based on your analysis, create new prompts that:
-- Address identified success factors
-- Mitigate common failure patterns
-- Maintain or improve upon the best performing prompt's strengths
-- Generalize effective patterns for broader applicability
-- Ensure clear alignment between instructions and expected outputs
+## 4. IMPROVEMENT TASK
+Your goal is to improve both the task definition and prompts based on the analysis.
+
+Required Improvements:
+1. Task Definition:
+   - Refine task type to better reflect actual requirements
+   - Enhance task description to cover all essential aspects
+   - Ensure alignment with evaluation criteria
+
+2. Prompts:
+   - Build on successful patterns
+   - Address identified weaknesses
+   - Maintain or exceed current best performance
 
 ## OUTPUT FORMAT
 TASK_TYPE:
-[Define the task type]
+[Improved task type]
 
 TASK_DESCRIPTION:
-[Detailed description of the task]
+[Enhanced task description]
 
 SYSTEM_PROMPT:
-[Your improved system prompt]
+[Optimized system prompt]
 
 USER_PROMPT:
-[Your improved user prompt]
+[Optimized user prompt]
