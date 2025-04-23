@@ -27,9 +27,8 @@ Current prompts to improve:
 System: {system_prompt}
 User: {user_prompt}
 
-Best performing prompt (Score: {best_prompt_score}):
-System: {best_system_prompt}
-User: {best_user_prompt}
+Best Performing Prompt:
+{formatted_best_prompt}
 
 ## 3. OPTIMIZATION REQUIREMENTS
 Based on your analysis, create new prompts that:

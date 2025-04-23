@@ -303,7 +303,8 @@ class PromptTuner:
                 'iteration': iteration + 1,
                 'system_prompt': current_system_prompt,
                 'user_prompt': current_user_prompt,
-                'avg_score': avg_score
+                'avg_score': avg_score,
+                'evaluation_reasons': [response['reasons'] for response in iteration_responses if response['score'] is not None]
             })
             
             # 점수 임계값 체크
@@ -335,7 +336,6 @@ class PromptTuner:
                     current_system_prompt, 
                     current_user_prompt, 
                     self._get_recent_prompts(), 
-                    {'avg_score': best_avg_score, 'system_prompt': best_system_prompt, 'user_prompt': best_user_prompt}, 
                     random_cases
                 )
                 
@@ -407,7 +407,7 @@ class PromptTuner:
             }
         return max(self.prompt_history, key=lambda x: x['avg_score'])
 
-    def _generate_meta_prompt(self, system_prompt: str, user_prompt: str, recent_prompts: List[Dict], best_prompt: Dict, random_cases: List[Dict]) -> str:
+    def _generate_meta_prompt(self, system_prompt: str, user_prompt: str, recent_prompts: List[Dict], random_cases: List[Dict]) -> str:
         """
         메타프롬프트 템플릿을 생성합니다.
         
@@ -415,7 +415,6 @@ class PromptTuner:
             system_prompt (str): 현재 시스템 프롬프트
             user_prompt (str): 현재 유저 프롬프트
             recent_prompts (List[Dict]): 최근 프롬프트 히스토리
-            best_prompt (Dict): 최고 성능 프롬프트
             random_cases (List[Dict]): 랜덤 평가 케이스
             
         Returns:
@@ -436,9 +435,22 @@ class PromptTuner:
         formatted_recent_prompts = chr(10).join([
             f"Iteration {p['iteration']} (Average Score: {p['avg_score']:.2f}):{chr(10)}"
             f"System Prompt: {p['system_prompt']}{chr(10)}"
-            f"User Prompt: {p['user_prompt']}"
+            f"User Prompt: {p['user_prompt']}{chr(10)}"
+            f"Evaluation Reasons: {p.get('evaluation_reasons', 'No evaluation reasons available')}"
             for p in recent_prompts[:-1]  # 현재 프롬프트를 제외한 최근 3개
         ])
+        
+        # Format best performing prompt
+        best_prompt = self._get_best_prompt()
+        if best_prompt:
+            formatted_best_prompt = f"""
+System: {best_prompt['system_prompt']}
+User: {best_prompt['user_prompt']}
+Average Score: {best_prompt['avg_score']:.2f}
+Evaluation Reasons: {best_prompt.get('evaluation_reasons', 'No evaluation reasons available')}
+"""
+        else:
+            formatted_best_prompt = "No best performing prompt available yet."
         
         # 메타프롬프트 템플릿 생성
         improvement_prompt = self.meta_user_prompt_template.format(
@@ -446,9 +458,7 @@ class PromptTuner:
             user_prompt=user_prompt,
             random_cases=formatted_cases,
             recent_prompts=formatted_recent_prompts,
-            best_prompt_score=best_prompt['avg_score'],
-            best_system_prompt=best_prompt['system_prompt'],
-            best_user_prompt=best_prompt['user_prompt']
+            formatted_best_prompt=formatted_best_prompt
         )
         
         return improvement_prompt 
