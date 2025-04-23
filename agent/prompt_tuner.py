@@ -303,7 +303,7 @@ class PromptTuner:
                 
                 # 랜덤으로 5개의 케이스 선택 (데이터가 5개 미만이면 전부 선택)
                 valid_responses = [response for response in iteration_responses if response['score'] is not None]
-                num_cases = min(5, len(valid_responses))
+                num_cases = min(3, len(valid_responses))
                 if num_cases > 0:
                     random_cases = random.sample(valid_responses, num_cases)
                 else:
@@ -408,7 +408,7 @@ class PromptTuner:
             f"Expected Answer: {case['expected']}\n"
             f"Actual Answer: {case['actual']}\n"
             f"Score: {case['score']:.2f}\n"
-            f"Evaluation: {case['reason']}"
+            f"Reason: {case['reason']}"
             for i, case in enumerate(random_cases)
         ])
         
