@@ -1,5 +1,5 @@
-from typing import List, Dict, Any
-from evaluation.evaluator import BaseEvaluator
+from typing import List, Dict, Any, Optional
+from evaluation.base.evaluator import BaseEvaluator
 
 class BBHEvaluator(BaseEvaluator):
     def load_dataset(self, dataset_path: str) -> List[Dict[str, Any]]:

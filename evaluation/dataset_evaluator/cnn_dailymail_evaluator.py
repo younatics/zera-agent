@@ -1,5 +1,5 @@
 from typing import List, Dict, Any, Optional
-from evaluation.evaluator import BaseEvaluator
+from evaluation.base.evaluator import BaseEvaluator
 from rouge import Rouge
 import json
 import os

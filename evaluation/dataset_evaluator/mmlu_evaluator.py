@@ -1,5 +1,5 @@
-from typing import List, Dict, Any
-from evaluation.evaluator import BaseEvaluator
+from typing import List, Dict, Any, Optional
+from evaluation.base.evaluator import BaseEvaluator
 from datasets import load_dataset
 import json
 import re

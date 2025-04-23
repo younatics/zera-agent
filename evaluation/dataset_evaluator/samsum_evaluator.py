@@ -1,6 +1,6 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+from evaluation.base.evaluator import BaseEvaluator
 from rouge import Rouge
-from .evaluator import BaseEvaluator
 
 class SAMSumEvaluator(BaseEvaluator):
     def __init__(self, model_name: str = "gpt4o", model_version: str = "gpt-3.5-turbo"):

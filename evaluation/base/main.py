@@ -1,12 +1,12 @@
 import argparse
 from dotenv import load_dotenv
 import os
-from evaluation.gsm8k_evaluator import GSM8KEvaluator
-from evaluation.mmlu_evaluator import MMLUEvaluator
-from evaluation.bbh_evaluator import BBHEvaluator
-from evaluation.cnn_dailymail_evaluator import CNNDailyMailEvaluator
-from evaluation.samsum_evaluator import SAMSumEvaluator
-from evaluation.mbpp_evaluator import MBPPEvaluator
+from evaluation.dataset_evaluator.gsm8k_evaluator import GSM8KEvaluator
+from evaluation.dataset_evaluator.mmlu_evaluator import MMLUEvaluator
+from evaluation.dataset_evaluator.bbh_evaluator import BBHEvaluator
+from evaluation.dataset_evaluator.cnn_dailymail_evaluator import CNNDailyMailEvaluator
+from evaluation.dataset_evaluator.samsum_evaluator import SAMSumEvaluator
+from evaluation.dataset_evaluator.mbpp_evaluator import MBPPEvaluator
 
 # .env 파일 로드
 load_dotenv()
