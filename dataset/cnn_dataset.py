@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from datasets import load_dataset
 from pathlib import Path
 import shutil
@@ -116,7 +116,7 @@ class CNNDataset:
             os.remove(csv_path)
             print(f"원본 {split}.csv 파일 삭제 완료")
 
-    def load_data(self, split: str, chunk_index: int = None) -> pd.DataFrame:
+    def load_data(self, split: str, chunk_index: int = None) -> List[Dict]:
         """
         Load data from chunk files.
         
@@ -125,7 +125,7 @@ class CNNDataset:
             chunk_index (int, optional): Index of the chunk to load. If None, loads all chunks.
         
         Returns:
-            pd.DataFrame: Loaded data
+            List[Dict]: Loaded data as a list of dictionaries
         """
         if split not in ['train', 'validation', 'test']:
             raise ValueError("split must be one of 'train', 'validation', or 'test'")
@@ -139,14 +139,16 @@ class CNNDataset:
             chunk_file = os.path.join(chunk_dir, f"{split}_chunk_{chunk_index}.csv")
             if not os.path.exists(chunk_file):
                 raise FileNotFoundError(f"Chunk file not found: {chunk_file}")
-            return pd.read_csv(chunk_file)
+            df = pd.read_csv(chunk_file)
+            return df.to_dict('records')
         else:
             # Load all chunks
-            all_chunks = []
+            all_data = []
             chunk_files = sorted(glob.glob(os.path.join(chunk_dir, f"{split}_chunk_*.csv")))
             for chunk_file in chunk_files:
-                all_chunks.append(pd.read_csv(chunk_file))
-            return pd.concat(all_chunks, ignore_index=True)
+                df = pd.read_csv(chunk_file)
+                all_data.extend(df.to_dict('records'))
+            return all_data
 
     def get_num_chunks(self, split: str) -> int:
         """
@@ -161,7 +163,7 @@ class CNNDataset:
         chunk_dir = os.path.join(self.data_dir, f"{split}_chunks")
         return len(glob.glob(os.path.join(chunk_dir, f"{split}_chunk_*.csv")))
     
-    def load_all_data(self, split: str) -> pd.DataFrame:
+    def load_all_data(self, split: str) -> List[Dict]:
         """
         Load all data from a given split.
         
@@ -169,7 +171,7 @@ class CNNDataset:
             split (str): One of 'train', 'validation', or 'test'
             
         Returns:
-            pd.DataFrame: All data from the specified split
+            List[Dict]: All data from the specified split as a list of dictionaries
         """
         return self.load_data(split, chunk_index=None)
 

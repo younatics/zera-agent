@@ -300,10 +300,11 @@ def process_dataset(data, dataset_type):
                 'expected': expected
             })
             
-            display_data.append({
-                'question': question,
-                'expected_answer': expected
-            })
+            if len(display_data) < 2000:  # display_data를 2000개로 제한
+                display_data.append({
+                    'question': question,
+                    'expected_answer': expected
+                })
     elif dataset_type == "CSV":
         # 컬럼 이름 확인 및 매핑
         required_columns = ['question', 'expected_answer']
@@ -322,24 +323,22 @@ def process_dataset(data, dataset_type):
                 'expected': row['expected_answer']
             })
             
-            display_data.append({
-                'question': row['question'],
-                'expected_answer': row['expected_answer']
-            })
-    elif dataset_type == "CNN":
-        # 데이터를 청크 단위로 처리
-        chunk_size = 1000  # 한 번에 처리할 데이터 크기
-        for i in range(0, len(data), chunk_size):
-            chunk = data.iloc[i:i+chunk_size]
-            for _, row in chunk.iterrows():
-                test_cases.append({
-                    'question': row['input'],
-                    'expected': row['expected_answer']
-                })
-                
+            if len(display_data) < 2000:  # display_data를 2000개로 제한
                 display_data.append({
-                    'question': row['input'],
+                    'question': row['question'],
                     'expected_answer': row['expected_answer']
+                })
+    elif dataset_type == "CNN":
+        for item in data:
+            test_cases.append({
+                'question': item['input'],
+                'expected': item['expected_answer']
+            })
+            
+            if len(display_data) < 2000:  # display_data를 2000개로 제한
+                display_data.append({
+                    'question': item['input'],
+                    'expected_answer': item['expected_answer']
                 })
     elif dataset_type == "GSM8K":
         for item in data:
@@ -348,24 +347,10 @@ def process_dataset(data, dataset_type):
                 'expected': item['answer']
             })
             
-            display_data.append({
-                'question': item['question'],
-                'expected_answer': item['answer']
-            })
-    else:  # CNN 데이터셋
-        # 데이터를 청크 단위로 처리
-        chunk_size = 1000  # 한 번에 처리할 데이터 크기
-        for i in range(0, len(data), chunk_size):
-            chunk = data.iloc[i:i+chunk_size]
-            for _, row in chunk.iterrows():
-                test_cases.append({
-                    'question': row['input'],
-                    'expected': row['expected_answer']
-                })
-                
+            if len(display_data) < 2000:  # display_data를 2000개로 제한
                 display_data.append({
-                    'question': row['input'],
-                    'expected_answer': row['expected_answer']
+                    'question': item['question'],
+                    'expected_answer': item['answer']
                 })
     
     # 전체 데이터 표시
@@ -424,23 +409,38 @@ elif dataset_type == "CNN":
         st.error(f"{split} 데이터셋에 청크 파일이 없습니다.")
         st.stop()
     
-    # 청크 선택
-    st.write(f"총 {total_chunks}개의 청크가 있습니다.")
-    chunk_index = st.number_input(
-        "청크 선택",
-        min_value=0,
-        max_value=total_chunks-1,
-        value=0,
-        help="처리할 청크의 인덱스를 선택하세요."
+    # 전체 청크 선택 옵션 추가
+    use_all_chunks = st.toggle(
+        "전체 청크 사용",
+        value=False,
+        help="모든 청크의 데이터를 로드합니다. 처리 시간이 오래 걸릴 수 있습니다."
     )
     
     try:
-        # 선택된 청크 로드
-        data = cnn_dataset.load_data(split, chunk_index)
-        test_cases, num_samples = process_dataset(data, "CNN")
-        
-        # 선택된 청크 정보 표시
-        st.info(f"선택된 청크: {chunk_index} ({len(data):,}개 예제)")
+        if use_all_chunks:
+            # 모든 청크 로드
+            data = cnn_dataset.load_all_data(split)
+            test_cases, num_samples = process_dataset(data, "CNN")
+            
+            # 선택된 청크 정보 표시
+            st.info(f"전체 청크 로드 완료 ({len(data):,}개 예제)")
+        else:
+            # 청크 선택
+            st.write(f"총 {total_chunks}개의 청크가 있습니다.")
+            chunk_index = st.number_input(
+                "청크 선택",
+                min_value=0,
+                max_value=total_chunks-1,
+                value=0,
+                help="처리할 청크의 인덱스를 선택하세요."
+            )
+            
+            # 선택된 청크 로드
+            data = cnn_dataset.load_data(split, chunk_index)
+            test_cases, num_samples = process_dataset(data, "CNN")
+            
+            # 선택된 청크 정보 표시
+            st.info(f"선택된 청크: {chunk_index} ({len(data):,}개 예제)")
     except Exception as e:
         st.error(f"CNN 데이터셋 로드 중 오류 발생: {str(e)}")
         st.stop()
