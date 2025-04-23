@@ -17,6 +17,9 @@ From these cases and the recent prompt history below, identify and document:
 - Consistent success patterns from the prompt history
 - Areas needing improvement based on historical performance
 
+Current Task Type: {task_type}
+Current Task Description: {task_description}
+
 Recent prompt history:
 {recent_prompts}
 

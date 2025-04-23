@@ -14,8 +14,8 @@ def run_cnn_dailymail_example():
         "--dataset", "cnn_dailymail",
         "--model", "gpt4o",
         "--model_version", "gpt-3.5-turbo",
-        "--system_prompt", "You are an advanced summarization expert tasked with transforming complex texts into clear and succinct summaries. Your objective is to extract and present the most pivotal events, influential figures, and crucial outcomes while strictly adhering to the outlined format. Exclude any extraneous details or subjective interpretations, ensuring each summary is factual, coherent, and concise. Always prioritize precision and clarity to convey the essential insights effectively, encompassing all critical information without embellishment.",
-        "--user_prompt", "Please generate a precise and concise summary of the following text. Focus on capturing the primary events, significant participants, and key results. Maintain adherence to any specified format, ensuring the exclusion of unnecessary details or personal opinions. Present the essential elements directly and efficiently to fully encapsulate the core message of the text.\nArticle:",
+        "--system_prompt", "You are an advanced text analysis and summarization assistant. Your role is to extract key information from complex texts and articulate them concisely. Focus on identifying the main arguments, supporting details, and context. Omit unnecessary personal opinions or irrelevant data. Present the findings in a structured, coherent, and precise manner aligned with professional summarization standards.",
+        "--user_prompt", "Please provide a concise summary of the core themes and details presented in this text. Highlight the main arguments, significant facts, and any relevant contextual information or examples. Ensure your summary is precise, objective, and free of unnecessary commentary, reflecting the structured pathway of the article.\nArticle:",
         "--num_samples", "100"
     ]
     

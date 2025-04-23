@@ -358,7 +358,9 @@ class PromptTuner:
                     current_system_prompt, 
                     current_user_prompt, 
                     self._get_recent_prompts(), 
-                    random_cases
+                    random_cases,
+                    current_task_type,
+                    current_task_description
                 )
                 
                 # 결과에 메타프롬프트 추가
@@ -440,7 +442,7 @@ class PromptTuner:
             }
         return max(self.prompt_history, key=lambda x: x['avg_score'])
 
-    def _generate_meta_prompt(self, system_prompt: str, user_prompt: str, recent_prompts: List[Dict], random_cases: List[Dict]) -> str:
+    def _generate_meta_prompt(self, system_prompt: str, user_prompt: str, recent_prompts: List[Dict], random_cases: List[Dict], task_type: str, task_description: str) -> str:
         """
         메타프롬프트 템플릿을 생성합니다.
         
@@ -449,6 +451,8 @@ class PromptTuner:
             user_prompt (str): 현재 유저 프롬프트
             recent_prompts (List[Dict]): 최근 프롬프트 히스토리
             random_cases (List[Dict]): 랜덤 평가 케이스
+            task_type (str): 현재 테스크 타입
+            task_description (str): 현재 테스크 설명
             
         Returns:
             str: 생성된 메타프롬프트 템플릿
@@ -491,7 +495,9 @@ Evaluation Reasons: {best_prompt.get('evaluation_reasons', 'No evaluation reason
             user_prompt=user_prompt,
             random_cases=formatted_cases,
             recent_prompts=formatted_recent_prompts,
-            formatted_best_prompt=formatted_best_prompt
+            formatted_best_prompt=formatted_best_prompt,
+            task_type=task_type,
+            task_description=task_description
         )
         
         return improvement_prompt 
