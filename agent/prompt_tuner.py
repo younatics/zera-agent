@@ -95,7 +95,7 @@ class PromptTuner:
         self.initial_system_prompt = system_prompt
         self.initial_user_prompt = user_prompt
     
-    def _evaluate_response(self, response: str, expected: str, question: str) -> tuple[float, str]:
+    def _evaluate_response(self, response: str, expected: str, question: str) -> tuple[float, List[Dict]]:
         """
         Evaluate a response using the evaluator model.
         
@@ -105,7 +105,7 @@ class PromptTuner:
             question (str): The original question
             
         Returns:
-            tuple[float, str]: A tuple containing the score and evaluation reason
+            tuple[float, List[Dict]]: A tuple containing the score and evaluation reasons
         """
         try:
             # 평가 유저 프롬프트 생성
@@ -128,16 +128,36 @@ class PromptTuner:
             
             # 평가 결과에서 점수 추출
             score = float(evaluation.split('\n')[0].strip())
-            reason = '\n'.join(evaluation.split('\n')[1:]).strip()
+            raw_reasons = '\n'.join(evaluation.split('\n')[1:]).strip()
+            
+            # reason 파싱
+            reasons = []
+            for reason in raw_reasons.split(';'):
+                reason = reason.strip()
+                if reason:
+                    # [ ] 안의 내용을 main_reason으로, 그 뒤의 내용을 detail_reason으로 분리
+                    main_reason = None
+                    detail_reason = None
+                    
+                    if '[' in reason and ']' in reason:
+                        main_reason = reason[reason.find('[')+1:reason.find(']')].strip()
+                        detail_reason = reason[reason.find(']')+1:].strip()
+                    else:
+                        detail_reason = reason
+                    
+                    reasons.append({
+                        'main_reason': main_reason,
+                        'detail_reason': detail_reason
+                    })
             
             self.logger.info(f"Evaluation score: {score}")
-            self.logger.info(f"Evaluation reason: {reason}")
+            self.logger.info(f"Evaluation reasons: {reasons}")
             
-            return score, reason
+            return score, reasons
             
         except (ValueError, TypeError):
             # 숫자로 변환할 수 없는 경우 제외
-            return None, "점수 추출 실패, (평가 제외)"
+            return None, []
     
     def tune_prompt(self, initial_system_prompt: str, initial_user_prompt: str, initial_test_cases: List[Dict], num_iterations: int = 3, score_threshold: Optional[float] = None, evaluation_score_threshold: float = 0.8, use_meta_prompt: bool = True, num_samples: Optional[int] = None) -> List[Dict]:
         """
@@ -194,9 +214,9 @@ class PromptTuner:
                 self.logger.info(f"Response: {response}")
                 
                 # 응답 평가
-                score, reason = self._evaluate_response(response, test_case['expected'], test_case['question'])
+                score, reasons = self._evaluate_response(response, test_case['expected'], test_case['question'])
                 self.logger.info(f"Score: {score}")
-                self.logger.info(f"Evaluation reason: {reason}")
+                self.logger.info(f"Evaluation reasons: {reasons}")
                 
                 # 점수와 응답 저장
                 iteration_scores.append(score)
@@ -205,7 +225,7 @@ class PromptTuner:
                     'expected': test_case['expected'],
                     'actual': response,
                     'score': score,
-                    'reason': reason
+                    'reasons': reasons
                 })
                 
                 # 최고 개별 점수 업데이트
@@ -222,7 +242,7 @@ class PromptTuner:
                     'expected_answer': test_case['expected'],
                     'actual_answer': response,
                     'score': score,
-                    'evaluation_reason': reason
+                    'evaluation_reasons': reasons
                 })
                 
                 # 상세 결과 저장
@@ -232,7 +252,7 @@ class PromptTuner:
                     'expected_response': test_case['expected'],
                     'actual_response': response,
                     'score': score,
-                    'evaluation_reason': reason
+                    'evaluation_reasons': reasons
                 }
                 self.results.append(result)
                 
@@ -408,7 +428,7 @@ class PromptTuner:
             f"Expected Answer: {case['expected']}\n"
             f"Actual Answer: {case['actual']}\n"
             f"Score: {case['score']:.2f}\n"
-            f"Reason: {case['reason']}"
+            f"Reasons: {case['reasons']}"
             for i, case in enumerate(random_cases)
         ])
         
@@ -450,7 +470,7 @@ class PromptTuner:
         writer = csv.writer(output)
         
         # 헤더 작성
-        writer.writerow(['iteration', 'question', 'expected_response', 'actual_response', 'score', 'evaluation_reason'])
+        writer.writerow(['iteration', 'question', 'expected_response', 'actual_response', 'score', 'evaluation_reasons'])
         
         # 데이터 작성
         for result in self.results:
@@ -460,7 +480,7 @@ class PromptTuner:
                 result['expected_response'],
                 result['actual_response'],
                 result['score'],
-                result['evaluation_reason']
+                result['evaluation_reasons']
             ])
         
         return output.getvalue() 

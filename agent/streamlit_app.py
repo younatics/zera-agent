@@ -644,10 +644,26 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                         history_df = pd.DataFrame(result['responses'])
                         
                         # 컬럼 순서 변경 및 필요한 컬럼만 선택
-                        history_df = history_df[['question', 'expected', 'actual', 'score', 'reason']]
+                        history_df = history_df[['question', 'expected', 'actual', 'score', 'reasons']]
+                        
+                        # reasons 파싱하여 문자열로 변환
+                        def parse_reasons(reasons):
+                            if not reasons:
+                                return "No evaluation reasons"
+                            parsed_reasons = []
+                            for reason in reasons:
+                                main = reason.get('main_reason', '')
+                                detail = reason.get('detail_reason', '')
+                                if main and detail:
+                                    parsed_reasons.append(f"[{main}] {detail}")
+                                elif detail:
+                                    parsed_reasons.append(detail)
+                            return "\n".join(parsed_reasons)
+                        
+                        history_df['reasons'] = history_df['reasons'].apply(parse_reasons)
                         
                         # 컬럼 이름 변경
-                        history_df.columns = ['Question', 'Expected Answer', 'Actual Answer', 'Score', 'Evaluation Reason']
+                        history_df.columns = ['Question', 'Expected Answer', 'Actual Answer', 'Score', 'Evaluation Reasons']
                         
                         # 점수를 소수점 두자리까지만 표시
                         history_df['Score'] = history_df['Score'].round(2)
