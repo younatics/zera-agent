@@ -95,7 +95,7 @@ class PromptTuner:
         self.initial_system_prompt = system_prompt
         self.initial_user_prompt = user_prompt
     
-    def _evaluate_response(self, response: str, expected: str, question: str) -> tuple[float, List[Dict]]:
+    def _evaluate_response(self, response: str, expected: str, question: str, task_type: str, task_description: str) -> tuple[float, List[Dict]]:
         """
         Evaluate a response using the evaluator model.
         
@@ -103,6 +103,8 @@ class PromptTuner:
             response (str): The actual response to evaluate
             expected (str): The expected response
             question (str): The original question
+            task_type (str): The type of task being evaluated
+            task_description (str): The description of the task being evaluated
             
         Returns:
             tuple[float, List[Dict]]: A tuple containing the score and evaluation reasons
@@ -112,13 +114,21 @@ class PromptTuner:
             evaluation_prompt = self.evaluation_user_prompt_template.format(
                 response=response,
                 expected=expected,
-                question=question
+                question=question,
+                task_type=task_type,
+                task_description=task_description
+            )
+            
+            # 평가 시스템 프롬프트 생성
+            evaluation_system_prompt = self.evaluation_system_prompt_template.format(
+                task_type=task_type,
+                task_description=task_description
             )
             
             # 평가 모델로 평가 수행
             evaluation = self.evaluator.ask(
                 question=evaluation_prompt,
-                system_prompt=self.evaluation_system_prompt_template
+                system_prompt=evaluation_system_prompt
             )
             self.logger.info(f"Evaluating response:")
             self.logger.info(f"Question: {question}")
@@ -195,6 +205,10 @@ class PromptTuner:
         iteration_results = []
         self.results = []  # 결과 리스트 초기화
         
+        # 초기 task_type과 task_description 설정
+        current_task_type = "General Task"
+        current_task_description = "General task requiring responses to various questions"
+        
         for iteration in range(num_iterations):
             self.logger.info(f"\nIteration {iteration + 1}/{num_iterations}")
             iteration_scores = []
@@ -214,7 +228,13 @@ class PromptTuner:
                 self.logger.info(f"Response: {response}")
                 
                 # 응답 평가
-                score, reasons = self._evaluate_response(response, test_case['expected'], test_case['question'])
+                score, reasons = self._evaluate_response(
+                    response=response,
+                    expected=test_case['expected'],
+                    question=test_case['question'],
+                    task_type=current_task_type,
+                    task_description=current_task_description
+                )
                 self.logger.info(f"Score: {score}")
                 self.logger.info(f"Evaluation reasons: {reasons}")
                 
@@ -294,7 +314,9 @@ class PromptTuner:
                 'best_system_prompt': best_system_prompt,
                 'best_user_prompt': best_user_prompt,
                 'responses': iteration_responses,
-                'meta_prompt': None  # 초기값 설정
+                'meta_prompt': None,  # 초기값 설정
+                'task_type': current_task_type,
+                'task_description': current_task_description
             }
             iteration_results.append(result)
             
@@ -344,26 +366,37 @@ class PromptTuner:
                 
                 # 메타프롬프트를 사용하여 프롬프트 개선
                 improved_prompts = self.meta_prompt_model.ask(
-                    question=improvement_prompt,  # 질문
-                    system_prompt=self.meta_system_prompt_template  # 시스템 프롬프트
+                    question=improvement_prompt,
+                    system_prompt=self.meta_system_prompt_template
                 )
                 if improved_prompts and improved_prompts.strip():
-                    # 개선된 프롬프트에서 시스템 프롬프트와 유저 프롬프트 분리
+                    # 개선된 프롬프트에서 TASK_TYPE, TASK_DESCRIPTION, 시스템 프롬프트, 유저 프롬프트 분리
                     improved_prompts = improved_prompts.strip()
+                    
+                    # TASK_TYPE 추출
+                    task_type_start = improved_prompts.find("TASK_TYPE:")
+                    task_description_start = improved_prompts.find("TASK_DESCRIPTION:")
                     system_prompt_start = improved_prompts.find("SYSTEM_PROMPT:")
                     user_prompt_start = improved_prompts.find("USER_PROMPT:")
                     
-                    if system_prompt_start != -1 and user_prompt_start != -1:
+                    if all(pos != -1 for pos in [task_type_start, task_description_start, system_prompt_start, user_prompt_start]):
+                        current_task_type = improved_prompts[task_type_start + len("TASK_TYPE:"):task_description_start].strip()
+                        current_task_description = improved_prompts[task_description_start + len("TASK_DESCRIPTION:"):system_prompt_start].strip()
                         current_system_prompt = improved_prompts[system_prompt_start + len("SYSTEM_PROMPT:"):user_prompt_start].strip()
                         current_user_prompt = improved_prompts[user_prompt_start + len("USER_PROMPT:"):].strip()
+                        
+                        # 결과에 TASK_TYPE과 TASK_DESCRIPTION 추가
+                        result['task_type'] = current_task_type
+                        result['task_description'] = current_task_description
+                        
+                        self.logger.info(f"추출된 TASK_TYPE: {current_task_type}")
+                        self.logger.info(f"추출된 TASK_DESCRIPTION: {current_task_description}")
                         self.logger.info(f"개선된 시스템 프롬프트: {current_system_prompt}")
                         self.logger.info(f"개선된 유저 프롬프트: {current_user_prompt}")
                     else:
                         self.logger.warning("프롬프트 개선 결과가 올바른 형식이 아닙니다. 현재 프롬프트를 유지합니다.")
-                        # 현재 프롬프트를 유지하고 계속 진행
                 else:
                     self.logger.warning("프롬프트 개선에 실패했습니다. 현재 프롬프트를 유지합니다.")
-                    # 현재 프롬프트를 유지하고 계속 진행
             elif use_meta_prompt:
                 self.logger.info(f"평균 점수가 평가 임계값({evaluation_score_threshold}) 이상이므로 프롬프트를 개선하지 않습니다.")
                 if self.progress_callback:

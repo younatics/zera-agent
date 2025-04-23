@@ -627,6 +627,12 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                     with iteration_containers[iteration_idx]:
                         st.subheader(f"Iteration {result['iteration']}")
                         
+                        # Task Type과 Description 표시
+                        task_type = result.get('task_type', 'Not specified')
+                        task_desc = result.get('task_description', 'Not specified')
+                        with st.expander(f"Task Type: {task_type}", expanded=False):
+                            st.code(task_desc)
+                        
                         # 평균 점수와 최고 점수
                         col1, col2, col3, col4, col5 = st.columns(5)
                         with col1:

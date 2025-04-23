@@ -1,3 +1,6 @@
+TASK_TYPE: {task_type}
+TASK_DESCRIPTION: {task_description}
+
 Question:
 {question}
 
@@ -7,4 +10,4 @@ Actual Response:
 Expected Response:
 {expected}
 
-Please evaluate the response and return a score on the first line, and issue explanations on the second line.
+Please evaluate the response based on the task type and description, and return a score on the first line, and issue explanations on the second line.

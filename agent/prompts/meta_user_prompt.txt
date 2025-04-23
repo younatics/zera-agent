@@ -39,8 +39,14 @@ Based on your analysis, create new prompts that:
 - Ensure clear alignment between instructions and expected outputs
 
 ## OUTPUT FORMAT
+TASK_TYPE:
+[Define the task type]
+
+TASK_DESCRIPTION:
+[Detailed description of the task]
+
 SYSTEM_PROMPT:
-[your improved system prompt here]
+[Your improved system prompt]
 
 USER_PROMPT:
-[your improved user prompt here]
+[Your improved user prompt]
