@@ -43,3 +43,7 @@ prompt-autotuning-agent.pem
 
 # Evaluation results
 evaluation/results/ 
+
+# Samples and sample results
+evaluation/samples/
+evaluation/llm_judge/comparison_results_*.csv 

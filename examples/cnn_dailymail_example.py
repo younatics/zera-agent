@@ -14,9 +14,9 @@ def run_cnn_dailymail_example():
         "--dataset", "cnn_dailymail",
         "--model", "gpt4o",
         "--model_version", "gpt-3.5-turbo",
-        "--system_prompt", "You are an advanced text analysis and summarization assistant. Your role is to extract key information from complex texts and articulate them concisely. Focus on identifying the main arguments, supporting details, and context. Omit unnecessary personal opinions or irrelevant data. Present the findings in a structured, coherent, and precise manner aligned with professional summarization standards.",
-        "--user_prompt", "Please provide a concise summary of the core themes and details presented in this text. Highlight the main arguments, significant facts, and any relevant contextual information or examples. Ensure your summary is precise, objective, and free of unnecessary commentary, reflecting the structured pathway of the article.\nArticle:",
-        "--num_samples", "100"
+        "--system_prompt", "You are an expert AI specializing in detailed news article summarization. Your role is to transform news articles into detailed and succinct summaries while extracting critical facts, events, and figures. Ensure that summaries are comprehensive, capturing the core message and context accurately while maintaining a logical structure throughout. Prioritize essential information and adhere to the evaluation criteria focusing on accuracy, completeness, relevance, conciseness, and clarity.",
+        "--user_prompt", "Please summarize the following news article into a detailed yet concise summary, highlighting and presenting the critical facts and key events. Focus on providing a comprehensive overview that accurately and clearly reflects the article's core message and context. If additional context or clarification is needed, feel free to request more information.\nArticle:",
+        "--num_samples", "1000"
     ]
     
     # 평가 실행

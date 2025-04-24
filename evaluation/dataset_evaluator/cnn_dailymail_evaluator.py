@@ -7,25 +7,66 @@ from datasets import load_dataset
 import random
 import time
 import logging
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 class CNNDailyMailEvaluator(BaseEvaluator):
-    def load_dataset(self, dataset_path: str) -> List[Dict[str, Any]]:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.samples_dir = Path("evaluation/samples")
+        self.samples_dir.mkdir(exist_ok=True)
+
+    def load_dataset(self, dataset_path: str, num_samples: Optional[int] = None) -> List[Dict[str, Any]]:
         """CNN/DailyMail 데이터셋을 로드합니다."""
-        # Hugging Face에서 CNN/DailyMail 데이터셋 로드
-        dataset = load_dataset("cnn_dailymail", "3.0.0", split="test")
-        
-        # 필요한 형식으로 변환
-        formatted_data = []
-        for item in dataset:
-            formatted_item = {
-                "article": item["article"],
-                "highlights": item["highlights"]
-            }
-            formatted_data.append(formatted_item)
+        if num_samples:
+            # 샘플 파일 경로 생성
+            sample_file = self.samples_dir / f"cnn_dailymail_samples_{num_samples}.json"
             
-        return formatted_data
+            # 이미 샘플 파일이 있으면 로드
+            if sample_file.exists():
+                logger.info(f"Loading existing samples from {sample_file}")
+                with open(sample_file, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            
+            # 1000개 샘플 파일이 있고, 더 작은 샘플이 필요한 경우
+            sample_1000_file = self.samples_dir / "cnn_dailymail_samples_1000.json"
+            if sample_1000_file.exists() and num_samples < 1000:
+                logger.info(f"Loading and sampling from 1000 samples file")
+                with open(sample_1000_file, 'r', encoding='utf-8') as f:
+                    base_samples = json.load(f)
+                    return random.sample(base_samples, num_samples)
+            
+            # 샘플 파일이 없으면 새로 생성
+            logger.info(f"Creating new samples file: {sample_file}")
+            dataset = load_dataset("cnn_dailymail", "3.0.0", split="test")
+            formatted_data = []
+            for item in dataset:
+                formatted_item = {
+                    "article": item["article"],
+                    "highlights": item["highlights"]
+                }
+                formatted_data.append(formatted_item)
+            
+            # 랜덤 샘플링
+            sampled_data = random.sample(formatted_data, min(num_samples, len(formatted_data)))
+            
+            # 샘플 저장
+            with open(sample_file, 'w', encoding='utf-8') as f:
+                json.dump(sampled_data, f, ensure_ascii=False, indent=2)
+            
+            return sampled_data
+        else:
+            # 전체 데이터셋 로드
+            dataset = load_dataset("cnn_dailymail", "3.0.0", split="test")
+            formatted_data = []
+            for item in dataset:
+                formatted_item = {
+                    "article": item["article"],
+                    "highlights": item["highlights"]
+                }
+                formatted_data.append(formatted_item)
+            return formatted_data
     
     def format_question(self, item: Dict[str, Any]) -> str:
         """CNN/DailyMail 기사를 포맷팅합니다."""
@@ -56,12 +97,8 @@ class CNNDailyMailEvaluator(BaseEvaluator):
                       user_prompt: Optional[str] = None,
                       num_samples: Optional[int] = None) -> Dict[str, Any]:
         """전체 평가를 실행하는 메서드"""
-        dataset = self.load_dataset(dataset_name)
+        dataset = self.load_dataset(dataset_name, num_samples)
         
-        # 랜덤 샘플링
-        if num_samples:
-            dataset = random.sample(dataset, min(num_samples, len(dataset)))
-            
         results = {
             "total": len(dataset),
             "correct": 0,

@@ -10,6 +10,7 @@ import numpy as np
 from scipy import stats
 import os
 from dotenv import load_dotenv
+import requests
 
 # 환경 변수 로드
 load_dotenv()
@@ -21,22 +22,28 @@ logger = logging.getLogger(__name__)
 # API 클라이언트 설정
 openai_api_key = os.getenv("OPENAI_API_KEY")
 anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
+solar_api_key = os.getenv("SOLAR_API_KEY")
 
-if not openai_api_key and not anthropic_api_key:
-    raise ValueError("OPENAI_API_KEY 또는 ANTHROPIC_API_KEY 환경 변수가 설정되지 않았습니다.")
+if not openai_api_key and not anthropic_api_key and not solar_api_key:
+    raise ValueError("API 키가 설정되지 않았습니다.")
 
 openai_client = OpenAI(api_key=openai_api_key) if openai_api_key else None
 anthropic_client = anthropic.Anthropic(api_key=anthropic_api_key) if anthropic_api_key else None
+solar_client = OpenAI(
+    api_key=solar_api_key,
+    base_url="https://api.upstage.ai/v1"
+) if solar_api_key else None
 
 class LLMJudge:
     def __init__(self, model_type: str = "openai"):
         """
         Args:
-            model_type (str): 사용할 모델 타입 ("openai" 또는 "anthropic")
+            model_type (str): 사용할 모델 타입 ("openai", "anthropic", "solar")
         """
         self.model_type = model_type
         self.openai_client = openai_client
         self.anthropic_client = anthropic_client
+        self.solar_client = solar_client
         
         self.system_prompt = """You are an expert evaluator specialized in comparing AI-generated summaries. 
 Your task is to carefully analyze two summaries and determine which one is better based on the following criteria:
@@ -102,11 +109,26 @@ Your response should clearly indicate the winner (A or B) and provide a detailed
                     ]
                 )
                 result = response.content[0].text.strip()
+            elif self.model_type == "solar" and self.solar_client:
+                response = self.solar_client.chat.completions.create(
+                    model="solar-pro",
+                    messages=[
+                        {"role": "system", "content": self.system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    temperature=0.0                
+                    )
+                result = response.choices[0].message.content.strip()
             else:
                 raise ValueError(f"Unsupported model type: {self.model_type} or API client not initialized")
             
-            winner = 'A' if 'A' in result else 'B' if 'B' in result else None
-            return winner, result
+            # 첫 줄에서 Winner 정보 파싱
+            first_line = result.split('\n')[0].strip()
+            if first_line.startswith('Winner:'):
+                winner = first_line.split(':')[1].strip()
+                if winner in ['A', 'B']:
+                    return winner, result
+            return None, result
         except Exception as e:
             logger.error(f"Error in comparing responses: {e}")
             return None, str(e)
@@ -144,11 +166,11 @@ def main():
     baseline_results = load_results(baseline_path)
     
     # 응답 추출
-    zera_samples = extract_responses(zera_results)
-    baseline_samples = extract_responses(baseline_results)
+    zera_samples = extract_responses(zera_results)[:10]  # 100개로 제한
+    baseline_samples = extract_responses(baseline_results)[:10]  # 100개로 제한
     
     # LLM Judge 초기화 (Claude 사용)
-    judge = LLMJudge(model_type="anthropic")
+    judge = LLMJudge()
     
     # 비교 결과 저장
     comparison_results = []
@@ -156,14 +178,14 @@ def main():
     
     # 중간 결과 저장을 위한 변수
     batch_size = 50  # 50개마다 결과 저장
-    output_path = Path("evaluation/llm_judge/comparison_results.csv")
+    output_path = Path("evaluation/llm_judge/comparison_results_10.csv")
     
     # 각 샘플 비교
     for i, (zera, baseline) in enumerate(zip(zera_samples, baseline_samples)):
         logger.info(f"Comparing sample {i+1}/{len(zera_samples)}")
         
         winner, reason = judge.compare_responses(
-            zera['question'],
+            baseline['question'],
             zera['response'],
             baseline['response']
         )
@@ -171,7 +193,7 @@ def main():
         if winner:
             wins.append(1 if winner == 'A' else 0)
             comparison_results.append({
-                'question': zera['question'],
+                'question': baseline['question'],
                 'zera_response': zera['response'],
                 'baseline_response': baseline['response'],
                 'winner': winner,
