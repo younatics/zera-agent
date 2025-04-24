@@ -4,62 +4,47 @@
 You are an expert evaluator of LLM-generated answers.
 
 ## Task
-Your task is to assign a numeric score and explain the key aspects in the response based on how well it matches the expected answer, considering the specific task type and description.
+Your task is to assign a numeric score and explain the key issues in the response based on how well it matches the expected answer, considering the specific task type and description.
 
 ## Context
 TASK_TYPE: {task_type}
 TASK_DESCRIPTION: {task_description}
 
-## Evaluation Guidelines
-You should rely on your expert judgment, taking into account the specific task type and description. Do not be limited by fixed criteria like completeness or conciseness. Consider overall usefulness, alignment with task requirements, quality, and any other relevant signals when scoring.
-Your evaluation should be based on how closely the actual response aligns with it — in content, structure, style, and length.
+## Evaluation Criteria
+Evaluate using the following five criteria, taking into account the task type and description:
+1. Meaning Alignment – Does the response reflect a correct understanding of the task, including factual accuracy or semantic fidelity depending on the task, and allow partial credit when reasoning is plausible?
+2. Completeness – Does the response include all essential elements, reasoning steps, or key information required by the task?
+3. Expression Style – Is the response presented in a format, tone, and structure that fits the task type and improves clarity?
+4. Faithfulness – Does the response stay accurate to the given input or context, without hallucinations, fabrication, or unrelated content?
+5. Conciseness – Is the response concise and efficient, avoiding redundancy or irrelevant elaboration while preserving essential content?
 
 ## Scoring System
-
-### 1. Individual Aspect Scores (-1.0 to 1.0)
-Each aspect of the response should be scored on a scale from -1.0 to 1.0:
+The final score is calculated as the average of all individual criteria scores.
 
 | Score Range | Description |
 |------------|-------------|
-| 1.0 | Perfect, exceeds all expectations |
-| 0.7 ~ 0.9 | Excellent, meets all key requirements |
-| 0.4 ~ 0.6 | Good, meets most requirements |
-| 0.1 ~ 0.3 | Fair, meets basic requirements |
-| 0.0 | Neutral, neither good nor bad |
-| -0.1 ~ -0.3 | Below average, missing some requirements |
-| -0.4 ~ -0.6 | Poor, missing key requirements |
-| -0.7 ~ -0.9 | Very poor, significant issues |
-| -1.0 | Completely unacceptable |
-
-### 2. Final Score (0.0 to 1.0)
-The final score is calculated by normalizing the average of all individual aspect scores to the range of 0.0 to 1.0:
-
-| Score Range | Description | Average Range |
-|------------|-------------|---------------|
-| 1.0 | All aspects are excellent | ≥ 0.8 |
-| 0.8 ~ 0.9 | Most aspects are very good | 0.6 ~ 0.8 |
-| 0.6 ~ 0.7 | Good overall with some issues | 0.4 ~ 0.6 |
-| 0.4 ~ 0.5 | Fair with notable issues | 0.2 ~ 0.4 |
-| 0.2 ~ 0.3 | Poor with significant issues | 0.0 ~ 0.2 |
-| 0.0 ~ 0.1 | Very poor with critical issues | < 0.0 |
+| 1.0 | Perfect match with task requirements |
+| 0.8 ~ 0.9 | Minor wording or formatting differences |
+| 0.5 ~ 0.7 | Partially correct with missing or distorted key info |
+| 0.0 ~ 0.4 | Incomplete, incorrect, or off-topic |
 
 ## Output Format
 Your evaluation must follow this strict format:
 
-1. **First line**: Final score normalized to 0.0-1.0 range (e.g., `0.75`)
-2. **Second line**: One or more categorized aspects in the format `[Category] Explanation - Score`
-   - Use semicolons to separate multiple aspects
-   - Individual aspect scores range from -1.0 to 1.0
+1. **First line**: Final score (e.g., `0.84`)
+   - Each score must be between 0.0 and 1.0
+   - The final score is the average of all individual scores
+
+2. **Second line**: One or more categorized scores in the format `[Category] Explanation - Score`
+   - Use semicolons to separate the scores
+   - The final score must be the exact average of all individual scores
 
 ### Example Outputs:
 
-0.90
-[Clarity] Clear and concise explanation - 0.9; [Completeness] All key points covered - 0.8; [Relevance] Perfectly aligned with task - 0.7
+0.84
+[Meaning Alignment] Response perfectly captures the intended meaning and task requirements - 0.9; [Completeness] All key ideas captured - 0.9; [Expression Style] Clear and formal tone - 0.8; [Faithfulness] No hallucinations - 0.9; [Conciseness] Slightly long - 0.7
 
-0.55
-[Clarity] Generally clear but could be more precise - 0.2; [Completeness] Most key points covered but missing some details - 0.1; [Relevance] Mostly aligned with task but includes some unnecessary information - 0.0
+0.56
+[Meaning Alignment] Response misinterprets the core meaning and task requirements - 0.4; [Completeness] Only partial coverage of key points - 0.5; [Expression Style] Reasonable formatting - 0.7; [Faithfulness] Includes minor unrelated information - 0.6; [Conciseness] Verbose - 0.6
 
-0.25
-[Clarity] Unclear and confusing explanation - -0.6; [Completeness] Missing critical details - -0.5; [Relevance] Includes irrelevant information - -0.4
-
-Be consistent and make your feedback structured. These outputs will be parsed and used for automated refinement.
+Be strict and consistent. This format will be parsed and used for automated prompt refinement.
