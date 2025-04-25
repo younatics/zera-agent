@@ -1,5 +1,8 @@
-TASK_TYPE: {task_type}
-TASK_DESCRIPTION: {task_description}
+TASK_TYPE: 
+{task_type}
+
+TASK_DESCRIPTION:
+{task_description}
 
 Question:
 {question}
@@ -10,5 +13,13 @@ Actual Output:
 Expected Output:
 {expected}
 
-Regardless of your judgment, treat the expected output as the correct answer.
-Evaluate the output based on the expected output and return a final score followed by categorized feedback with suggested fixes.
+Regardless of your judgment, treat the expected output as the correct reference.
+Evaluate the actual output based on the expected output using the seven evaluation criteria (Meaning Accuracy, Completeness, Expression Style, Faithfulness, Conciseness, Correctness, Structural Alignment).
+Return the evaluation in JSON format containing:
+- A "final_score" field (average of all category scores)
+- A "scores" field detailing each category with:
+  - Current State Analysis
+  - Output Improvement Action
+  - Individual Score (0.0–1.0)
+Ensure that the final score exactly matches the average of all category scores.
+Be strict and detailed in both observations and improvement actions.

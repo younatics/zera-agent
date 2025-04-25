@@ -466,14 +466,14 @@ class PromptTuner:
         ])
         
         # 하위 3개 케이스 포맷팅
-        formatted_bottom3_cases = "\n\n".join([
+        formatted_bottom2_cases = "\n\n".join([
             f"[Bottom Case {i+1}]\n"
             f"Question: {case['question']}\n"
             f"Expected Output: {case['expected']}\n"
             f"Actual Output: {case['actual']}\n"
             f"Score: {case['score']:.2f}\n"
             f"Reasons: {case['reasons']}"
-            for i, case in enumerate(sorted_cases[:3])  # 하위 3개
+            for i, case in enumerate(sorted_cases[:2])  # 하위 3개
         ])
         
         # 최근 프롬프트 포맷팅
@@ -501,7 +501,8 @@ Evaluation Reasons: {best_prompt.get('evaluation_reasons', 'No evaluation reason
         improvement_prompt = self.meta_user_prompt_template.format(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            random_cases=formatted_top3_cases + "\n\n" + formatted_bottom3_cases,  # 상위/하위 케이스 결합
+            random_cases=formatted_top3_cases + "\n\n" + formatted_bottom2_cases,  # 상위/하위 케이스 결합
+            # random_cases=formatted_top3_cases,  # 상위/하위 케이스 결합
             recent_prompts=formatted_recent_prompts,
             formatted_best_prompt=formatted_best_prompt,
             task_type=task_type,
