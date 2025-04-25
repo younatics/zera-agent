@@ -57,19 +57,24 @@ Your evaluation must follow this strict format:
    - Must be between 0.0 and 1.0
    - Must be the exact average of all individual scores
 
-2. **Second line**: Categorized scores in format `[Category] Explanation, Recommended Fix: fix suggestion - Score`
+2. **Second line**: Categorized scores in format `[Category] Current State Analysis: specific observation, Response Improvement Action: concrete action to enhance response format/structure - Score`
    - Separate scores with semicolons
    - Final score must match the average
-   - Each category should include current state and improvement suggestion
+   - Each category must include:
+     * Current State Analysis: Specific observation of what exists in the current response
+     * Response Improvement Action: Concrete action to enhance the response format, structure, or presentation
+     * Focus on HOW to present the answer, not WHAT to solve
+     * Use specific, measurable actions for response formatting (e.g., "Structure explanation as bullet points", "Present calculation steps in markdown table")
+     * Specify exact response formatting requirements (e.g., "Use code blocks with language specification", "Add section headers with ##")
 
 ### 5. Example Evaluations
 
 Example 1: High-Quality Response
 0.85
-[Meaning Accuracy] Clear understanding shown, Recommended Fix: Add context references - 0.9; [Completeness] All elements present, Recommended Fix: Add examples - 0.9; [Expression Style] Well-structured, Recommended Fix: Standardize formatting - 0.8; [Faithfulness] Aligned with context, Recommended Fix: Add citations - 0.9; [Conciseness] Mostly efficient, Recommended Fix: Remove redundancy in intro - 0.8; [Correctness] Matches solution, Recommended Fix: Use technical terms - 0.8
+[Meaning Accuracy] Current State Analysis: Technical concepts explained in paragraph form, Response Improvement Action: Restructure explanation into numbered steps with each concept defined separately - 0.9; [Completeness] Current State Analysis: Solution steps mixed within explanation, Response Improvement Action: Break out solution steps into distinct code blocks with comments - 0.9; [Expression Style] Current State Analysis: Inconsistent code formatting across examples, Response Improvement Action: Apply consistent ```python formatting for all code snippets - 0.8; [Faithfulness] Current State Analysis: References to source material are implicit, Response Improvement Action: Add explicit line number citations in (line XX) format - 0.9; [Conciseness] Current State Analysis: Key points buried in long paragraphs, Response Improvement Action: Extract key points into bulleted list at start of response - 0.8; [Correctness] Current State Analysis: Validation steps described in prose, Response Improvement Action: Present validation steps in markdown table with Input | Expected | Actual columns - 0.8
 
 Example 2: Low-Quality Response
 0.50
-[Meaning Accuracy] Key points lost in summary, Recommended Fix: Focus on main arguments - 0.4; [Completeness] Missing central themes, Recommended Fix: Include core concepts X and Y - 0.5; [Expression Style] Verbose explanations, Recommended Fix: Use concise statements - 0.5; [Faithfulness] Added unsupported details, Recommended Fix: Stick to source content - 0.6; [Conciseness] Summary exceeds source length, Recommended Fix: Omit sections 2,4,7 with "..." - 0.5; [Correctness] Misrepresented conclusions, Recommended Fix: Correct final points - 0.5
+[Meaning Accuracy] Current State Analysis: Explanation mixes multiple concepts in single paragraph, Response Improvement Action: Separate each concept with ### headers and dedicated examples - 0.4; [Completeness] Current State Analysis: Steps presented without clear structure, Response Improvement Action: Number each step and add "Input:", "Process:", "Output:" sections - 0.5; [Expression Style] Current State Analysis: Code examples lack context and comments, Response Improvement Action: Add // Purpose: comment before each code block explaining its role - 0.5; [Faithfulness] Current State Analysis: Source material paraphrased without structure, Response Improvement Action: Quote key points with > blockquotes and add reference links - 0.6; [Conciseness] Current State Analysis: Repetitive explanations across sections, Response Improvement Action: Create reusable explanation blocks with clear section references - 0.5; [Correctness] Current State Analysis: Solution steps lack clear progression, Response Improvement Action: Add ➡️ arrows between steps to show logical flow - 0.5
 
 Be strict and consistent. This format will be parsed and used for automated prompt refinement.

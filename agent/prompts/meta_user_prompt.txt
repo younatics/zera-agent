@@ -10,9 +10,56 @@ Review these evaluation cases:
 
 Key Analysis Points:
 - Task alignment: Does the current task definition match actual requirements?
+- Sub-task identification: 
+    - Response Pattern Analysis:
+       - Compare actual responses with expected responses
+       - Identify key differences between high and low-scoring responses
+       - Extract common patterns from successful responses
+       - Note specific evaluation criteria used in scoring
+
+    - Output Structure Analysis:
+       - Analyze the expected output format (structured/unstructured, JSON/text/code)
+       - Identify required components in successful responses
+       - Note any mandatory sections or elements
+       - Check for consistent formatting requirements
+
+    - Response Characteristics:
+       - Determine general response length (short/medium/long)
+       - Detect fixed-length constraints (e.g., exactly three sentences, five bullet points)
+       - Identify required level of detail or abstraction
+       - Analyze reasoning style requirements (analytical/creative, step-by-step/holistic)
+
+    - Evaluation Criteria Mapping:
+       - Map evaluation reasons to specific response elements
+       - Identify critical factors in high-scoring responses
+       - Note common reasons for score deductions
+       - Extract implicit quality requirements
+
+    - Improvement Pattern Recognition:
+       - Analyze suggested improvements in evaluation cases
+       - Identify recurring enhancement recommendations
+       - Note specific areas marked for improvement
+       - Extract patterns in correction suggestions
+
 - Success patterns: What consistently works well?
 - Failure patterns: What needs improvement?
 - Response quality: What makes responses effective?
+
+When analyzing cases, consider:
+1. Output Format Analysis:
+   - Is there a consistent structure in successful responses?
+   - What format patterns appear in high-scoring cases?
+   - Are there specific formatting requirements?
+
+2. Content Characteristics:
+   - What is the typical length of successful responses?
+   - What level of detail is expected?
+   - Are there common elements in well-performing answers?
+
+3. Reasoning Style:
+   - What type of logic flow produces better results?
+   - Is step-by-step reasoning required?
+   - How is information abstracted or detailed?
 
 Recent History:
 {recent_prompts}
@@ -34,20 +81,29 @@ Your goal is to improve both the task definition and prompts based on the analys
 Required Improvements:
 1. Task Definition:
    - Refine task type to better reflect actual requirements
+   - Identify and specify appropriate sub-task types
+   - Define clear relationships between main tasks and sub-tasks
    - Enhance task description to cover all essential aspects
    - Ensure alignment with evaluation criteria
 
-2. Prompts:
+2. Task Analysis:
+   - Analyze how sub-tasks contribute to main task objectives
+   - Identify specific requirements for each sub-task
+   - Consider dependencies between sub-tasks
+   - Evaluate success criteria at both main and sub-task levels
+
+3. Prompts:
    - Build on successful patterns
    - Address identified weaknesses
    - Maintain or exceed current best performance
+   - Ensure prompts effectively guide both main and sub-task execution
 
 ## OUTPUT FORMAT
 TASK_TYPE:
-[Improved task type]
+[Main task type] ([Sub-task type])
 
 TASK_DESCRIPTION:
-[Enhanced task description]
+[Enhanced task description including main task and sub-task specifications]
 
 SYSTEM_PROMPT:
 [Optimized system prompt]
