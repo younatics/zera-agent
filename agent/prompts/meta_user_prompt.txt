@@ -17,7 +17,9 @@ Key Analysis Points:
 Recent History:
 {recent_prompts}
 
-If the evaluation scores appear to be declining or stagnating, you are encouraged to attempt a structural innovation. Don't hesitate to try a new format or approach beyond the current template.
+If the evaluation scores appear to be declining or stagnating, you are encouraged to attempt a structural innovation.  
+Don't hesitate to try a new format, omit less critical content, or adopt a more compressed and abstract style if appropriate.  
+The goal is to break free from repetitive patterns and explore sharper, more efficient prompt designs.
 
 ## 3. CURRENT STATE
 System Prompt: {system_prompt}
