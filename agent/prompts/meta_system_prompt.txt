@@ -16,7 +16,7 @@ Core Responsibilities:
 
 3. Task-Aligned Prompt Engineering
    - Design system prompts that match task requirements
-   - Create user prompts that guide task-specific responses
+   - Create user prompts that guide task-specific outputs
    - Ensure consistency in task execution
 
 4. Task-Focused Optimization

@@ -95,13 +95,13 @@ class PromptTuner:
         self.initial_system_prompt = system_prompt
         self.initial_user_prompt = user_prompt
     
-    def _evaluate_response(self, response: str, expected: str, question: str, task_type: str, task_description: str) -> tuple[float, List[Dict]]:
+    def _evaluate_output(self, output: str, expected: str, question: str, task_type: str, task_description: str) -> tuple[float, List[Dict]]:
         """
-        Evaluate a response using the evaluator model.
+        Evaluate an output using the evaluator model.
         
         Args:
-            response (str): The actual response to evaluate
-            expected (str): The expected response
+            output (str): The actual output to evaluate
+            expected (str): The expected output
             question (str): The original question
             task_type (str): The type of task being evaluated
             task_description (str): The description of the task being evaluated
@@ -112,7 +112,7 @@ class PromptTuner:
         try:
             # 평가 유저 프롬프트 생성
             evaluation_prompt = self.evaluation_user_prompt_template.format(
-                response=response,
+                response=output,
                 expected=expected,
                 question=question,
                 task_type=task_type,
@@ -130,10 +130,10 @@ class PromptTuner:
                 question=evaluation_prompt,
                 system_prompt=evaluation_system_prompt
             )
-            self.logger.info(f"Evaluating response:")
+            self.logger.info(f"Evaluating output:")
             self.logger.info(f"Question: {question}")
-            self.logger.info(f"Actual response: {response}")
-            self.logger.info(f"Expected response: {expected}")
+            self.logger.info(f"Actual output: {output}")
+            self.logger.info(f"Expected output: {expected}")
             self.logger.info(f"Evaluation: {evaluation}")
             
             # 평가 결과에서 점수 추출
@@ -194,7 +194,7 @@ class PromptTuner:
                 - best_avg_score: best average score so far
                 - best_sample_score: best individual test case score so far
                 - best_prompt: best prompt so far
-                - responses: list of responses for each test case
+                - outputs: list of outputs for each test case
         """
         current_system_prompt = initial_system_prompt
         current_user_prompt = initial_user_prompt
@@ -207,12 +207,12 @@ class PromptTuner:
         
         # 초기 task_type과 task_description 설정
         current_task_type = "General Task"
-        current_task_description = "General task requiring responses to various questions"
+        current_task_description = "General task requiring outputs to various questions"
         
         for iteration in range(num_iterations):
             self.logger.info(f"\nIteration {iteration + 1}/{num_iterations}")
             iteration_scores = []
-            iteration_responses = []
+            iteration_outputs = []
             iteration_best_sample_score = 0.0  # 이터레이션별 최고 점수 초기화
             
             # 각 이터레이션마다 랜덤 샘플링
@@ -223,13 +223,13 @@ class PromptTuner:
                 self.logger.info(f"\nTest Case {i}/{len(test_cases)}")
                 self.logger.info(f"Question: {test_case['question']}")
                 
-                # 현재 프롬프트로 응답 생성
-                response = self.model.ask(test_case['question'], system_prompt=current_system_prompt, user_prompt=current_user_prompt)
-                self.logger.info(f"Response: {response}")
+                # 현재 프롬프트로 출력 생성
+                output = self.model.ask(test_case['question'], system_prompt=current_system_prompt, user_prompt=current_user_prompt)
+                self.logger.info(f"Output: {output}")
                 
-                # 응답 평가
-                score, reasons = self._evaluate_response(
-                    response=response,
+                # 출력 평가
+                score, reasons = self._evaluate_output(
+                    output=output,
                     expected=test_case['expected'],
                     question=test_case['question'],
                     task_type=current_task_type,
@@ -238,12 +238,12 @@ class PromptTuner:
                 self.logger.info(f"Score: {score}")
                 self.logger.info(f"Evaluation reasons: {reasons}")
                 
-                # 점수와 응답 저장
+                # 점수와 출력 저장
                 iteration_scores.append(score)
-                iteration_responses.append({
+                iteration_outputs.append({
                     'question': test_case['question'],
                     'expected': test_case['expected'],
-                    'actual': response,
+                    'actual': output,
                     'score': score,
                     'reasons': reasons
                 })
@@ -259,8 +259,8 @@ class PromptTuner:
                     'system_prompt': current_system_prompt,
                     'user_prompt': current_user_prompt,
                     'question': test_case['question'],
-                    'expected_answer': test_case['expected'],
-                    'actual_answer': response,
+                    'expected_output': test_case['expected'],
+                    'actual_output': output,
                     'score': score,
                     'evaluation_reasons': reasons
                 })
@@ -269,8 +269,8 @@ class PromptTuner:
                 result = {
                     'iteration': iteration + 1,
                     'question': test_case['question'],
-                    'expected_response': test_case['expected'],
-                    'actual_response': response,
+                    'expected_output': test_case['expected'],
+                    'actual_output': output,
                     'score': score,
                     'evaluation_reasons': reasons
                 }
@@ -313,7 +313,7 @@ class PromptTuner:
                 'best_sample_score': iteration_best_sample_score,  # 이터레이션별 최고 점수 사용
                 'best_system_prompt': best_system_prompt,
                 'best_user_prompt': best_user_prompt,
-                'responses': iteration_responses,
+                'outputs': iteration_outputs,
                 'meta_prompt': None,  # 초기값 설정
                 'task_type': current_task_type,
                 'task_description': current_task_description
@@ -326,7 +326,7 @@ class PromptTuner:
                 'system_prompt': current_system_prompt,
                 'user_prompt': current_user_prompt,
                 'avg_score': avg_score,
-                'evaluation_reasons': [response['reasons'] for response in iteration_responses if response['score'] is not None]
+                'evaluation_reasons': [output['reasons'] for output in iteration_outputs if output['score'] is not None]
             })
             
             # 점수 임계값 체크
@@ -345,14 +345,14 @@ class PromptTuner:
                 self.logger.info("프롬프트 개선 중...")
                 
                 # 랜덤으로 5개의 케이스 선택 (데이터가 5개 미만이면 전부 선택)
-                valid_responses = [response for response in iteration_responses if response['score'] is not None]
+                valid_outputs = [output for output in iteration_outputs if output['score'] is not None]
                 
                 # 메타프롬프트를 사용하여 현재 프롬프트를 개선
                 improvement_prompt = self._generate_meta_prompt(
                     current_system_prompt, 
                     current_user_prompt, 
                     self._get_recent_prompts(), 
-                    valid_responses,
+                    valid_outputs,
                     current_task_type,
                     current_task_description
                 )
@@ -436,7 +436,7 @@ class PromptTuner:
             }
         return max(self.prompt_history, key=lambda x: x['avg_score'])
 
-    def _generate_meta_prompt(self, system_prompt: str, user_prompt: str, recent_prompts: List[Dict], valid_responses: List[Dict], task_type: str, task_description: str) -> str:
+    def _generate_meta_prompt(self, system_prompt: str, user_prompt: str, recent_prompts: List[Dict], valid_outputs: List[Dict], task_type: str, task_description: str) -> str:
         """
         메타프롬프트 템플릿을 생성합니다.
         
@@ -444,7 +444,7 @@ class PromptTuner:
             system_prompt (str): 현재 시스템 프롬프트
             user_prompt (str): 현재 유저 프롬프트
             recent_prompts (List[Dict]): 최근 프롬프트 히스토리
-            valid_responses (List[Dict]): 전체 평가 케이스
+            valid_outputs (List[Dict]): 전체 평가 케이스
             task_type (str): 현재 테스크 타입
             task_description (str): 현재 테스크 설명
             
@@ -452,14 +452,14 @@ class PromptTuner:
             str: 생성된 메타프롬프트 템플릿
         """
         # 케이스를 점수순으로 정렬
-        sorted_cases = sorted(valid_responses, key=lambda x: x['score'])
+        sorted_cases = sorted(valid_outputs, key=lambda x: x['score'])
         
         # 상위 3개 케이스 포맷팅
         formatted_top3_cases = "\n\n".join([
             f"[Top Case {i+1}]\n"
             f"Question: {case['question']}\n"
-            f"Expected Answer: {case['expected']}\n"
-            f"Actual Answer: {case['actual']}\n"
+            f"Expected Output: {case['expected']}\n"
+            f"Actual Output: {case['actual']}\n"
             f"Score: {case['score']:.2f}\n"
             f"Reasons: {case['reasons']}"
             for i, case in enumerate(reversed(sorted_cases[-3:]))  # 상위 3개를 역순으로
@@ -469,8 +469,8 @@ class PromptTuner:
         formatted_bottom3_cases = "\n\n".join([
             f"[Bottom Case {i+1}]\n"
             f"Question: {case['question']}\n"
-            f"Expected Answer: {case['expected']}\n"
-            f"Actual Answer: {case['actual']}\n"
+            f"Expected Output: {case['expected']}\n"
+            f"Actual Output: {case['actual']}\n"
             f"Score: {case['score']:.2f}\n"
             f"Reasons: {case['reasons']}"
             for i, case in enumerate(sorted_cases[:3])  # 하위 3개
@@ -527,15 +527,15 @@ Evaluation Reasons: {best_prompt.get('evaluation_reasons', 'No evaluation reason
         writer = csv.writer(output)
         
         # 헤더 작성
-        writer.writerow(['iteration', 'question', 'expected_response', 'actual_response', 'score', 'evaluation_reasons'])
+        writer.writerow(['iteration', 'question', 'expected_output', 'actual_output', 'score', 'evaluation_reasons'])
         
         # 데이터 작성
         for result in self.results:
             writer.writerow([
                 result['iteration'],
                 result['question'],
-                result['expected_response'],
-                result['actual_response'],
+                result['expected_output'],
+                result['actual_output'],
                 result['score'],
                 result['evaluation_reasons']
             ])

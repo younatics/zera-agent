@@ -4,11 +4,11 @@ TASK_DESCRIPTION: {task_description}
 Question:
 {question}
 
-Actual Response:
+Actual Output:
 {response}
 
-Expected Response:
+Expected Output:
 {expected}
 
-Regardless of your judgment, treat the expected response as the correct answer.
-Evaluate the response based on the expected response and return a final score followed by categorized feedback with suggested fixes.
+Regardless of your judgment, treat the expected output as the correct answer.
+Evaluate the output based on the expected output and return a final score followed by categorized feedback with suggested fixes.

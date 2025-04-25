@@ -11,27 +11,27 @@ Review these evaluation cases:
 Key Analysis Points:
 - Task alignment: Does the current task definition match actual requirements?
 - Sub-task identification: 
-    - Response Pattern Analysis:
-       - Compare actual responses with expected responses
-       - Identify key differences between high and low-scoring responses
-       - Extract common patterns from successful responses
+    - Output Pattern Analysis:
+       - Compare actual outputs with expected outputs
+       - Identify key differences between high and low-scoring outputs
+       - Extract common patterns from successful outputs
        - Note specific evaluation criteria used in scoring
 
     - Output Structure Analysis:
        - Analyze the expected output format (structured/unstructured, JSON/text/code)
-       - Identify required components in successful responses
+       - Identify required components in successful outputs
        - Note any mandatory sections or elements
        - Check for consistent formatting requirements
 
-    - Response Characteristics:
-       - Determine general response length (short/medium/long)
+    - Output Characteristics:
+       - Determine general output length (short/medium/long)
        - Detect fixed-length constraints (e.g., exactly three sentences, five bullet points)
        - Identify required level of detail or abstraction
        - Analyze reasoning style requirements (analytical/creative, step-by-step/holistic)
 
     - Evaluation Criteria Mapping:
-       - Map evaluation reasons to specific response elements
-       - Identify critical factors in high-scoring responses
+       - Map evaluation reasons to specific output elements
+       - Identify critical factors in high-scoring outputs
        - Note common reasons for score deductions
        - Extract implicit quality requirements
 
@@ -43,16 +43,16 @@ Key Analysis Points:
 
 - Success patterns: What consistently works well?
 - Failure patterns: What needs improvement?
-- Response quality: What makes responses effective?
+- Output quality: What makes outputs effective?
 
 When analyzing cases, consider:
 1. Output Format Analysis:
-   - Is there a consistent structure in successful responses?
+   - Is there a consistent structure in successful outputs?
    - What format patterns appear in high-scoring cases?
    - Are there specific formatting requirements?
 
 2. Content Characteristics:
-   - What is the typical length of successful responses?
+   - What is the typical length of successful outputs?
    - What level of detail is expected?
    - Are there common elements in well-performing answers?
 

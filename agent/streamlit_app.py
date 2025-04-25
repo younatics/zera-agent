@@ -174,7 +174,7 @@ with st.sidebar:
             "모델 선택",
             options=list(MODEL_INFO.keys()),
             format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
-            help="응답 평가에 사용할 모델을 선택하세요."
+            help="출력 평가에 사용할 모델을 선택하세요."
         )
         st.caption(MODEL_INFO[evaluator_model]['description'])
         
@@ -263,7 +263,7 @@ with st.expander("평가 프롬프트 설정", expanded=False):
             "평가 유저 프롬프트",
             value=DEFAULT_EVALUATION_USER_PROMPT,
             height=200,
-            help="평가 모델의 유저 프롬프트를 설정합니다. {question}, {response}, {expected}를 포함해야 합니다."
+            help="평가 모델의 유저 프롬프트를 설정합니다. {question}, {output}, {expected}를 포함해야 합니다."
         )
     
     if st.button("평가 프롬프트 업데이트", key="eval_prompt_update"):
@@ -648,7 +648,7 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                             st.metric("Top3 Average Score", f"{result['top3_avg_score']:.2f}")
                         
                         # 평가 기록을 데이터프레임으로 변환
-                        history_df = pd.DataFrame(result['responses'])
+                        history_df = pd.DataFrame(result['outputs'])
                         
                         # 컬럼 순서 변경 및 필요한 컬럼만 선택
                         history_df = history_df[['question', 'expected', 'actual', 'score', 'reasons']]
@@ -670,7 +670,7 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
                         history_df['reasons'] = history_df['reasons'].apply(parse_reasons)
                         
                         # 컬럼 이름 변경
-                        history_df.columns = ['Question', 'Expected Answer', 'Actual Answer', 'Score', 'Evaluation Reasons']
+                        history_df.columns = ['Question', 'Expected Output', 'Actual Output', 'Score', 'Evaluation Reasons']
                         
                         # 점수를 소수점 두자리까지만 표시
                         history_df['Score'] = history_df['Score'].round(2)
