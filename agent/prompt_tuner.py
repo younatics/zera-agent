@@ -451,11 +451,8 @@ Average Score: {best_prompt['avg_score']:.2f}
         
         return improvement_prompt
 
-    def save_results_to_csv(self, filename=None):
-        """결과를 CSV 파일로 저장합니다."""
-        if not filename:
-            filename = f"prompt_tuning_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-        
+    def save_results_to_csv(self):
+        """결과를 CSV 형식의 문자열로 반환합니다."""
         output = io.StringIO()
         writer = csv.writer(output)
         
@@ -478,8 +475,4 @@ Average Score: {best_prompt['avg_score']:.2f}
                     json.dumps(test_case.evaluation_details, ensure_ascii=False)
                 ])
         
-        # 파일로 저장
-        with open(filename, 'w', encoding='utf-8') as f:
-            f.write(output.getvalue())
-        
-        return filename 
+        return output.getvalue() 

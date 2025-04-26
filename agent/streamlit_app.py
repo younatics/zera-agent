@@ -620,15 +620,13 @@ class ResultsDisplay:
             line=dict(color='blue', width=2)
         ))
         
-        # 표준편차 영역 추가
+        # 표준편차를 별도의 선으로 표시
         fig.add_trace(go.Scatter(
-            x=x_values + x_values[::-1],
-            y=upper_bound + lower_bound[::-1],
-            fill='toself',
-            fillcolor='rgba(0,0,255,0.1)',
-            line=dict(color='rgba(0,0,255,0)'),
+            x=x_values,
+            y=std_devs,
             name='표준편차',
-            showlegend=True
+            mode='lines+markers',
+            line=dict(color='purple', width=2, dash='dot')
         ))
         
         fig.add_trace(go.Scatter(
@@ -697,6 +695,21 @@ class ResultsDisplay:
                 col2.metric("Standard Deviation", f"{iteration_result.std_dev:.2f}")
                 col3.metric("Top 3 Average", f"{iteration_result.top3_avg_score:.2f}")
                 
+                # Task Type과 Description expander 추가
+                with st.expander(f"Task Type ({iteration_result.task_type})", expanded=False):
+                    st.markdown("### Task Description")
+                    st.code(iteration_result.task_description, language="text")
+                
+                # 현재 프롬프트 expander 추가
+                with st.expander("현재 프롬프트 보기", expanded=False):
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.markdown("### System Prompt")
+                        st.code(iteration_result.system_prompt, language="text")
+                    with col2:
+                        st.markdown("### User Prompt")
+                        st.code(iteration_result.user_prompt, language="text")
+                
                 # 출력 결과를 데이터프레임으로 변환
                 outputs_data = []
                 for i, test_case in enumerate(iteration_result.test_case_results):
@@ -742,6 +755,11 @@ class ResultsDisplay:
                     use_container_width=True,
                     height=400
                 )
+                
+                # 메타프롬프트 expander 추가
+                if iteration_result.meta_prompt:
+                    with st.expander("메타프롬프트 결과 보기", expanded=False):
+                        st.code(iteration_result.meta_prompt, language="text")
             
             # 현재 선택된 이터레이션 저장
             SessionState.set_current_iteration(selected_iteration)
@@ -808,13 +826,14 @@ def run_tuning_process():
             st.write(f"최종 결과: 평균 점수 {best_result.avg_score:.2f}, 최고 평균 점수 {best_result.best_avg_score:.2f}, 최고 개별 점수 {best_result.best_sample_score:.2f}")
             
             # CSV 다운로드 버튼
-            csv_data = tuner.save_results_to_csv()
-            st.download_button(
-                label="Download Results as CSV",
-                data=csv_data,
-                file_name=f"prompt_tuning_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                mime="text/csv"
-            )
+            if st.button("결과를 CSV 파일로 저장"):
+                csv_data = tuner.save_results_to_csv()
+                st.download_button(
+                    label="Download Results as CSV",
+                    data=csv_data,
+                    file_name=f"prompt_tuning_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                    mime="text/csv"
+                )
         else:
             st.warning("튜닝 결과가 없습니다.")
 
