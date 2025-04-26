@@ -8,6 +8,7 @@ import csv
 from datetime import datetime
 import io
 import json
+from app.iteration_result import IterationResult, TestCaseResult
 
 class PromptTuner:
     """
@@ -29,11 +30,7 @@ class PromptTuner:
         self.model = Model(model_name, version=model_version)
         self.evaluator = Model(evaluator_model_name, version=evaluator_model_version)
         self.meta_prompt_model = Model(meta_prompt_model_name, version=meta_prompt_model_version)
-        self.evaluation_history: List[Dict] = []
-        self.prompt_history: List[Dict] = []
-        self.best_prompt: Optional[str] = None
-        self.best_avg_score: float = 0.0
-        self.best_sample_score: float = 0.0
+        self.iteration_results = []
         self.progress_callback = None
         self.iteration_callback = None
         logging.basicConfig(level=logging.INFO)
@@ -60,8 +57,6 @@ class PromptTuner:
             self.meta_system_prompt_template = f.read()
         with open(os.path.join(prompts_dir, 'meta_user_prompt.txt'), 'r', encoding='utf-8') as f:
             self.meta_user_prompt_template = f.read()
-        
-        self.results = []  # Add this line to store results
     
     def set_evaluation_prompt(self, system_prompt_template: str, user_prompt_template: str):
         """
@@ -190,7 +185,7 @@ class PromptTuner:
             self.logger.error(f"Error during evaluation: {str(e)}")
             return 0.0, {'final_score': 0.0, 'category_scores': {}}
     
-    def tune_prompt(self, initial_system_prompt: str, initial_user_prompt: str, initial_test_cases: List[Dict], num_iterations: int = 3, score_threshold: Optional[float] = None, evaluation_score_threshold: float = 0.8, use_meta_prompt: bool = True, num_samples: Optional[int] = None) -> List[Dict]:
+    def tune_prompt(self, initial_system_prompt: str, initial_user_prompt: str, initial_test_cases: List[Dict], num_iterations: int = 3, score_threshold: Optional[float] = None, evaluation_score_threshold: float = 0.8, use_meta_prompt: bool = True, num_samples: Optional[int] = None) -> List[IterationResult]:
         """
         Tune a system prompt using a set of test cases.
         
@@ -205,26 +200,13 @@ class PromptTuner:
             num_samples (Optional[int]): Number of samples to use for evaluate prompt
             
         Returns:
-            List[Dict]: List of iteration results, each containing:
-                - iteration: iteration number
-                - system_prompt: current system prompt
-                - user_prompt: current user prompt
-                - avg_score: average score for this iteration
-                - std_dev: standard deviation for this iteration
-                - top3_avg_score: top 3 average score for this iteration
-                - best_avg_score: best average score so far
-                - best_sample_score: best individual test case score so far
-                - best_prompt: best prompt so far
-                - outputs: list of outputs for each test case
+            List[IterationResult]: List of iteration results
         """
         current_system_prompt = initial_system_prompt
         current_user_prompt = initial_user_prompt
         best_system_prompt = initial_system_prompt
         best_user_prompt = initial_user_prompt
         best_avg_score = 0.0
-        best_sample_score = 0.0
-        iteration_results = []
-        self.results = []  # 결과 리스트 초기화
         
         # 초기 task_type과 task_description 설정
         current_task_type = "General Task"
@@ -233,7 +215,7 @@ class PromptTuner:
         for iteration in range(num_iterations):
             self.logger.info(f"\nIteration {iteration + 1}/{num_iterations}")
             iteration_scores = []
-            iteration_outputs = []
+            test_case_results = []
             iteration_best_sample_score = 0.0  # 이터레이션별 최고 점수 초기화
             
             # 각 이터레이션마다 랜덤 샘플링
@@ -261,41 +243,21 @@ class PromptTuner:
                 
                 # 점수와 출력 저장
                 iteration_scores.append(score)
-                iteration_outputs.append({
-                    'question': test_case['question'],
-                    'expected': test_case['expected'],
-                    'actual': output,
-                    'score': score,
-                    'evaluation_details': evaluation_details
-                })
+                
+                # TestCaseResult 생성
+                test_case_result = TestCaseResult(
+                    test_case=i,
+                    question=test_case['question'],
+                    expected_output=test_case['expected'],
+                    actual_output=output,
+                    score=score,
+                    evaluation_details=evaluation_details
+                )
+                test_case_results.append(test_case_result)
                 
                 # 최고 개별 점수 업데이트
                 if score is not None and score > iteration_best_sample_score:
                     iteration_best_sample_score = score
-                
-                # 평가 기록 저장
-                self.evaluation_history.append({
-                    'iteration': iteration + 1,
-                    'test_case': i,
-                    'system_prompt': current_system_prompt,
-                    'user_prompt': current_user_prompt,
-                    'question': test_case['question'],
-                    'expected_output': test_case['expected'],
-                    'actual_output': output,
-                    'score': score,
-                    'evaluation_details': evaluation_details
-                })
-                
-                # 상세 결과 저장
-                result = {
-                    'iteration': iteration + 1,
-                    'question': test_case['question'],
-                    'expected_output': test_case['expected'],
-                    'actual_output': output,
-                    'score': score,
-                    'evaluation_details': evaluation_details
-                }
-                self.results.append(result)
                 
                 # 프로그레스 바 업데이트
                 if self.progress_callback:
@@ -322,33 +284,22 @@ class PromptTuner:
                 best_system_prompt = current_system_prompt
                 best_user_prompt = current_user_prompt
             
-            # 현재 이터레이션 결과 저장
-            result = {
-                'iteration': iteration + 1,
-                'system_prompt': current_system_prompt,
-                'user_prompt': current_user_prompt,
-                'avg_score': avg_score,
-                'std_dev': std_dev,  # 표준편차 추가
-                'top3_avg_score': top3_avg_score,  # top3 평균 점수 추가
-                'best_avg_score': best_avg_score,
-                'best_sample_score': iteration_best_sample_score,  # 이터레이션별 최고 점수 사용
-                'best_system_prompt': best_system_prompt,
-                'best_user_prompt': best_user_prompt,
-                'outputs': iteration_outputs,
-                'meta_prompt': None,  # 초기값 설정
-                'task_type': current_task_type,
-                'task_description': current_task_description
-            }
-            iteration_results.append(result)
-            
-            # prompt_history 업데이트
-            self.prompt_history.append({
-                'iteration': iteration + 1,
-                'system_prompt': current_system_prompt,
-                'user_prompt': current_user_prompt,
-                'avg_score': avg_score,
-                'evaluation_details': [output['evaluation_details'] for output in iteration_outputs if output['score'] is not None]
-            })
+            # IterationResult 생성
+            iteration_result = IterationResult(
+                iteration=iteration + 1,
+                system_prompt=current_system_prompt,
+                user_prompt=current_user_prompt,
+                avg_score=avg_score,
+                std_dev=std_dev,
+                top3_avg_score=top3_avg_score,
+                best_avg_score=best_avg_score,
+                best_sample_score=iteration_best_sample_score,
+                test_case_results=test_case_results,
+                meta_prompt=None,
+                task_type=current_task_type,
+                task_description=current_task_description
+            )
+            self.iteration_results.append(iteration_result)
             
             # 점수 임계값 체크
             if score_threshold is not None and avg_score >= score_threshold:
@@ -357,7 +308,7 @@ class PromptTuner:
                     self.progress_callback(num_iterations, len(test_cases))
 
                 if self.iteration_callback:
-                    self.iteration_callback(result)
+                    self.iteration_callback(iteration_result)
 
                 break
             
@@ -365,21 +316,18 @@ class PromptTuner:
             if use_meta_prompt and avg_score < evaluation_score_threshold:
                 self.logger.info("프롬프트 개선 중...")
                 
-                # 랜덤으로 5개의 케이스 선택 (데이터가 5개 미만이면 전부 선택)
-                valid_outputs = [output for output in iteration_outputs if output['score'] is not None]
-                
                 # 메타프롬프트를 사용하여 현재 프롬프트를 개선
                 improvement_prompt = self._generate_meta_prompt(
                     current_system_prompt, 
                     current_user_prompt, 
                     self._get_recent_prompts(), 
-                    valid_outputs,
+                    test_case_results,
                     current_task_type,
                     current_task_description
                 )
                 
                 # 결과에 메타프롬프트 추가
-                result['meta_prompt'] = improvement_prompt
+                iteration_result.meta_prompt = improvement_prompt
                 
                 # 메타프롬프트를 사용하여 프롬프트 개선
                 improved_prompts = self.meta_prompt_model.ask(
@@ -401,63 +349,36 @@ class PromptTuner:
                         current_task_description = improved_prompts[task_description_start + len("TASK_DESCRIPTION:"):system_prompt_start].strip()
                         current_system_prompt = improved_prompts[system_prompt_start + len("SYSTEM_PROMPT:"):user_prompt_start].strip()
                         current_user_prompt = improved_prompts[user_prompt_start + len("USER_PROMPT:"):].strip()
-                        
-                        # 결과에 TASK_TYPE과 TASK_DESCRIPTION 추가
-                        result['task_type'] = current_task_type
-                        result['task_description'] = current_task_description
-                        
-                        self.logger.info(f"추출된 TASK_TYPE: {current_task_type}")
-                        self.logger.info(f"추출된 TASK_DESCRIPTION: {current_task_description}")
-                        self.logger.info(f"개선된 시스템 프롬프트: {current_system_prompt}")
-                        self.logger.info(f"개선된 유저 프롬프트: {current_user_prompt}")
-                    else:
-                        self.logger.warning("프롬프트 개선 결과가 올바른 형식이 아닙니다. 현재 프롬프트를 유지합니다.")
-                else:
-                    self.logger.warning("프롬프트 개선에 실패했습니다. 현재 프롬프트를 유지합니다.")
-            elif use_meta_prompt:
-                self.logger.info(f"평균 점수가 평가 임계값({evaluation_score_threshold}) 이상이므로 프롬프트를 개선하지 않습니다.")
-                if self.progress_callback:
-                    self.progress_callback(num_iterations, len(test_cases))
-
-                if self.iteration_callback:
-                    self.iteration_callback(result)
-
-                break
-        
-            # 콜백 호출 (메타프롬프트 설정 이후)
-            if self.iteration_callback:
-                self.iteration_callback(result)
-
-        return iteration_results 
-
-    def _get_recent_prompts(self, num_prompts: int = 5) -> List[Dict]:
-        """
-        최근 num_prompts개의 프롬프트를 반환합니다.
-        
-        Args:
-            num_prompts (int): 반환할 프롬프트의 개수 (default: 3)
             
-        Returns:
-            List[Dict]: 최근 프롬프트들의 리스트
-        """
-        return self.prompt_history[-num_prompts:] if len(self.prompt_history) >= num_prompts else self.prompt_history
+            if self.iteration_callback:
+                self.iteration_callback(iteration_result)
+        
+        return self.iteration_results
+
+    def _get_recent_prompts(self, num_prompts: int = 5) -> List[IterationResult]:
+        """최근 프롬프트 결과를 반환합니다."""
+        recent_results = self.iteration_results[-num_prompts:] if len(self.iteration_results) >= num_prompts else self.iteration_results
+        return [{
+            'iteration': result.iteration,
+            'system_prompt': result.system_prompt,
+            'user_prompt': result.user_prompt,
+            'avg_score': result.avg_score,
+            'evaluation_details': [test_case.evaluation_details for test_case in result.test_case_results]
+        } for result in recent_results]
 
     def _get_best_prompt(self) -> Dict:
-        """
-        현재까지의 최고 점수를 가진 프롬프트를 반환합니다.
+        """최고 성능의 프롬프트를 반환합니다."""
+        if not self.iteration_results:
+            return None
         
-        Returns:
-            Dict: 최고 점수를 가진 프롬프트 정보
-        """
-        if not self.prompt_history:
-            return {
-                'avg_score': 0.0,
-                'system_prompt': self.initial_system_prompt,
-                'user_prompt': self.initial_user_prompt
-            }
-        return max(self.prompt_history, key=lambda x: x['avg_score'])
+        best_result = max(self.iteration_results, key=lambda x: x.avg_score)
+        return {
+            'system_prompt': best_result.system_prompt,
+            'user_prompt': best_result.user_prompt,
+            'avg_score': best_result.avg_score
+        }
 
-    def _generate_meta_prompt(self, system_prompt: str, user_prompt: str, recent_prompts: List[Dict], valid_outputs: List[Dict], task_type: str, task_description: str) -> str:
+    def _generate_meta_prompt(self, system_prompt: str, user_prompt: str, recent_prompts: List[Dict], valid_outputs: List[TestCaseResult], task_type: str, task_description: str) -> str:
         """
         메타프롬프트 템플릿을 생성합니다.
         
@@ -465,7 +386,7 @@ class PromptTuner:
             system_prompt (str): 현재 시스템 프롬프트
             user_prompt (str): 현재 유저 프롬프트
             recent_prompts (List[Dict]): 최근 프롬프트 히스토리
-            valid_outputs (List[Dict]): 전체 평가 케이스
+            valid_outputs (List[TestCaseResult]): 전체 평가 케이스
             task_type (str): 현재 테스크 타입
             task_description (str): 현재 테스크 설명
             
@@ -473,27 +394,27 @@ class PromptTuner:
             str: 생성된 메타프롬프트 템플릿
         """
         # 케이스를 점수순으로 정렬
-        sorted_cases = sorted(valid_outputs, key=lambda x: x['score'])
+        sorted_cases = sorted(valid_outputs, key=lambda x: x.score)
         
         # 상위 3개 케이스 포맷팅
         formatted_top3_cases = "\n\n".join([
             f"[Top Case {i+1}]\n"
-            f"Question: {case['question']}\n"
-            f"Expected Output: {case['expected']}\n"
-            f"Actual Output: {case['actual']}\n"
-            f"Score: {case['score']:.2f}\n"
-            f"Evaluation Details: {case['evaluation_details']}"
+            f"Question: {case.question}\n"
+            f"Expected Output: {case.expected_output}\n"
+            f"Actual Output: {case.actual_output}\n"
+            f"Score: {case.score:.2f}\n"
+            f"Evaluation Details: {case.evaluation_details}"
             for i, case in enumerate(reversed(sorted_cases[-3:]))  # 상위 3개를 역순으로
         ])
         
         # 하위 3개 케이스 포맷팅
         formatted_bottom2_cases = "\n\n".join([
             f"[Bottom Case {i+1}]\n"
-            f"Question: {case['question']}\n"
-            f"Expected Output: {case['expected']}\n"
-            f"Actual Output: {case['actual']}\n"
-            f"Score: {case['score']:.2f}\n"
-            f"Evaluation Details: {case['evaluation_details']}"
+            f"Question: {case.question}\n"
+            f"Expected Output: {case.expected_output}\n"
+            f"Actual Output: {case.actual_output}\n"
+            f"Score: {case.score:.2f}\n"
+            f"Evaluation Details: {case.evaluation_details}"
             for i, case in enumerate(sorted_cases[:2])  # 하위 3개
         ])
         
@@ -513,7 +434,6 @@ class PromptTuner:
 System: {best_prompt['system_prompt']}
 User: {best_prompt['user_prompt']}
 Average Score: {best_prompt['avg_score']:.2f}
-Evaluation Details: {best_prompt.get('evaluation_details', 'No evaluation details available')}
 """
         else:
             formatted_best_prompt = "No best performing prompt available yet."
@@ -529,36 +449,37 @@ Evaluation Details: {best_prompt.get('evaluation_details', 'No evaluation detail
             task_description=task_description
         )
         
-        return improvement_prompt 
+        return improvement_prompt
 
     def save_results_to_csv(self, filename=None):
-        """Save iteration results to a CSV file.
+        """결과를 CSV 파일로 저장합니다."""
+        if not filename:
+            filename = f"prompt_tuning_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         
-        Args:
-            filename (str, optional): The name of the CSV file. If None, a default name will be used.
-            
-        Returns:
-            str: The CSV content as a string
-        """
-        if not self.results:
-            return ""
-            
-        # CSV 내용 생성
         output = io.StringIO()
         writer = csv.writer(output)
         
         # 헤더 작성
-        writer.writerow(['iteration', 'question', 'expected_output', 'actual_output', 'score', 'evaluation_details'])
+        writer.writerow([
+            'iteration', 'test_case', 'question', 'expected_output', 
+            'actual_output', 'score', 'evaluation_details'
+        ])
         
         # 데이터 작성
-        for result in self.results:
-            writer.writerow([
-                result['iteration'],
-                result['question'],
-                result['expected_output'],
-                result['actual_output'],
-                result['score'],
-                result['evaluation_details']
-            ])
+        for iteration_result in self.iteration_results:
+            for test_case in iteration_result.test_case_results:
+                writer.writerow([
+                    iteration_result.iteration,
+                    test_case.test_case,
+                    test_case.question,
+                    test_case.expected_output,
+                    test_case.actual_output,
+                    test_case.score,
+                    json.dumps(test_case.evaluation_details, ensure_ascii=False)
+                ])
         
-        return output.getvalue() 
+        # 파일로 저장
+        with open(filename, 'w', encoding='utf-8') as f:
+            f.write(output.getvalue())
+        
+        return filename 

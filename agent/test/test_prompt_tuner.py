@@ -8,8 +8,8 @@ def load_test_cases_from_csv(csv_file):
         reader = csv.DictReader(f)
         for row in reader:
             test_case = {
-                'input': row['question'],
-                'expected_output': row['expected_answer']
+                'question': row['question'],
+                'expected': row['expected_answer']
             }
             test_cases.append(test_case)
     return test_cases
@@ -27,25 +27,37 @@ def test_prompt_tuner():
     print(f"\nLoaded {len(test_cases)} test cases from {csv_file}")
     
     # 초기 프롬프트
-    initial_prompt = "You are a helpful AI assistant. Be polite and concise in your responses."
+    initial_system_prompt = "You are a helpful AI assistant."
+    initial_user_prompt = "Be polite and concise in your responses."
     
     # PromptTuner 인스턴스 생성 (기본값으로 solar 사용)
     tuner = PromptTuner()
     
     # 프롬프트 튜닝 실행
     print("\n=== 프롬프트 튜닝 시작 ===")
-    best_prompt = tuner.tune(initial_prompt, test_cases, iterations=3)
+    iteration_results = tuner.tune_prompt(
+        initial_system_prompt=initial_system_prompt,
+        initial_user_prompt=initial_user_prompt,
+        initial_test_cases=test_cases,
+        num_iterations=3
+    )
     
     # 결과 출력
     print("\n=== 튜닝 결과 ===")
-    print(f"최고 점수: {tuner.best_score}")
-    print(f"최적 프롬프트: {best_prompt}")
+    best_result = max(iteration_results, key=lambda x: x.avg_score)
+    print(f"최고 평균 점수: {best_result.best_avg_score}")
+    print(f"최고 개별 점수: {best_result.best_sample_score}")
+    print(f"최적 시스템 프롬프트: {best_result.system_prompt}")
+    print(f"최적 유저 프롬프트: {best_result.user_prompt}")
     
     print("\n=== 평가 기록 ===")
-    for record in tuner.evaluation_history:
-        print(f"Iteration {record['iteration']}: Score {record['score']}")
-        print(f"System Prompt: {record['system_prompt']}")
-        print(f"User Prompt: {record['user_prompt']}\n")
+    for result in iteration_results:
+        print(f"Iteration {result.iteration}:")
+        print(f"평균 점수: {result.avg_score}")
+        print(f"표준편차: {result.std_dev}")
+        print(f"Top3 평균 점수: {result.top3_avg_score}")
+        print(f"시스템 프롬프트: {result.system_prompt}")
+        print(f"유저 프롬프트: {result.user_prompt}\n")
 
 if __name__ == "__main__":
     test_prompt_tuner() 

@@ -508,8 +508,7 @@ class SessionState:
         """세션 상태를 초기화합니다."""
         if 'initialized' not in st.session_state:
             st.session_state.initialized = True
-            st.session_state.all_results = []
-            st.session_state.prompt_history = []
+            st.session_state.all_iteration_results = []
             st.session_state.current_iteration = 0
             st.session_state.show_results = False
             st.session_state.tuning_complete = False
@@ -518,8 +517,7 @@ class SessionState:
     @staticmethod
     def reset():
         """상태를 초기화합니다."""
-        st.session_state.all_results = []
-        st.session_state.prompt_history = []
+        st.session_state.all_iteration_results = []
         st.session_state.current_iteration = 0
         st.session_state.show_results = False
         st.session_state.tuning_complete = False
@@ -527,29 +525,17 @@ class SessionState:
     @staticmethod
     def update_results(result):
         """새로운 결과를 추가합니다."""
-        if 'all_results' not in st.session_state:
-            st.session_state.all_results = []
+        if 'all_iteration_results' not in st.session_state:
+            st.session_state.all_iteration_results = []
         
-        st.session_state.all_results.append(result)
-        
-        if 'prompt_history' not in st.session_state:
-            st.session_state.prompt_history = []
-        
-        st.session_state.prompt_history.append({
-            'iteration': result['iteration'],
-            'system_prompt': result['system_prompt'],
-            'user_prompt': result['user_prompt'],
-            'avg_score': result['avg_score'],
-            'best_sample_score': result['best_sample_score']
-        })
-        
-        st.session_state.current_iteration = len(st.session_state.all_results) - 1
+        st.session_state.all_iteration_results.append(result)
+        st.session_state.current_iteration = len(st.session_state.all_iteration_results) - 1
         st.session_state.show_results = True
     
     @staticmethod
     def get_results():
         """현재 저장된 모든 결과를 반환합니다."""
-        return st.session_state.get('all_results', [])
+        return st.session_state.get('all_iteration_results', [])
     
     @staticmethod
     def get_current_iteration():
@@ -577,11 +563,15 @@ class ResultsDisplay:
             return
         
         # 그래프 데이터 준비
-        x_values = [result['iteration'] for result in results]
-        avg_scores = [result['avg_score'] for result in results]
-        best_sample_scores = [result['best_sample_score'] for result in results]
-        std_devs = [result['std_dev'] for result in results]
-        top3_scores = [result['top3_avg_score'] for result in results]
+        x_values = [result.iteration for result in results]
+        avg_scores = [result.avg_score for result in results]
+        best_sample_scores = [result.best_sample_score for result in results]
+        std_devs = [result.std_dev for result in results]
+        top3_scores = [result.top3_avg_score for result in results]
+        
+        # 표준편차 상한/하한 계산
+        upper_bound = [avg + std for avg, std in zip(avg_scores, std_devs)]
+        lower_bound = [avg - std for avg, std in zip(avg_scores, std_devs)]
         
         # 카테고리별 평균 점수 계산
         category_scores = {
@@ -597,9 +587,9 @@ class ResultsDisplay:
         for result in results:
             iteration_category_scores = {category: [] for category in category_scores.keys()}
             
-            for output in result['outputs']:
-                if 'evaluation_details' in output and 'category_scores' in output['evaluation_details']:
-                    for category, details in output['evaluation_details']['category_scores'].items():
+            for test_case in result.test_case_results:
+                if test_case.evaluation_details and 'category_scores' in test_case.evaluation_details:
+                    for category, details in test_case.evaluation_details['category_scores'].items():
                         if category in iteration_category_scores:
                             iteration_category_scores[category].append(details['score'])
             
@@ -626,21 +616,35 @@ class ResultsDisplay:
             x=x_values,
             y=avg_scores,
             name='평균 점수',
-            mode='lines+markers'
+            mode='lines+markers',
+            line=dict(color='blue', width=2)
+        ))
+        
+        # 표준편차 영역 추가
+        fig.add_trace(go.Scatter(
+            x=x_values + x_values[::-1],
+            y=upper_bound + lower_bound[::-1],
+            fill='toself',
+            fillcolor='rgba(0,0,255,0.1)',
+            line=dict(color='rgba(0,0,255,0)'),
+            name='표준편차',
+            showlegend=True
         ))
         
         fig.add_trace(go.Scatter(
             x=x_values,
             y=best_sample_scores,
             name='최고 개별 점수',
-            mode='lines+markers'
+            mode='lines+markers',
+            line=dict(color='green', width=2)
         ))
         
         fig.add_trace(go.Scatter(
             x=x_values,
             y=top3_scores,
             name='Top3 평균 점수',
-            mode='lines+markers'
+            mode='lines+markers',
+            line=dict(color='red', width=2)
         ))
         
         # 그래프 레이아웃 설정
@@ -689,24 +693,24 @@ class ResultsDisplay:
                 
                 # 평균 점수와 표준편차 표시
                 col1, col2, col3 = st.columns(3)
-                col1.metric("Average Score", f"{iteration_result['avg_score']:.2f}")
-                col2.metric("Standard Deviation", f"{iteration_result['std_dev']:.2f}")
-                col3.metric("Top 3 Average", f"{iteration_result['top3_avg_score']:.2f}")
+                col1.metric("Average Score", f"{iteration_result.avg_score:.2f}")
+                col2.metric("Standard Deviation", f"{iteration_result.std_dev:.2f}")
+                col3.metric("Top 3 Average", f"{iteration_result.top3_avg_score:.2f}")
                 
                 # 출력 결과를 데이터프레임으로 변환
                 outputs_data = []
-                for i, output in enumerate(iteration_result['outputs']):
+                for i, test_case in enumerate(iteration_result.test_case_results):
                     row = {
                         'Test Case': i + 1,
-                        'Score': f"{output['score']:.2f}",
-                        'Question': output['question'],
-                        'Expected': output['expected'],
-                        'Actual': output['actual']
+                        'Score': f"{test_case.score:.2f}",
+                        'Question': test_case.question,
+                        'Expected': test_case.expected_output,
+                        'Actual': test_case.actual_output
                     }
                     
                     # 카테고리별 점수와 피드백 추가
-                    if 'evaluation_details' in output and 'category_scores' in output['evaluation_details']:
-                        for category, details in output['evaluation_details']['category_scores'].items():
+                    if test_case.evaluation_details and 'category_scores' in test_case.evaluation_details:
+                        for category, details in test_case.evaluation_details['category_scores'].items():
                             row[f"{category} Score"] = f"{details['score']:.2f}"
                             row[f"{category} State"] = details['current_state']
                             row[f"{category} Action"] = details['improvement_action']
@@ -773,7 +777,7 @@ def run_tuning_process():
         tuner.iteration_callback = iteration_callback
         
         # 프롬프트 튜닝 실행
-        results = tuner.tune_prompt(
+        tuner.tune_prompt(
             initial_system_prompt=system_prompt,
             initial_user_prompt=user_prompt,
             initial_test_cases=test_cases,
@@ -787,20 +791,21 @@ def run_tuning_process():
         st.session_state.tuning_complete = True
         
         # 최종 결과
+        results = SessionState.get_results()
         if results:
             st.success("프롬프트 튜닝 완료!")
             
             # 전체 결과에서 가장 높은 평균 점수를 가진 프롬프트 찾기
-            best_result = max(results, key=lambda x: x['avg_score'])
+            best_result = max(results, key=lambda x: x.avg_score)
             st.write("Final Best Prompt:")
             col1, col2 = st.columns(2)
             with col1:
                 st.write("System Prompt:")
-                st.code(best_result['system_prompt'])
+                st.code(best_result.system_prompt)
             with col2:
                 st.write("User Prompt:")
-                st.code(best_result['user_prompt'])
-            st.write(f"최종 결과: 평균 점수 {best_result['avg_score']:.2f}, 최고 평균 점수 {best_result['best_avg_score']:.2f}, 최고 개별 점수 {best_result['best_sample_score']:.2f}")
+                st.code(best_result.user_prompt)
+            st.write(f"최종 결과: 평균 점수 {best_result.avg_score:.2f}, 최고 평균 점수 {best_result.best_avg_score:.2f}, 최고 개별 점수 {best_result.best_sample_score:.2f}")
             
             # CSV 다운로드 버튼
             csv_data = tuner.save_results_to_csv()
