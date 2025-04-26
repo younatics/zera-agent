@@ -60,46 +60,46 @@ Evaluate using the following seven criteria:
 ### 4. Output Format
 The evaluation must be output in JSON format:
 
-{
+{{
   "final_score": (average of all scores, e.g., 0.84),
-  "scores": {
-    "meaning_accuracy": {
+  "scores": {{
+    "meaning_accuracy": {{
       "current_state": "[specific analysis]",
       "improvement_action": "[concrete formatting or structure action]",
       "score": (0.0 ~ 1.0)
-    },
-    "completeness": {
+    }},
+    "completeness": {{
       "current_state": "[specific analysis]",
       "improvement_action": "[concrete formatting or structure action]",
       "score": (0.0 ~ 1.0)
-    },
-    "expression_style": {
+    }},
+    "expression_style": {{
       "current_state": "[specific analysis]",
       "improvement_action": "[concrete formatting or structure action]",
       "score": (0.0 ~ 1.0)
-    },
-    "faithfulness": {
+    }},
+    "faithfulness": {{
       "current_state": "[specific analysis]",
       "improvement_action": "[concrete formatting or structure action]",
       "score": (0.0 ~ 1.0)
-    },
-    "conciseness": {
+    }},
+    "conciseness": {{
       "current_state": "[specific analysis]",
       "improvement_action": "[concrete formatting or structure action]",
       "score": (0.0 ~ 1.0)
-    },
-    "correctness": {
+    }},
+    "correctness": {{
       "current_state": "[specific analysis]",
       "improvement_action": "[concrete formatting or structure action]",
       "score": (0.0 ~ 1.0)
-    },
-    "structural_alignment": {
+    }},
+    "structural_alignment": {{
       "current_state": "[specific structure observation]",
       "improvement_action": "[how to improve alignment with structure]",
       "score": (0.0 ~ 1.0)
-    }
-  }
-}
+    }}
+  }}
+}}
 - The `final_score` must exactly match the average of the individual scores.
 - All seven categories must be included in "scores".
 - Each improvement action should focus on output format or structure enhancement, not task-solving itself.
@@ -108,86 +108,86 @@ The evaluation must be output in JSON format:
 
 Example 1: High-Quality Output
 
-{
+{{
   "final_score": 0.87,
-  "scores": {
-    "meaning_accuracy Accuracy": {
+  "scores": {{
+    "meaning_accuracy": {{
       "current_state": "Technical concepts explained clearly in structured paragraphs",
       "improvement_action": "Restructure explanation into numbered steps with each concept defined separately",
       "score": 0.9
-    },
-    "completeness": {
+    }},
+    "completeness": {{
       "current_state": "All key solution steps included with detailed explanation",
       "improvement_action": "Break out solution steps into distinct code blocks with comments",
       "score": 0.9
-    },
-    "expression_style": {
+    }},
+    "expression_style": {{
       "current_state": "Consistent tone and formatting across all sections",
       "improvement_action": "Apply consistent markdown formatting for all code snippets",
       "score": 0.85
-    },
-    "faithfulness": {
+    }},
+    "faithfulness": {{
       "current_state": "References to source material are clear and explicit",
       "improvement_action": "Add explicit line number citations in (line XX) format",
       "score": 0.9
-    },
-    "conciseness": {
+    }},
+    "conciseness": {{
       "current_state": "Key points are concise and well summarized",
       "improvement_action": "Extract key points into bulleted list at start of output",
       "score": 0.85
-    },
-    "correctness": {
+    }},
+    "correctness": {{
       "current_state": "Validation steps accurately presented with correct results",
       "improvement_action": "Present validation steps in markdown table with Input | Expected | Actual columns",
       "score": 0.85
-    },
-    "structural_alignment": {
+    }},
+    "structural_alignment": {{
       "current_state": "Sections and headings follow expected hierarchy and formatting",
       "improvement_action": "Ensure consistent use of headers and bullet points matching expected style",
       "score": 0.85
-    }
-  }
-}
+    }}
+  }}
+}}
 
 Example 2: Low-Quality Output
 
-{
+{{
   "final_score": 0.53,
-  "scores": {
-    "meaning_accuracy": {
+  "scores": {{
+    "meaning_accuracy": {{
       "current_state": "Explanation mixes multiple concepts in single paragraph",
       "improvement_action": "Separate each concept with ### headers and dedicated examples",
       "score": 0.4
-    },
-    "completeness": {
+    }},
+    "completeness": {{
       "current_state": "Steps presented without clear structure or missing details",
       "improvement_action": "Number each step and add 'Input:', 'Process:', 'Output:' sections",
       "score": 0.5
-    },
-    "expression_style": {
+    }},
+    "expression_style": {{
       "current_state": "Code examples lack context and comments",
       "improvement_action": "Add // Purpose: comment before each code block explaining its role",
       "score": 0.5
-    },
-    "faithfulness": {
+    }},
+    "faithfulness": {{
       "current_state": "Source material paraphrased without clear structure",
       "improvement_action": "Quote key points with > blockquotes and add reference links",
       "score": 0.6
-    },
-    "conciseness": {
+    }},
+    "conciseness": {{
       "current_state": "Repetitive explanations across sections",
       "improvement_action": "Create reusable explanation blocks with clear section references",
       "score": 0.5
-    },
-    "correctness": {
+    }},
+    "correctness": {{
       "current_state": "Solution steps lack clear logical progression",
       "improvement_action": "Add ➡️ arrows between steps to show logical flow",
       "score": 0.5
-    },
-    "structural_alignment": {
+    }},
+    "structural_alignment": {{
       "current_state": "Formatting inconsistent; headings and bullet points missing",
       "improvement_action": "Implement consistent section headers and bullet points as per expected format",
       "score": 0.5
-    }
-  }
-}
+    }}
+  }}
+}}
