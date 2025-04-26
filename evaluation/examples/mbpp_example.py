@@ -13,8 +13,8 @@ def run_mbpp_example():
         dataset="mbpp",
         model="gpt4o",
         model_version="gpt-3.5-turbo",
-        system_prompt="You are a helpful assistant that writes Python code to solve programming problems.",
-        user_prompt="Write a Python function to solve the following problem:",
+        system_prompt="Please provide step-by-step solutions to the math problems below, adhere strictly to the expected output format.",
+        user_prompt="Your task is to solve the math problems and present the answers clearly with detailed step-by-step calculations. Let's dive into these challenges!",
         num_samples=5
     )
     
