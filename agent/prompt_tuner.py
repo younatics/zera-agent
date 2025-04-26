@@ -7,6 +7,7 @@ import statistics
 import csv
 from datetime import datetime
 import io
+import json
 
 class PromptTuner:
     """
@@ -95,7 +96,7 @@ class PromptTuner:
         self.initial_system_prompt = system_prompt
         self.initial_user_prompt = user_prompt
     
-    def _evaluate_output(self, output: str, expected: str, question: str, task_type: str, task_description: str) -> tuple[float, List[Dict]]:
+    def _evaluate_output(self, output: str, expected: str, question: str, task_type: str, task_description: str) -> tuple[float, Dict]:
         """
         Evaluate an output using the evaluator model.
         
@@ -107,7 +108,7 @@ class PromptTuner:
             task_description (str): The description of the task being evaluated
             
         Returns:
-            tuple[float, List[Dict]]: A tuple containing the score and evaluation reasons
+            tuple[float, Dict]: A tuple containing the score and evaluation details
         """
         try:
             # 평가 유저 프롬프트 생성
@@ -136,38 +137,35 @@ class PromptTuner:
             self.logger.info(f"Expected output: {expected}")
             self.logger.info(f"Evaluation: {evaluation}")
             
-            # 평가 결과에서 점수 추출
-            score = float(evaluation.split('\n')[0].strip())
-            raw_reasons = '\n'.join(evaluation.split('\n')[1:]).strip()
+            # JSON 파싱
+            evaluation_data = json.loads(evaluation)
             
-            # reason 파싱
-            reasons = []
-            for reason in raw_reasons.split(';'):
-                reason = reason.strip()
-                if reason:
-                    # [ ] 안의 내용을 main_reason으로, 그 뒤의 내용을 detail_reason으로 분리
-                    main_reason = None
-                    detail_reason = None
-                    
-                    if '[' in reason and ']' in reason:
-                        main_reason = reason[reason.find('[')+1:reason.find(']')].strip()
-                        detail_reason = reason[reason.find(']')+1:].strip()
-                    else:
-                        detail_reason = reason
-                    
-                    reasons.append({
-                        'main_reason': main_reason,
-                        'detail_reason': detail_reason
-                    })
+            # 최종 점수와 세부 점수 추출
+            final_score = float(evaluation_data.get('final_score', 0))
+            scores_data = evaluation_data.get('scores', {})
             
-            self.logger.info(f"Evaluation score: {score}")
-            self.logger.info(f"Evaluation reasons: {reasons}")
+            # 평가 상세 정보 구성
+            evaluation_details = {
+                'final_score': final_score,
+                'category_scores': {}
+            }
             
-            return score, reasons
+            # 각 카테고리별 점수와 피드백 정보 추출
+            for category, details in scores_data.items():
+                evaluation_details['category_scores'][category] = {
+                    'score': float(details.get('score', 0)),
+                    'current_state': details.get('current_state', ''),
+                    'improvement_action': details.get('improvement_action', '')
+                }
             
-        except (ValueError, TypeError):
-            # 숫자로 변환할 수 없는 경우 제외
-            return None, []
+            self.logger.info(f"Evaluation score: {final_score}")
+            self.logger.info(f"Evaluation details: {evaluation_details}")
+            
+            return final_score, evaluation_details
+            
+        except (ValueError, TypeError, json.JSONDecodeError) as e:
+            self.logger.error(f"Error during evaluation: {str(e)}")
+            return 0.0, {'final_score': 0.0, 'category_scores': {}}
     
     def tune_prompt(self, initial_system_prompt: str, initial_user_prompt: str, initial_test_cases: List[Dict], num_iterations: int = 3, score_threshold: Optional[float] = None, evaluation_score_threshold: float = 0.8, use_meta_prompt: bool = True, num_samples: Optional[int] = None) -> List[Dict]:
         """
@@ -228,7 +226,7 @@ class PromptTuner:
                 self.logger.info(f"Output: {output}")
                 
                 # 출력 평가
-                score, reasons = self._evaluate_output(
+                score, evaluation_details = self._evaluate_output(
                     output=output,
                     expected=test_case['expected'],
                     question=test_case['question'],
@@ -236,7 +234,7 @@ class PromptTuner:
                     task_description=current_task_description
                 )
                 self.logger.info(f"Score: {score}")
-                self.logger.info(f"Evaluation reasons: {reasons}")
+                self.logger.info(f"Evaluation details: {evaluation_details}")
                 
                 # 점수와 출력 저장
                 iteration_scores.append(score)
@@ -245,7 +243,7 @@ class PromptTuner:
                     'expected': test_case['expected'],
                     'actual': output,
                     'score': score,
-                    'reasons': reasons
+                    'evaluation_details': evaluation_details
                 })
                 
                 # 최고 개별 점수 업데이트
@@ -262,7 +260,7 @@ class PromptTuner:
                     'expected_output': test_case['expected'],
                     'actual_output': output,
                     'score': score,
-                    'evaluation_reasons': reasons
+                    'evaluation_details': evaluation_details
                 })
                 
                 # 상세 결과 저장
@@ -272,7 +270,7 @@ class PromptTuner:
                     'expected_output': test_case['expected'],
                     'actual_output': output,
                     'score': score,
-                    'evaluation_reasons': reasons
+                    'evaluation_details': evaluation_details
                 }
                 self.results.append(result)
                 
@@ -326,7 +324,7 @@ class PromptTuner:
                 'system_prompt': current_system_prompt,
                 'user_prompt': current_user_prompt,
                 'avg_score': avg_score,
-                'evaluation_reasons': [output['reasons'] for output in iteration_outputs if output['score'] is not None]
+                'evaluation_details': [output['evaluation_details'] for output in iteration_outputs if output['score'] is not None]
             })
             
             # 점수 임계값 체크
@@ -461,7 +459,7 @@ class PromptTuner:
             f"Expected Output: {case['expected']}\n"
             f"Actual Output: {case['actual']}\n"
             f"Score: {case['score']:.2f}\n"
-            f"Reasons: {case['reasons']}"
+            f"Evaluation Details: {case['evaluation_details']}"
             for i, case in enumerate(reversed(sorted_cases[-3:]))  # 상위 3개를 역순으로
         ])
         
@@ -472,7 +470,7 @@ class PromptTuner:
             f"Expected Output: {case['expected']}\n"
             f"Actual Output: {case['actual']}\n"
             f"Score: {case['score']:.2f}\n"
-            f"Reasons: {case['reasons']}"
+            f"Evaluation Details: {case['evaluation_details']}"
             for i, case in enumerate(sorted_cases[:2])  # 하위 3개
         ])
         
@@ -481,7 +479,7 @@ class PromptTuner:
             f"Iteration {p['iteration']} (Average Score: {p['avg_score']:.2f}):{chr(10)}"
             f"System Prompt: {p['system_prompt']}{chr(10)}"
             f"User Prompt: {p['user_prompt']}{chr(10)}"
-            f"Evaluation Reasons: {p.get('evaluation_reasons', 'No evaluation reasons available')}"
+            f"Evaluation Details: {p.get('evaluation_details', 'No evaluation details available')}"
             for p in recent_prompts[:-1]  # 현재 프롬프트를 제외한 최근 3개
         ])
         
@@ -492,7 +490,7 @@ class PromptTuner:
 System: {best_prompt['system_prompt']}
 User: {best_prompt['user_prompt']}
 Average Score: {best_prompt['avg_score']:.2f}
-Evaluation Reasons: {best_prompt.get('evaluation_reasons', 'No evaluation reasons available')}
+Evaluation Details: {best_prompt.get('evaluation_details', 'No evaluation details available')}
 """
         else:
             formatted_best_prompt = "No best performing prompt available yet."
@@ -502,7 +500,6 @@ Evaluation Reasons: {best_prompt.get('evaluation_reasons', 'No evaluation reason
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             random_cases=formatted_top3_cases + "\n\n" + formatted_bottom2_cases,  # 상위/하위 케이스 결합
-            # random_cases=formatted_top3_cases,  # 상위/하위 케이스 결합
             recent_prompts=formatted_recent_prompts,
             formatted_best_prompt=formatted_best_prompt,
             task_type=task_type,
@@ -528,7 +525,7 @@ Evaluation Reasons: {best_prompt.get('evaluation_reasons', 'No evaluation reason
         writer = csv.writer(output)
         
         # 헤더 작성
-        writer.writerow(['iteration', 'question', 'expected_output', 'actual_output', 'score', 'evaluation_reasons'])
+        writer.writerow(['iteration', 'question', 'expected_output', 'actual_output', 'score', 'evaluation_details'])
         
         # 데이터 작성
         for result in self.results:
@@ -538,7 +535,7 @@ Evaluation Reasons: {best_prompt.get('evaluation_reasons', 'No evaluation reason
                 result['expected_output'],
                 result['actual_output'],
                 result['score'],
-                result['evaluation_reasons']
+                result['evaluation_details']
             ])
         
         return output.getvalue() 

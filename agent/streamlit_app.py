@@ -13,6 +13,9 @@ import base64
 import zipfile
 import io
 import time
+from typing import List, Dict
+import numpy as np
+from datetime import datetime
 
 # set_page_config은 반드시 첫 번째 Streamlit 명령어여야 함
 st.set_page_config(page_title="Prompt Auto Tuning Agent", layout="wide")
@@ -28,7 +31,6 @@ sys.path.append(project_root)
 from dataset.mmlu_dataset import MMLUDataset
 from dataset.cnn_dataset import CNNDataset
 from dataset.gsm8k_dataset import GSM8KDataset
-import numpy as np
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -497,6 +499,320 @@ else:
         st.error(f"MMLU 데이터셋 로드 중 오류 발생: {str(e)}")
         st.stop()
 
+class SessionState:
+    """
+    Streamlit 앱의 세션 상태를 관리하는 클래스
+    """
+    @staticmethod
+    def init_state():
+        """세션 상태를 초기화합니다."""
+        if 'initialized' not in st.session_state:
+            st.session_state.initialized = True
+            st.session_state.all_results = []
+            st.session_state.prompt_history = []
+            st.session_state.current_iteration = 0
+            st.session_state.show_results = False
+            st.session_state.tuning_complete = False
+            st.session_state.display_container = st.empty()
+    
+    @staticmethod
+    def reset():
+        """상태를 초기화합니다."""
+        st.session_state.all_results = []
+        st.session_state.prompt_history = []
+        st.session_state.current_iteration = 0
+        st.session_state.show_results = False
+        st.session_state.tuning_complete = False
+    
+    @staticmethod
+    def update_results(result):
+        """새로운 결과를 추가합니다."""
+        if 'all_results' not in st.session_state:
+            st.session_state.all_results = []
+        
+        st.session_state.all_results.append(result)
+        
+        if 'prompt_history' not in st.session_state:
+            st.session_state.prompt_history = []
+        
+        st.session_state.prompt_history.append({
+            'iteration': result['iteration'],
+            'system_prompt': result['system_prompt'],
+            'user_prompt': result['user_prompt'],
+            'avg_score': result['avg_score'],
+            'best_sample_score': result['best_sample_score']
+        })
+        
+        st.session_state.current_iteration = len(st.session_state.all_results) - 1
+        st.session_state.show_results = True
+    
+    @staticmethod
+    def get_results():
+        """현재 저장된 모든 결과를 반환합니다."""
+        return st.session_state.get('all_results', [])
+    
+    @staticmethod
+    def get_current_iteration():
+        """현재 선택된 이터레이션을 반환합니다."""
+        return st.session_state.get('current_iteration', 0)
+    
+    @staticmethod
+    def set_current_iteration(iteration):
+        """현재 이터레이션을 설정합니다."""
+        st.session_state.current_iteration = iteration
+
+class ResultsDisplay:
+    """
+    결과 표시를 담당하는 클래스
+    """
+    def __init__(self):
+        SessionState.init_state()
+        # 메인 컨테이너 초기화
+        if 'main_container' not in st.session_state:
+            st.session_state.main_container = st.empty()
+    
+    def display_metrics(self, results, container):
+        """성능 지표를 표시합니다."""
+        if not results:
+            return
+        
+        # 그래프 데이터 준비
+        x_values = [result['iteration'] for result in results]
+        avg_scores = [result['avg_score'] for result in results]
+        best_sample_scores = [result['best_sample_score'] for result in results]
+        std_devs = [result['std_dev'] for result in results]
+        top3_scores = [result['top3_avg_score'] for result in results]
+        
+        # 카테고리별 평균 점수 계산
+        category_scores = {
+            'meaning_accuracy': [],
+            'completeness': [],
+            'expression_style': [],
+            'faithfulness': [],
+            'conciseness': [],
+            'correctness': [],
+            'structural_alignment': []
+        }
+        
+        for result in results:
+            iteration_category_scores = {category: [] for category in category_scores.keys()}
+            
+            for output in result['outputs']:
+                if 'evaluation_details' in output and 'category_scores' in output['evaluation_details']:
+                    for category, details in output['evaluation_details']['category_scores'].items():
+                        if category in iteration_category_scores:
+                            iteration_category_scores[category].append(details['score'])
+            
+            # 각 카테고리의 평균 점수 추가
+            for category in category_scores:
+                scores = iteration_category_scores[category]
+                avg_score = np.mean(scores) if scores else 0
+                category_scores[category].append(avg_score)
+        
+        # 통합 그래프 생성
+        fig = go.Figure()
+        
+        # 카테고리별 점수를 막대 그래프로 추가
+        for category in category_scores:
+            fig.add_trace(go.Bar(
+                x=x_values,
+                y=category_scores[category],
+                name=category,
+                visible=True
+            ))
+        
+        # 주요 성능 지표 트레이스
+        fig.add_trace(go.Scatter(
+            x=x_values,
+            y=avg_scores,
+            name='평균 점수',
+            mode='lines+markers'
+        ))
+        
+        fig.add_trace(go.Scatter(
+            x=x_values,
+            y=best_sample_scores,
+            name='최고 개별 점수',
+            mode='lines+markers'
+        ))
+        
+        fig.add_trace(go.Scatter(
+            x=x_values,
+            y=top3_scores,
+            name='Top3 평균 점수',
+            mode='lines+markers'
+        ))
+        
+        # 그래프 레이아웃 설정
+        fig.update_layout(
+            title='통합 성능 지표 및 카테고리 분석',
+            xaxis_title='이터레이션',
+            yaxis_title='점수',
+            yaxis_range=[0, 1],
+            xaxis=dict(
+                tickmode='array',
+                tickvals=x_values,
+                ticktext=[f"Iteration {x}" for x in x_values]
+            ),
+            height=600,
+            barmode='group',
+            showlegend=True,
+            legend=dict(
+                yanchor="top",
+                y=0.99,
+                xanchor="left",
+                x=1.05
+            )
+        )
+        
+        # 그래프 표시
+        container.plotly_chart(fig, use_container_width=True)
+    
+    def display_iteration_details(self, results, container):
+        """이터레이션 상세 정보를 표시합니다."""
+        if not results:
+            container.info("아직 결과가 없습니다.")
+            return
+        
+        # 이터레이션 선택
+        total_iterations = len(results)
+        if total_iterations > 0:
+            # 이터레이션 선택 UI
+            current_iteration = SessionState.get_current_iteration()
+            
+            # 이터레이션 선택을 위한 탭 생성
+            tabs = container.tabs([f"Iteration {i+1}" for i in range(total_iterations)])
+            selected_iteration = current_iteration
+            
+            with tabs[selected_iteration]:
+                iteration_result = results[selected_iteration]
+                
+                # 평균 점수와 표준편차 표시
+                col1, col2, col3 = st.columns(3)
+                col1.metric("Average Score", f"{iteration_result['avg_score']:.2f}")
+                col2.metric("Standard Deviation", f"{iteration_result['std_dev']:.2f}")
+                col3.metric("Top 3 Average", f"{iteration_result['top3_avg_score']:.2f}")
+                
+                # 출력 결과를 데이터프레임으로 변환
+                outputs_data = []
+                for i, output in enumerate(iteration_result['outputs']):
+                    row = {
+                        'Test Case': i + 1,
+                        'Score': f"{output['score']:.2f}",
+                        'Question': output['question'],
+                        'Expected': output['expected'],
+                        'Actual': output['actual']
+                    }
+                    
+                    # 카테고리별 점수와 피드백 추가
+                    if 'evaluation_details' in output and 'category_scores' in output['evaluation_details']:
+                        for category, details in output['evaluation_details']['category_scores'].items():
+                            row[f"{category} Score"] = f"{details['score']:.2f}"
+                            row[f"{category} State"] = details['current_state']
+                            row[f"{category} Action"] = details['improvement_action']
+                    
+                    outputs_data.append(row)
+                
+                # 데이터프레임 생성
+                df = pd.DataFrame(outputs_data)
+                
+                # 데이터프레임 스타일링 함수
+                def highlight_rows(df):
+                    scores = df['Score'].astype(float)
+                    max_score = scores.max()
+                    min_score = scores.min()
+                    
+                    background_colors = pd.DataFrame('', index=df.index, columns=df.columns)
+                    
+                    max_score_mask = (scores == max_score)
+                    min_score_mask = (scores == min_score)
+                    
+                    background_colors.loc[max_score_mask] = 'background-color: #90EE90'
+                    background_colors.loc[min_score_mask] = 'background-color: #FFB6C6'
+                    
+                    return background_colors
+                
+                # 스타일이 적용된 데이터프레임 표시
+                st.dataframe(
+                    df.style.apply(highlight_rows, axis=None),
+                    use_container_width=True,
+                    height=400
+                )
+            
+            # 현재 선택된 이터레이션 저장
+            SessionState.set_current_iteration(selected_iteration)
+    
+    def update(self):
+        """결과 표시를 업데이트합니다."""
+        results = SessionState.get_results()
+        if st.session_state.show_results and results:
+            # 기존 컨테이너를 비우고 새로운 컨테이너 생성
+            with st.session_state.main_container.container():
+                st.empty()  # 기존 내용을 지웁니다
+                
+                # 메트릭스와 상세 정보를 표시할 새로운 컨테이너 생성
+                metrics_container = st.container()
+                details_container = st.container()
+                
+                # 메트릭스와 상세 정보 표시
+                self.display_metrics(results, metrics_container)
+                self.display_iteration_details(results, details_container)
+
+def run_tuning_process():
+    """프롬프트 튜닝 프로세스를 실행하고 결과를 시각화합니다."""
+    # UI 상태 초기화
+    SessionState.init_state()
+    results_display = ResultsDisplay()
+    
+    with st.spinner('프롬프트 튜닝 중...'):
+        def iteration_callback(result):
+            SessionState.update_results(result)
+            results_display.update()
+        
+        # iteration_callback 설정
+        tuner.iteration_callback = iteration_callback
+        
+        # 프롬프트 튜닝 실행
+        results = tuner.tune_prompt(
+            initial_system_prompt=system_prompt,
+            initial_user_prompt=user_prompt,
+            initial_test_cases=test_cases,
+            num_iterations=iterations,
+            score_threshold=score_threshold if use_threshold else None,
+            evaluation_score_threshold=evaluation_threshold,
+            use_meta_prompt=use_meta_prompt,
+            num_samples=num_samples
+        )
+        
+        st.session_state.tuning_complete = True
+        
+        # 최종 결과
+        if results:
+            st.success("프롬프트 튜닝 완료!")
+            
+            # 전체 결과에서 가장 높은 평균 점수를 가진 프롬프트 찾기
+            best_result = max(results, key=lambda x: x['avg_score'])
+            st.write("Final Best Prompt:")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write("System Prompt:")
+                st.code(best_result['system_prompt'])
+            with col2:
+                st.write("User Prompt:")
+                st.code(best_result['user_prompt'])
+            st.write(f"최종 결과: 평균 점수 {best_result['avg_score']:.2f}, 최고 평균 점수 {best_result['best_avg_score']:.2f}, 최고 개별 점수 {best_result['best_sample_score']:.2f}")
+            
+            # CSV 다운로드 버튼
+            csv_data = tuner.save_results_to_csv()
+            st.download_button(
+                label="Download Results as CSV",
+                data=csv_data,
+                file_name=f"prompt_tuning_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                mime="text/csv"
+            )
+        else:
+            st.warning("튜닝 결과가 없습니다.")
+
 # 튜닝 시작 버튼
 if st.button("프롬프트 튜닝 시작", type="primary"):
     # API 키 확인
@@ -540,243 +856,4 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
         tuner.progress_callback = progress_callback
         
         # 프롬프트 튜닝 실행
-        with st.spinner("프롬프트 튜닝 중..."):
-            # 결과를 저장할 리스트
-            all_results = []
-            
-            # 프롬프트 히스토리를 저장할 리스트
-            prompt_history = []
-            
-            # 그래프를 위한 컨테이너 생성 (이터레이션 컨테이너들 위에 위치)
-            graph_container = st.container()
-            graph_placeholder = graph_container.empty()  # 그래프를 위한 placeholder
-            
-            # 각 이터레이션마다 결과를 보여주기 위한 컨테이너
-            iteration_containers = []
-            for i in range(iterations):
-                iteration_containers.append(st.container())
-            
-            # 이터레이션 결과를 위한 컨테이너 생성
-            iteration_results_container = st.container()
-            
-            def iteration_callback(result):
-                iteration_idx = result['iteration'] - 1
-                
-                # 현재 결과를 all_results에 추가
-                all_results.append(result)
-                
-                # 프롬프트 히스토리에 추가
-                prompt_history.append({
-                    'iteration': result['iteration'],
-                    'system_prompt': result['system_prompt'],
-                    'user_prompt': result['user_prompt'],
-                    'avg_score': result['avg_score'],
-                    'best_sample_score': result['best_sample_score']
-                })
-                
-                # 그래프 업데이트
-                with graph_placeholder.container():
-                    fig = go.Figure()
-                    x_values = list(range(1, iteration_idx + 2))
-                    avg_scores = [r['avg_score'] for r in all_results]
-                    best_sample_scores = [r['best_sample_score'] for r in all_results]
-                    
-                    fig.add_trace(go.Scatter(
-                        x=x_values,
-                        y=avg_scores,
-                        name='평균 점수',
-                        mode='lines+markers'
-                    ))
-                    fig.add_trace(go.Scatter(
-                        x=x_values,
-                        y=best_sample_scores,
-                        name='최고 개별 점수',
-                        mode='lines+markers'
-                    ))
-                    # 표준편차 그래프 추가
-                    std_devs = [r['std_dev'] for r in all_results]
-                    fig.add_trace(go.Scatter(
-                        x=x_values,
-                        y=std_devs,
-                        name='표준편차',
-                        mode='lines+markers'
-                    ))
-                    # top3 평균 점수 그래프 추가
-                    top3_scores = [r['top3_avg_score'] for r in all_results]
-                    fig.add_trace(go.Scatter(
-                        x=x_values,
-                        y=top3_scores,
-                        name='Top3 평균 점수',
-                        mode='lines+markers'
-                    ))
-                    fig.update_layout(
-                        title='점수 추이',
-                        xaxis_title='이터레이션',
-                        yaxis_title='점수',
-                        yaxis_range=[0, 1],
-                        xaxis=dict(
-                            tickmode='array',
-                            tickvals=x_values,
-                            ticktext=x_values
-                        ),
-                        height=300  # 그래프 높이를 300px로 설정
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
-                
-                # 이터레이션 결과 표시
-                with iteration_results_container:
-                    with iteration_containers[iteration_idx]:
-                        st.subheader(f"Iteration {result['iteration']}")
-                        
-                        # Task Type과 Description 표시
-                        task_type = result.get('task_type', 'Not specified')
-                        task_desc = result.get('task_description', 'Not specified')
-                        with st.expander(f"Task Type: {task_type}", expanded=False):
-                            st.code(task_desc)
-                        
-                        # 평균 점수와 최고 점수
-                        col1, col2, col3, col4, col5 = st.columns(5)
-                        with col1:
-                            st.metric("Average Score", f"{result['avg_score']:.2f}")
-                        with col2:
-                            st.metric("Best Average Score So Far", f"{result['best_avg_score']:.2f}")
-                        with col3:
-                            st.metric("Best Sample Score So Far", f"{result['best_sample_score']:.2f}")
-                        with col4:
-                            st.metric("Standard Deviation", f"{result['std_dev']:.2f}")
-                        with col5:
-                            st.metric("Top3 Average Score", f"{result['top3_avg_score']:.2f}")
-                        
-                        # 평가 기록을 데이터프레임으로 변환
-                        history_df = pd.DataFrame(result['outputs'])
-                        
-                        # 컬럼 순서 변경 및 필요한 컬럼만 선택
-                        history_df = history_df[['question', 'expected', 'actual', 'score', 'reasons']]
-                        
-                        # reasons 파싱하여 문자열로 변환
-                        def parse_reasons(reasons):
-                            if not reasons:
-                                return "No evaluation reasons"
-                            parsed_reasons = []
-                            for reason in reasons:
-                                main = reason.get('main_reason', '')
-                                detail = reason.get('detail_reason', '')
-                                if main and detail:
-                                    parsed_reasons.append(f"[{main}] {detail}")
-                                elif detail:
-                                    parsed_reasons.append(detail)
-                            return "\n".join(parsed_reasons)
-                        
-                        history_df['reasons'] = history_df['reasons'].apply(parse_reasons)
-                        
-                        # 컬럼 이름 변경
-                        history_df.columns = ['Question', 'Expected Output', 'Actual Output', 'Score', 'Evaluation Reasons']
-                        
-                        # 점수를 소수점 두자리까지만 표시
-                        history_df['Score'] = history_df['Score'].round(2)
-                        
-                        # 최고 점수를 가진 행 하이라이트
-                        def highlight_max_row(df):
-                            try:
-                                if df.empty:
-                                    return pd.DataFrame('', index=df.index, columns=df.columns)
-                                max_score = df['Score'].max()
-                                is_max = df['Score'] == max_score
-                                
-                                # 현재 테마 확인
-                                is_dark = st.get_option("theme.base") == "dark"
-                                
-                                # 테마에 따른 색상 선택
-                                if not is_dark:
-                                    # 라이트모드: 연한 파란색 배경, 진한 파란색 글자
-                                    highlight_style = 'background-color: #E3F2FD; color: #0D47A1'
-                                else:
-                                    # 다크모드: 어두운 청록색 배경, 밝은 청록색 글자
-                                    highlight_style = 'background-color: #006064; color: #80DEEA'
-                                
-                                # 모든 열에 대해 동일한 스타일 적용
-                                styles = np.where(is_max, highlight_style, '')
-                                # 스타일을 2D 배열로 확장
-                                styles_2d = np.tile(styles.reshape(-1, 1), (1, len(df.columns)))
-                                return pd.DataFrame(styles_2d, index=df.index, columns=df.columns)
-                            except Exception as e:
-                                print(f"하이라이트 오류: {str(e)}")
-                                return pd.DataFrame('', index=df.index, columns=df.columns)
-                        
-                        # 테이블 표시
-                        st.dataframe(
-                            history_df.style.apply(highlight_max_row, axis=None),
-                            hide_index=True
-                        )
-                        
-                        # 현재 프롬프트 표시
-                        st.write("Current Prompts:")
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            st.write("System Prompt:")
-                            st.code(result['system_prompt'])
-                        with col2:
-                            st.write("User Prompt:")
-                            st.code(result['user_prompt'])
-                        
-                        # 메타프롬프트 표시 (expander 사용)
-                        with st.expander("Meta Prompt", expanded=False):
-                            st.code(result['meta_prompt'])
-                        
-                        st.divider()
-            
-            # iteration_callback을 설정
-            tuner.iteration_callback = iteration_callback
-            
-            # 프롬프트 튜닝 실행
-            results = tuner.tune_prompt(
-                initial_system_prompt=system_prompt,
-                initial_user_prompt=user_prompt,
-                initial_test_cases=test_cases,
-                num_iterations=iterations,
-                score_threshold=score_threshold if use_threshold else None,
-                evaluation_score_threshold=evaluation_threshold,
-                use_meta_prompt=use_meta_prompt,
-                num_samples=num_samples
-            )
-            
-            # 최종 결과
-            st.success("프롬프트 튜닝 완료!")
-            
-            if results:  # 결과가 있을 때만 처리
-                # 전체 결과에서 가장 높은 평균 점수를 가진 프롬프트 찾기
-                best_result = max(results, key=lambda x: x['avg_score'])
-                st.write("Final Best Prompt:")
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.write("System Prompt:")
-                    st.code(best_result['system_prompt'])
-                with col2:
-                    st.write("User Prompt:")
-                    st.code(best_result['user_prompt'])
-                st.write(f"최종 결과: 평균 점수 {best_result['avg_score']:.2f}, 최고 평균 점수 {best_result['best_avg_score']:.2f}, 최고 개별 점수 {best_result['best_sample_score']:.2f}")
-                
-                # CSV 출력 기능
-                df = pd.DataFrame(results)
-                df = df[['iteration', 'avg_score', 'best_avg_score', 'best_sample_score', 'system_prompt', 'user_prompt', 'meta_prompt']]
-                df.columns = ['Iteration', 'Average Score', 'Best Average Score', 'Best Sample Score', 'System Prompt', 'User Prompt', 'Meta Prompt']
-                summary_csv = df.to_csv(index=False)
-                
-                # 상세 결과 CSV 생성
-                detailed_csv = tuner.save_results_to_csv()
-                
-                # ZIP 파일 생성
-                zip_buffer = io.BytesIO()
-                with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
-                    zip_file.writestr("prompt_tuning_results.csv", summary_csv)
-                    zip_file.writestr("detailed_iteration_results.csv", detailed_csv)
-                
-                # 다운로드 버튼
-                st.download_button(
-                    label="결과를 CSV로 저장",
-                    data=zip_buffer.getvalue(),
-                    file_name="prompt_tuning_results.zip",
-                    mime="application/zip"
-                )
-            else:
-                st.warning("튜닝 결과가 없습니다.") 
+        run_tuning_process() 
