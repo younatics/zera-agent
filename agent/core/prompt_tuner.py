@@ -454,26 +454,39 @@ Average Score: {best_prompt['avg_score']:.2f}
 
     def save_results_to_csv(self):
         """결과를 CSV 형식의 문자열로 반환합니다."""
-        output = io.StringIO()
-        writer = csv.writer(output)
+        data = []
         
-        # 헤더 작성
-        writer.writerow([
-            'iteration', 'test_case', 'question', 'expected_output', 
-            'actual_output', 'score', 'evaluation_details'
-        ])
-        
-        # 데이터 작성
+        # 각 이터레이션과 테스트 케이스의 결과를 데이터로 변환
         for iteration_result in self.iteration_results:
             for test_case in iteration_result.test_case_results:
-                writer.writerow([
-                    iteration_result.iteration,
-                    test_case.test_case,
-                    test_case.question,
-                    test_case.expected_output,
-                    test_case.actual_output,
-                    test_case.score,
-                    json.dumps(test_case.evaluation_details, ensure_ascii=False)
-                ])
+                row = {
+                    'Iteration': iteration_result.iteration,
+                    'Average Score': iteration_result.avg_score,
+                    'Standard Deviation': iteration_result.std_dev,
+                    'Top3 Average Score': iteration_result.top3_avg_score,
+                    'Best Average Score': iteration_result.best_avg_score,
+                    'Best Sample Score': iteration_result.best_sample_score,
+                    'Task Type': iteration_result.task_type,
+                    'Task Description': iteration_result.task_description,
+                    'Test Case': test_case.test_case,
+                    'Question': test_case.question,
+                    'Expected Output': test_case.expected_output,
+                    'Actual Output': test_case.actual_output,
+                    'Score': test_case.score,
+                    'System Prompt': iteration_result.system_prompt,
+                    'User Prompt': iteration_result.user_prompt,
+                    'Created At': iteration_result.created_at.strftime('%Y-%m-%d %H:%M:%S')
+                }
+                
+                # 카테고리별 점수와 피드백 추가
+                if test_case.evaluation_details and 'category_scores' in test_case.evaluation_details:
+                    for category, details in test_case.evaluation_details['category_scores'].items():
+                        row[f"{category}_Score"] = details['score']
+                        row[f"{category}_State"] = details['current_state']
+                        row[f"{category}_Action"] = details['improvement_action']
+                
+                data.append(row)
         
-        return output.getvalue() 
+        # DataFrame 생성 및 CSV 변환
+        df = pd.DataFrame(data)
+        return df.to_csv(index=False, encoding='utf-8') 

@@ -16,6 +16,7 @@ import time
 from typing import List, Dict
 import numpy as np
 from datetime import datetime
+import json
 
 # set_page_config은 반드시 첫 번째 Streamlit 명령어여야 함
 st.set_page_config(page_title="Prompt Auto Tuning Agent", layout="wide")
@@ -506,13 +507,11 @@ class SessionState:
     @staticmethod
     def init_state():
         """세션 상태를 초기화합니다."""
-        if 'initialized' not in st.session_state:
-            st.session_state.initialized = True
-            st.session_state.all_iteration_results = []
-            st.session_state.current_iteration = 0
-            st.session_state.show_results = False
-            st.session_state.tuning_complete = False
-            st.session_state.display_container = st.empty()
+        st.session_state.all_iteration_results = []
+        st.session_state.current_iteration = 0
+        st.session_state.show_results = False
+        st.session_state.tuning_complete = False
+        st.session_state.display_container = st.empty()
     
     @staticmethod
     def reset():
@@ -525,22 +524,38 @@ class SessionState:
     @staticmethod
     def update_results(result):
         """새로운 결과를 추가합니다."""
-        if 'all_iteration_results' not in st.session_state:
+        # 결과가 이미 있는지 확인
+        if not hasattr(st.session_state, 'all_iteration_results'):
             st.session_state.all_iteration_results = []
         
-        st.session_state.all_iteration_results.append(result)
-        st.session_state.current_iteration = len(st.session_state.all_iteration_results) - 1
+        # 같은 iteration의 결과가 있다면 업데이트, 없다면 추가
+        existing_result = next(
+            (r for r in st.session_state.all_iteration_results if r.iteration == result.iteration),
+            None
+        )
+        
+        if existing_result:
+            index = st.session_state.all_iteration_results.index(existing_result)
+            st.session_state.all_iteration_results[index] = result
+        else:
+            st.session_state.all_iteration_results.append(result)
+        
+        st.session_state.current_iteration = result.iteration - 1  # 0-based index
         st.session_state.show_results = True
     
     @staticmethod
     def get_results():
         """현재 저장된 모든 결과를 반환합니다."""
-        return st.session_state.get('all_iteration_results', [])
+        if not hasattr(st.session_state, 'all_iteration_results'):
+            st.session_state.all_iteration_results = []
+        return st.session_state.all_iteration_results
     
     @staticmethod
     def get_current_iteration():
         """현재 선택된 이터레이션을 반환합니다."""
-        return st.session_state.get('current_iteration', 0)
+        if not hasattr(st.session_state, 'current_iteration'):
+            st.session_state.current_iteration = 0
+        return st.session_state.current_iteration
     
     @staticmethod
     def set_current_iteration(iteration):
@@ -569,9 +584,6 @@ class ResultsDisplay:
         std_devs = [result.std_dev for result in results]
         top3_scores = [result.top3_avg_score for result in results]
         
-        # 표준편차 상한/하한 계산
-        upper_bound = [avg + std for avg, std in zip(avg_scores, std_devs)]
-        lower_bound = [avg - std for avg, std in zip(avg_scores, std_devs)]
         
         # 카테고리별 평균 점수 계산
         category_scores = {
@@ -718,7 +730,8 @@ class ResultsDisplay:
                         'Score': f"{test_case.score:.2f}",
                         'Question': test_case.question,
                         'Expected': test_case.expected_output,
-                        'Actual': test_case.actual_output
+                        'Actual': test_case.actual_output,
+                        'Evaluation Details': json.dumps(test_case.evaluation_details, ensure_ascii=False, indent=2)
                     }
                     
                     # 카테고리별 점수와 피드백 추가
@@ -826,19 +839,25 @@ def run_tuning_process():
             st.write(f"최종 결과: 평균 점수 {best_result.avg_score:.2f}, 최고 평균 점수 {best_result.best_avg_score:.2f}, 최고 개별 점수 {best_result.best_sample_score:.2f}")
             
             # CSV 다운로드 버튼
-            if st.button("결과를 CSV 파일로 저장"):
+            try:
                 csv_data = tuner.save_results_to_csv()
                 st.download_button(
-                    label="Download Results as CSV",
+                    label="결과를 CSV 파일로 저장",
                     data=csv_data,
                     file_name=f"prompt_tuning_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                    mime="text/csv"
+                    mime="text/csv",
+                    key="download_csv"
                 )
+            except Exception as e:
+                st.error(f"CSV 파일 생성 중 오류가 발생했습니다: {str(e)}")
         else:
             st.warning("튜닝 결과가 없습니다.")
 
 # 튜닝 시작 버튼
 if st.button("프롬프트 튜닝 시작", type="primary"):
+    # 세션 상태 초기화
+    SessionState.reset()
+    
     # API 키 확인
     required_keys = {
         "solar": "SOLAR_API_KEY",
