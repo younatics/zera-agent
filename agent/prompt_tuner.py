@@ -137,31 +137,54 @@ class PromptTuner:
             self.logger.info(f"Expected output: {expected}")
             self.logger.info(f"Evaluation: {evaluation}")
             
-            # JSON 파싱
-            evaluation_data = json.loads(evaluation)
-            
-            # 최종 점수와 세부 점수 추출
-            final_score = float(evaluation_data.get('final_score', 0))
-            scores_data = evaluation_data.get('scores', {})
-            
-            # 평가 상세 정보 구성
-            evaluation_details = {
-                'final_score': final_score,
-                'category_scores': {}
-            }
-            
-            # 각 카테고리별 점수와 피드백 정보 추출
-            for category, details in scores_data.items():
-                evaluation_details['category_scores'][category] = {
-                    'score': float(details.get('score', 0)),
-                    'current_state': details.get('current_state', ''),
-                    'improvement_action': details.get('improvement_action', '')
+            # JSON 문자열 추출 및 파싱
+            try:
+                # 응답에서 JSON 부분만 추출
+                evaluation = evaluation.strip()
+                json_start = evaluation.find('{')
+                json_end = evaluation.rfind('}') + 1
+                
+                if json_start == -1 or json_end == 0:
+                    raise ValueError("응답에서 JSON 객체를 찾을 수 없습니다")
+                
+                json_str = evaluation[json_start:json_end]
+                
+                # JSON 파싱
+                evaluation_data = json.loads(json_str)
+                
+                # 필수 필드 검증
+                if 'final_score' not in evaluation_data:
+                    raise ValueError("JSON 응답에 final_score 필드가 없습니다")
+                if 'scores' not in evaluation_data:
+                    raise ValueError("JSON 응답에 scores 필드가 없습니다")
+                
+                # 최종 점수와 세부 점수 추출
+                final_score = float(evaluation_data.get('final_score', 0))
+                scores_data = evaluation_data.get('scores', {})
+                
+                # 평가 상세 정보 구성
+                evaluation_details = {
+                    'final_score': final_score,
+                    'category_scores': {}
                 }
-            
-            self.logger.info(f"Evaluation score: {final_score}")
-            self.logger.info(f"Evaluation details: {evaluation_details}")
-            
-            return final_score, evaluation_details
+                
+                # 각 카테고리별 점수와 피드백 정보 추출
+                for category, details in scores_data.items():
+                    evaluation_details['category_scores'][category] = {
+                        'score': float(details.get('score', 0)),
+                        'current_state': details.get('current_state', ''),
+                        'improvement_action': details.get('improvement_action', '')
+                    }
+                
+                self.logger.info(f"Evaluation score: {final_score}")
+                self.logger.info(f"Evaluation details: {evaluation_details}")
+                
+                return final_score, evaluation_details
+                
+            except (ValueError, TypeError, json.JSONDecodeError) as e:
+                self.logger.error(f"평가 중 오류 발생: {str(e)}")
+                # 오류 발생 시 기본값 반환
+                return 0.0, {'final_score': 0.0, 'category_scores': {}, 'error': str(e)}
             
         except (ValueError, TypeError, json.JSONDecodeError) as e:
             self.logger.error(f"Error during evaluation: {str(e)}")
