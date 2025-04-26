@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
-from common.api_client import Model
+from agent.common.api_client import Model
 import json
 import time
 from pathlib import Path
@@ -85,6 +85,8 @@ class BaseEvaluator(ABC):
                 
                 # 상세 정보 출력
                 print(f"\n샘플 {idx+1}/{len(dataset)}:")
+                print(f"시스템 프롬프트: {system_prompt}")
+                print(f"사용자 프롬프트: {user_prompt}")
                 print(f"문제: {question}")
                 print(f"모델 답변: {response}")
                 print(f"실제 답변: {sample_info['actual_answer']}")

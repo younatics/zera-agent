@@ -98,8 +98,8 @@ class Model:
     def _create_handler(self):
         def handler(question, system_prompt=None, user_prompt=None):
             try:
-                system_prompt = system_prompt or self.system_prompt or "You are a helpful assistant."
-                user_prompt = user_prompt or self.user_prompt or "Hello! I'm here to help you. Please let me know what you need assistance with, and I'll do my best to provide clear and helpful responses. Feel free to ask me anything!"
+                system_prompt = system_prompt or self.system_prompt or ""
+                user_prompt = user_prompt or self.user_prompt or ""
                 messages = create_messages(question, system_prompt, user_prompt)
                 if "claude" in self.model_id:
                     response = self.client.messages.create(
