@@ -1,0 +1,883 @@
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+from agent.core.prompt_tuner import PromptTuner
+from agent.common.api_client import Model
+import os
+import logging
+import plotly.graph_objects as go
+import sys
+from dotenv import load_dotenv
+import tempfile
+import base64
+import zipfile
+import io
+import time
+from typing import List, Dict
+import numpy as np
+from datetime import datetime
+
+# set_page_config은 반드시 첫 번째 Streamlit 명령어여야 함
+st.set_page_config(page_title="Prompt Auto Tuning Agent", layout="wide")
+
+# .env 파일 로드
+env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
+load_dotenv(env_path, override=True)
+
+# 프로젝트 루트 디렉토리를 Python 경로에 추가
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(project_root)
+
+from agent.dataset.mmlu_dataset import MMLUDataset
+from agent.dataset.cnn_dataset import CNNDataset
+from agent.dataset.gsm8k_dataset import GSM8KDataset
+
+# 로깅 설정
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+st.title("Prompt Tuning Dashboard")
+
+# 모델 정보 정의
+MODEL_INFO = Model.get_all_model_info()
+
+# 프롬프트 파일 로드
+prompts_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'prompts')
+with open(os.path.join(prompts_dir, 'initial_system_prompt.txt'), 'r', encoding='utf-8') as f:
+    DEFAULT_SYSTEM_PROMPT = f.read()
+with open(os.path.join(prompts_dir, 'initial_user_prompt.txt'), 'r', encoding='utf-8') as f:
+    DEFAULT_USER_PROMPT = f.read()
+with open(os.path.join(prompts_dir, 'evaluation_system_prompt.txt'), 'r', encoding='utf-8') as f:
+    DEFAULT_EVALUATION_SYSTEM_PROMPT = f.read()
+with open(os.path.join(prompts_dir, 'evaluation_user_prompt.txt'), 'r', encoding='utf-8') as f:
+    DEFAULT_EVALUATION_USER_PROMPT = f.read()
+with open(os.path.join(prompts_dir, 'meta_system_prompt.txt'), 'r', encoding='utf-8') as f:
+    DEFAULT_META_SYSTEM_PROMPT = f.read()
+with open(os.path.join(prompts_dir, 'meta_user_prompt.txt'), 'r', encoding='utf-8') as f:
+    DEFAULT_META_USER_PROMPT = f.read()
+
+# MMLU 데이터셋 인스턴스 생성
+mmlu_dataset = MMLUDataset()
+
+# 사이드바에서 파라미터 설정
+with st.sidebar:
+    st.header("튜닝 설정")
+    
+    # 반복 설정 그룹
+    with st.expander("반복 설정", expanded=True):
+        iterations = st.slider(
+            "반복 횟수", 
+            min_value=1, 
+            max_value=40, 
+            value=3,
+            help="프롬프트 튜닝을 수행할 반복 횟수를 설정합니다."
+        )
+    
+    # 프롬프트 개선 설정 그룹
+    with st.expander("프롬프트 개선 설정", expanded=True):
+        # 프롬프트 개선 사용 토글
+        use_meta_prompt = st.toggle(
+            "프롬프트 개선 사용", 
+            value=True, 
+            help="메타 프롬프트를 사용하여 프롬프트를 개선합니다. 비활성화하면 초기 프롬프트를 사용합니다."
+        )
+        
+        # 평가 프롬프트 점수 임계값 설정 (프롬프트 개선이 켜져있을 때만 활성화)
+        evaluation_threshold = st.slider(
+            "평가 프롬프트 점수 임계값",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.8,
+            step=0.1,
+            disabled=not use_meta_prompt,
+            help="이 점수 미만이면 프롬프트를 개선합니다. 프롬프트 개선이 켜져있을 때만 사용 가능합니다."
+        )
+        
+        # 평균 점수 임계값 적용 여부 토글 (프롬프트 개선이 켜져있을 때만 활성화)
+        use_threshold = st.toggle(
+            "평균 점수 임계값 적용",
+            value=True,
+            disabled=not use_meta_prompt,
+            help="이 옵션이 켜져있으면 평균 점수가 임계값 이상일 때 반복을 중단합니다. 프롬프트 개선이 켜져있을 때만 사용 가능합니다."
+        )
+        
+        # 평균 점수 임계값 슬라이더 (평균 점수 임계값 적용이 꺼져있거나 프롬프트 개선이 꺼져있을 때는 비활성화)
+        score_threshold = st.slider(
+            "평균 점수 임계값",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.9,
+            step=0.05,
+            disabled=not (use_threshold and use_meta_prompt),
+            help="이 점수 이상이면 반복을 중단합니다. 평균 점수 임계값 적용과 프롬프트 개선이 모두 켜져있을 때만 사용 가능합니다."
+        )
+    
+    # 모델 설정 섹션 구분을 위한 디바이더
+    st.divider()
+    
+    # 모델 설정 그룹
+    with st.expander("튜닝 모델 설정", expanded=True):
+        # 모델 선택
+        model_name = st.selectbox(
+            "모델 선택",
+            options=list(MODEL_INFO.keys()),
+            format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
+            help="프롬프트 튜닝에 사용할 모델을 선택하세요."
+        )
+        st.caption(MODEL_INFO[model_name]['description'])
+        
+        # 튜닝 모델 버전 선택
+        use_custom_tuning_version = st.toggle(
+            "커스텀 버전 사용",
+            value=False,
+            help="튜닝 모델의 기본 버전 대신 커스텀 버전을 사용합니다."
+        )
+        
+        if use_custom_tuning_version:
+            tuning_model_version = st.text_input(
+                "모델 버전",
+                value=MODEL_INFO[model_name]['default_version'],
+                help="튜닝에 사용할 모델 버전을 입력하세요."
+            )
+        else:
+            tuning_model_version = None  # 기본 버전을 사용하도록 None으로 설정
+    
+    # 메타 프롬프트 모델 설정 그룹
+    with st.expander("메타 프롬프트 모델 설정", expanded=True):
+        # 메타 프롬프트 모델 선택
+        meta_prompt_model = st.selectbox(
+            "모델 선택",
+            options=list(MODEL_INFO.keys()),
+            format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
+            help="메타 프롬프트 생성에 사용할 모델을 선택하세요."
+        )
+        st.caption(MODEL_INFO[meta_prompt_model]['description'])
+        
+        # 메타 프롬프트 모델 버전 선택
+        use_custom_meta_version = st.toggle(
+            "커스텀 버전 사용",
+            value=False,
+            help="메타 프롬프트 모델의 기본 버전 대신 커스텀 버전을 사용합니다."
+        )
+        
+        if use_custom_meta_version:
+            meta_model_version = st.text_input(
+                "모델 버전",
+                value=MODEL_INFO[meta_prompt_model]['default_version'],
+                help="메타 프롬프트 생성에 사용할 모델 버전을 입력하세요."
+            )
+        else:
+            meta_model_version = None  # 기본 버전을 사용하도록 None으로 설정
+    
+    # 평가 모델 설정 그룹
+    with st.expander("평가 모델 설정", expanded=True):
+        # 평가 모델 선택
+        evaluator_model = st.selectbox(
+            "모델 선택",
+            options=list(MODEL_INFO.keys()),
+            format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
+            help="출력 평가에 사용할 모델을 선택하세요."
+        )
+        st.caption(MODEL_INFO[evaluator_model]['description'])
+        
+        # 평가 모델 버전 선택
+        use_custom_evaluator_version = st.toggle(
+            "커스텀 버전 사용",
+            value=False,
+            help="평가 모델의 기본 버전 대신 커스텀 버전을 사용합니다."
+        )
+        
+        if use_custom_evaluator_version:
+            evaluator_model_version = st.text_input(
+                "모델 버전",
+                value=MODEL_INFO[evaluator_model]['default_version'],
+                help="평가에 사용할 모델 버전을 입력하세요."
+            )
+        else:
+            evaluator_model_version = None  # 기본 버전을 사용하도록 None으로 설정
+
+# PromptTuner 객체 생성
+tuner = PromptTuner(
+    model_name=model_name,
+    evaluator_model_name=evaluator_model,
+    meta_prompt_model_name=meta_prompt_model,
+    model_version=tuning_model_version,
+    evaluator_model_version=evaluator_model_version,
+    meta_prompt_model_version=meta_model_version
+)
+
+# 프롬프트 설정
+with st.expander("초기 프롬프트 설정", expanded=False):
+    col1, col2 = st.columns(2)
+    with col1:
+        system_prompt = st.text_area(
+            "시스템 프롬프트",
+            value=DEFAULT_SYSTEM_PROMPT,
+            height=100,
+            help="튜닝을 시작할 초기 시스템 프롬프트를 입력하세요."
+        )
+    with col2:
+        user_prompt = st.text_area(
+            "사용자 프롬프트",
+            value=DEFAULT_USER_PROMPT,
+            height=100,
+            help="튜닝을 시작할 초기 사용자 프롬프트를 입력하세요."
+        )
+    
+    if st.button("초기 프롬프트 업데이트", key="initial_prompt_update"):
+        tuner.set_initial_prompt(system_prompt, user_prompt)
+        st.success("초기 프롬프트가 업데이트되었습니다.")
+
+# 메타프롬프트 설정
+with st.expander("메타프롬프트 설정", expanded=False):
+    col1, col2 = st.columns(2)
+    with col1:
+        meta_system_prompt = st.text_area(
+            "메타 시스템 프롬프트",
+            value=DEFAULT_META_SYSTEM_PROMPT,
+            height=300,
+            help="프롬프트 엔지니어의 역할과 책임을 정의하는 시스템 프롬프트를 입력하세요."
+        )
+    with col2:
+        meta_user_prompt = st.text_area(
+            "메타 유저 프롬프트",
+            value=DEFAULT_META_USER_PROMPT,
+            height=300,
+            help="프롬프트 개선을 위한 입력 데이터와 출력 형식을 정의하는 유저 프롬프트를 입력하세요."
+        )
+    
+    if st.button("메타 프롬프트 업데이트", key="meta_prompt_update"):
+        tuner.set_meta_prompt(meta_system_prompt, meta_user_prompt)
+        st.success("메타 프롬프트가 업데이트되었습니다.")
+
+# 평가 프롬프트 설정
+with st.expander("평가 프롬프트 설정", expanded=False):
+    col1, col2 = st.columns(2)
+    with col1:
+        evaluation_system_prompt = st.text_area(
+            "평가 시스템 프롬프트",
+            value=DEFAULT_EVALUATION_SYSTEM_PROMPT,
+            height=200,
+            help="평가 모델의 시스템 프롬프트를 설정합니다."
+        )
+    with col2:
+        evaluation_user_prompt = st.text_area(
+            "평가 유저 프롬프트",
+            value=DEFAULT_EVALUATION_USER_PROMPT,
+            height=200,
+            help="평가 모델의 유저 프롬프트를 설정합니다. {question}, {output}, {expected}를 포함해야 합니다."
+        )
+    
+    if st.button("평가 프롬프트 업데이트", key="eval_prompt_update"):
+        tuner.set_evaluation_prompt(evaluation_system_prompt, evaluation_user_prompt)
+        st.success("평가 프롬프트가 업데이트되었습니다.")
+
+# 데이터셋 처리 공통 함수
+def process_dataset(data, dataset_type):
+    # 데이터 표시
+    total_examples = len(data)
+    st.write(f"총 예제 수: {total_examples}")
+    
+    # 샘플 수 선택
+    num_samples = st.slider(
+        "Number of random samples to evaluate per iteration",
+        min_value=1,
+        max_value=min(100, total_examples),  # 최대 샘플 수를 100으로 제한
+        value=min(5, total_examples),
+        help="각 iteration마다 평가할 랜덤 샘플의 개수를 선택하세요."
+    )
+    
+    # 테스트 케이스 생성 및 데이터프레임 생성
+    test_cases = []
+    display_data = []
+    
+    if dataset_type == "MMLU":
+        for item in data:
+            # 선택지를 문자열로 변환
+            choices_str = "\n".join([f"{i+1}. {choice}" for i, choice in enumerate(item['choices'])])
+            question = f"{item['question']}\n\nChoices:\n{choices_str}"
+            expected = str(item['answer'] + 1)  # 0-based를 1-based로 변환
+            
+            test_cases.append({
+                'question': question,
+                'expected': expected
+            })
+            
+            if len(display_data) < 2000:  # display_data를 2000개로 제한
+                display_data.append({
+                    'question': question,
+                    'expected_answer': expected
+                })
+    elif dataset_type == "CSV":
+        # 컬럼 이름 확인 및 매핑
+        required_columns = ['question', 'expected_answer']
+        available_columns = data.columns.tolist()
+        
+        # 필수 컬럼이 있는지 확인
+        missing_columns = [col for col in required_columns if col not in available_columns]
+        if missing_columns:
+            st.error(f"CSV 파일에 다음 컬럼이 필요합니다: {', '.join(missing_columns)}")
+            st.info("CSV 파일은 'question'과 'expected_answer' 컬럼을 포함해야 합니다.")
+            st.stop()
+        
+        for _, row in data.iterrows():
+            test_cases.append({
+                'question': row['question'],
+                'expected': row['expected_answer']
+            })
+            
+            if len(display_data) < 2000:  # display_data를 2000개로 제한
+                display_data.append({
+                    'question': row['question'],
+                    'expected_answer': row['expected_answer']
+                })
+    elif dataset_type == "CNN":
+        for item in data:
+            test_cases.append({
+                'question': item['input'],
+                'expected': item['expected_answer']
+            })
+            
+            if len(display_data) < 2000:  # display_data를 2000개로 제한
+                display_data.append({
+                    'question': item['input'],
+                    'expected_answer': item['expected_answer']
+                })
+    elif dataset_type == "GSM8K":
+        for item in data:
+            test_cases.append({
+                'question': item['question'],
+                'expected': item['answer']
+            })
+            
+            if len(display_data) < 2000:  # display_data를 2000개로 제한
+                display_data.append({
+                    'question': item['question'],
+                    'expected_answer': item['answer']
+                })
+    
+    # 전체 데이터 표시
+    st.write("데이터셋 내용:")
+    st.dataframe(pd.DataFrame(display_data))
+    
+    return test_cases, num_samples
+
+# 데이터셋 선택
+st.header("Dataset Selection")
+dataset_type = st.radio(
+    "Select Dataset Type",
+    ["CSV", "MMLU", "CNN", "GSM8K"],
+    horizontal=True
+)
+
+if dataset_type == "CSV":
+    csv_file = st.file_uploader("Upload CSV file", type=['csv'])
+    if csv_file is not None:
+        try:
+            # CSV 파일을 읽을 때 더 유연한 파싱 옵션 사용
+            df = pd.read_csv(csv_file, 
+                            encoding='utf-8',
+                            on_bad_lines='skip',  # 문제가 있는 줄은 건너뛰기
+                            quoting=1,  # 모든 필드를 따옴표로 감싸기
+                            escapechar='\\')  # 이스케이프 문자 설정
+            
+            # 데이터프레임이 비어있는지 확인
+            if df.empty:
+                st.error("CSV 파일이 비어있습니다. 올바른 데이터가 포함된 CSV 파일을 업로드하세요.")
+                st.stop()
+            
+            test_cases, num_samples = process_dataset(df, "CSV")
+        except Exception as e:
+            st.error(f"CSV 파일 로드 중 오류 발생: {str(e)}")
+            st.info("CSV 파일이 올바른 형식인지 확인하세요. 파일이 비어있거나, 인코딩이 UTF-8이 아닐 수 있습니다.")
+            st.stop()
+    else:
+        st.info("CSV 파일을 업로드하거나 MMLU 데이터셋을 선택하세요.")
+        st.stop()
+elif dataset_type == "CNN":
+    # CNN 데이터셋 인스턴스 생성
+    cnn_dataset = CNNDataset()
+    
+    # 데이터셋 선택
+    split = st.selectbox(
+        "데이터셋 선택",
+        ["train", "validation", "test"],
+        index=0
+    )
+    
+    # 청크 수 확인
+    total_chunks = cnn_dataset.get_num_chunks(split)
+    
+    if total_chunks == 0:
+        st.error(f"{split} 데이터셋에 청크 파일이 없습니다.")
+        st.stop()
+    
+    # 전체 청크 선택 옵션 추가
+    use_all_chunks = st.toggle(
+        "전체 청크 사용",
+        value=False,
+        help="모든 청크의 데이터를 로드합니다. 처리 시간이 오래 걸릴 수 있습니다."
+    )
+    
+    try:
+        if use_all_chunks:
+            # 모든 청크 로드
+            data = cnn_dataset.load_all_data(split)
+            test_cases, num_samples = process_dataset(data, "CNN")
+            
+            # 선택된 청크 정보 표시
+            st.info(f"전체 청크 로드 완료 ({len(data):,}개 예제)")
+        else:
+            # 청크 선택
+            st.write(f"총 {total_chunks}개의 청크가 있습니다.")
+            chunk_index = st.number_input(
+                "청크 선택",
+                min_value=0,
+                max_value=total_chunks-1,
+                value=0,
+                help="처리할 청크의 인덱스를 선택하세요."
+            )
+            
+            # 선택된 청크 로드
+            data = cnn_dataset.load_data(split, chunk_index)
+            test_cases, num_samples = process_dataset(data, "CNN")
+            
+            # 선택된 청크 정보 표시
+            st.info(f"선택된 청크: {chunk_index} ({len(data):,}개 예제)")
+    except Exception as e:
+        st.error(f"CNN 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.stop()
+elif dataset_type == "GSM8K":
+    # GSM8K 데이터셋 인스턴스 생성
+    gsm8k_dataset = GSM8KDataset()
+    
+    # 데이터셋 선택
+    split = st.selectbox(
+        "데이터셋 선택",
+        ["train", "test"],
+        index=0
+    )
+    
+    try:
+        # 데이터 로드
+        data = gsm8k_dataset.load_data(split)
+        test_cases, num_samples = process_dataset(data, "GSM8K")
+        
+        # 데이터셋 정보 표시
+        st.info(f"GSM8K {split} 데이터셋: {len(data):,}개 예제")
+    except Exception as e:
+        st.error(f"GSM8K 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.stop()
+else:
+    # MMLU 데이터셋 선택에 '모든 과목' 옵션 추가
+    subject_options = ["모든 과목"] + mmlu_dataset.subjects
+    subject = st.selectbox(
+        "Select MMLU Subject",
+        subject_options,
+        index=0
+    )
+    split = st.selectbox(
+        "Select Data Split",
+        ["validation", "test"],
+        index=0
+    )
+    try:
+        if subject == "모든 과목":
+            # 모든 과목의 데이터 로드
+            all_subjects_data = mmlu_dataset.get_all_subjects_data()
+            # 모든 과목의 데이터를 하나의 리스트로 합치기
+            data = []
+            for subject_data in all_subjects_data.values():
+                data.extend(subject_data[split])
+        else:
+            # 특정 과목의 데이터 로드
+            subject_data = mmlu_dataset.get_subject_data(subject)
+            data = subject_data[split]
+        
+        test_cases, num_samples = process_dataset(data, "MMLU")
+    except Exception as e:
+        st.error(f"MMLU 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.stop()
+
+class SessionState:
+    """
+    Streamlit 앱의 세션 상태를 관리하는 클래스
+    """
+    @staticmethod
+    def init_state():
+        """세션 상태를 초기화합니다."""
+        if 'initialized' not in st.session_state:
+            st.session_state.initialized = True
+            st.session_state.all_iteration_results = []
+            st.session_state.current_iteration = 0
+            st.session_state.show_results = False
+            st.session_state.tuning_complete = False
+            st.session_state.display_container = st.empty()
+    
+    @staticmethod
+    def reset():
+        """상태를 초기화합니다."""
+        st.session_state.all_iteration_results = []
+        st.session_state.current_iteration = 0
+        st.session_state.show_results = False
+        st.session_state.tuning_complete = False
+    
+    @staticmethod
+    def update_results(result):
+        """새로운 결과를 추가합니다."""
+        if 'all_iteration_results' not in st.session_state:
+            st.session_state.all_iteration_results = []
+        
+        st.session_state.all_iteration_results.append(result)
+        st.session_state.current_iteration = len(st.session_state.all_iteration_results) - 1
+        st.session_state.show_results = True
+    
+    @staticmethod
+    def get_results():
+        """현재 저장된 모든 결과를 반환합니다."""
+        return st.session_state.get('all_iteration_results', [])
+    
+    @staticmethod
+    def get_current_iteration():
+        """현재 선택된 이터레이션을 반환합니다."""
+        return st.session_state.get('current_iteration', 0)
+    
+    @staticmethod
+    def set_current_iteration(iteration):
+        """현재 이터레이션을 설정합니다."""
+        st.session_state.current_iteration = iteration
+
+class ResultsDisplay:
+    """
+    결과 표시를 담당하는 클래스
+    """
+    def __init__(self):
+        SessionState.init_state()
+        # 메인 컨테이너 초기화
+        if 'main_container' not in st.session_state:
+            st.session_state.main_container = st.empty()
+    
+    def display_metrics(self, results, container):
+        """성능 지표를 표시합니다."""
+        if not results:
+            return
+        
+        # 그래프 데이터 준비
+        x_values = [result.iteration for result in results]
+        avg_scores = [result.avg_score for result in results]
+        best_sample_scores = [result.best_sample_score for result in results]
+        std_devs = [result.std_dev for result in results]
+        top3_scores = [result.top3_avg_score for result in results]
+        
+        # 표준편차 상한/하한 계산
+        upper_bound = [avg + std for avg, std in zip(avg_scores, std_devs)]
+        lower_bound = [avg - std for avg, std in zip(avg_scores, std_devs)]
+        
+        # 카테고리별 평균 점수 계산
+        category_scores = {
+            'meaning_accuracy': [],
+            'completeness': [],
+            'expression_style': [],
+            'faithfulness': [],
+            'conciseness': [],
+            'correctness': [],
+            'structural_alignment': []
+        }
+        
+        for result in results:
+            iteration_category_scores = {category: [] for category in category_scores.keys()}
+            
+            for test_case in result.test_case_results:
+                if test_case.evaluation_details and 'category_scores' in test_case.evaluation_details:
+                    for category, details in test_case.evaluation_details['category_scores'].items():
+                        if category in iteration_category_scores:
+                            iteration_category_scores[category].append(details['score'])
+            
+            # 각 카테고리의 평균 점수 추가
+            for category in category_scores:
+                scores = iteration_category_scores[category]
+                avg_score = np.mean(scores) if scores else 0
+                category_scores[category].append(avg_score)
+        
+        # 통합 그래프 생성
+        fig = go.Figure()
+        
+        # 카테고리별 점수를 막대 그래프로 추가
+        for category in category_scores:
+            fig.add_trace(go.Bar(
+                x=x_values,
+                y=category_scores[category],
+                name=category,
+                visible=True
+            ))
+        
+        # 주요 성능 지표 트레이스
+        fig.add_trace(go.Scatter(
+            x=x_values,
+            y=avg_scores,
+            name='평균 점수',
+            mode='lines+markers',
+            line=dict(color='blue', width=2)
+        ))
+        
+        # 표준편차를 별도의 선으로 표시
+        fig.add_trace(go.Scatter(
+            x=x_values,
+            y=std_devs,
+            name='표준편차',
+            mode='lines+markers',
+            line=dict(color='purple', width=2, dash='dot')
+        ))
+        
+        fig.add_trace(go.Scatter(
+            x=x_values,
+            y=best_sample_scores,
+            name='최고 개별 점수',
+            mode='lines+markers',
+            line=dict(color='green', width=2)
+        ))
+        
+        fig.add_trace(go.Scatter(
+            x=x_values,
+            y=top3_scores,
+            name='Top3 평균 점수',
+            mode='lines+markers',
+            line=dict(color='red', width=2)
+        ))
+        
+        # 그래프 레이아웃 설정
+        fig.update_layout(
+            title='통합 성능 지표 및 카테고리 분석',
+            xaxis_title='이터레이션',
+            yaxis_title='점수',
+            yaxis_range=[0, 1],
+            xaxis=dict(
+                tickmode='array',
+                tickvals=x_values,
+                ticktext=[f"Iteration {x}" for x in x_values]
+            ),
+            height=600,
+            barmode='group',
+            showlegend=True,
+            legend=dict(
+                yanchor="top",
+                y=0.99,
+                xanchor="left",
+                x=1.05
+            )
+        )
+        
+        # 그래프 표시
+        container.plotly_chart(fig, use_container_width=True)
+    
+    def display_iteration_details(self, results, container):
+        """이터레이션 상세 정보를 표시합니다."""
+        if not results:
+            container.info("아직 결과가 없습니다.")
+            return
+        
+        # 이터레이션 선택
+        total_iterations = len(results)
+        if total_iterations > 0:
+            # 이터레이션 선택 UI
+            current_iteration = SessionState.get_current_iteration()
+            
+            # 이터레이션 선택을 위한 탭 생성
+            tabs = container.tabs([f"Iteration {i+1}" for i in range(total_iterations)])
+            selected_iteration = current_iteration
+            
+            with tabs[selected_iteration]:
+                iteration_result = results[selected_iteration]
+                
+                # 평균 점수와 표준편차 표시
+                col1, col2, col3 = st.columns(3)
+                col1.metric("Average Score", f"{iteration_result.avg_score:.2f}")
+                col2.metric("Standard Deviation", f"{iteration_result.std_dev:.2f}")
+                col3.metric("Top 3 Average", f"{iteration_result.top3_avg_score:.2f}")
+                
+                # Task Type과 Description expander 추가
+                with st.expander(f"Task Type ({iteration_result.task_type})", expanded=False):
+                    st.markdown("### Task Description")
+                    st.code(iteration_result.task_description, language="text")
+                
+                # 현재 프롬프트 expander 추가
+                with st.expander("현재 프롬프트 보기", expanded=False):
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.markdown("### System Prompt")
+                        st.code(iteration_result.system_prompt, language="text")
+                    with col2:
+                        st.markdown("### User Prompt")
+                        st.code(iteration_result.user_prompt, language="text")
+                
+                # 출력 결과를 데이터프레임으로 변환
+                outputs_data = []
+                for i, test_case in enumerate(iteration_result.test_case_results):
+                    row = {
+                        'Test Case': i + 1,
+                        'Score': f"{test_case.score:.2f}",
+                        'Question': test_case.question,
+                        'Expected': test_case.expected_output,
+                        'Actual': test_case.actual_output
+                    }
+                    
+                    # 카테고리별 점수와 피드백 추가
+                    if test_case.evaluation_details and 'category_scores' in test_case.evaluation_details:
+                        for category, details in test_case.evaluation_details['category_scores'].items():
+                            row[f"{category} Score"] = f"{details['score']:.2f}"
+                            row[f"{category} State"] = details['current_state']
+                            row[f"{category} Action"] = details['improvement_action']
+                    
+                    outputs_data.append(row)
+                
+                # 데이터프레임 생성
+                df = pd.DataFrame(outputs_data)
+                
+                # 데이터프레임 스타일링 함수
+                def highlight_rows(df):
+                    scores = df['Score'].astype(float)
+                    max_score = scores.max()
+                    min_score = scores.min()
+                    
+                    background_colors = pd.DataFrame('', index=df.index, columns=df.columns)
+                    
+                    max_score_mask = (scores == max_score)
+                    min_score_mask = (scores == min_score)
+                    
+                    background_colors.loc[max_score_mask] = 'background-color: #90EE90'
+                    background_colors.loc[min_score_mask] = 'background-color: #FFB6C6'
+                    
+                    return background_colors
+                
+                # 스타일이 적용된 데이터프레임 표시
+                st.dataframe(
+                    df.style.apply(highlight_rows, axis=None),
+                    use_container_width=True,
+                    height=400
+                )
+                
+                # 메타프롬프트 expander 추가
+                if iteration_result.meta_prompt:
+                    with st.expander("메타프롬프트 결과 보기", expanded=False):
+                        st.code(iteration_result.meta_prompt, language="text")
+            
+            # 현재 선택된 이터레이션 저장
+            SessionState.set_current_iteration(selected_iteration)
+    
+    def update(self):
+        """결과 표시를 업데이트합니다."""
+        results = SessionState.get_results()
+        if st.session_state.show_results and results:
+            # 기존 컨테이너를 비우고 새로운 컨테이너 생성
+            with st.session_state.main_container.container():
+                st.empty()  # 기존 내용을 지웁니다
+                
+                # 메트릭스와 상세 정보를 표시할 새로운 컨테이너 생성
+                metrics_container = st.container()
+                details_container = st.container()
+                
+                # 메트릭스와 상세 정보 표시
+                self.display_metrics(results, metrics_container)
+                self.display_iteration_details(results, details_container)
+
+def run_tuning_process():
+    """프롬프트 튜닝 프로세스를 실행하고 결과를 시각화합니다."""
+    # UI 상태 초기화
+    SessionState.init_state()
+    results_display = ResultsDisplay()
+    
+    with st.spinner('프롬프트 튜닝 중...'):
+        def iteration_callback(result):
+            SessionState.update_results(result)
+            results_display.update()
+        
+        # iteration_callback 설정
+        tuner.iteration_callback = iteration_callback
+        
+        # 프롬프트 튜닝 실행
+        tuner.tune_prompt(
+            initial_system_prompt=system_prompt,
+            initial_user_prompt=user_prompt,
+            initial_test_cases=test_cases,
+            num_iterations=iterations,
+            score_threshold=score_threshold if use_threshold else None,
+            evaluation_score_threshold=evaluation_threshold,
+            use_meta_prompt=use_meta_prompt,
+            num_samples=num_samples
+        )
+        
+        st.session_state.tuning_complete = True
+        
+        # 최종 결과
+        results = SessionState.get_results()
+        if results:
+            st.success("프롬프트 튜닝 완료!")
+            
+            # 전체 결과에서 가장 높은 평균 점수를 가진 프롬프트 찾기
+            best_result = max(results, key=lambda x: x.avg_score)
+            st.write("Final Best Prompt:")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write("System Prompt:")
+                st.code(best_result.system_prompt)
+            with col2:
+                st.write("User Prompt:")
+                st.code(best_result.user_prompt)
+            st.write(f"최종 결과: 평균 점수 {best_result.avg_score:.2f}, 최고 평균 점수 {best_result.best_avg_score:.2f}, 최고 개별 점수 {best_result.best_sample_score:.2f}")
+            
+            # CSV 다운로드 버튼
+            if st.button("결과를 CSV 파일로 저장"):
+                csv_data = tuner.save_results_to_csv()
+                st.download_button(
+                    label="Download Results as CSV",
+                    data=csv_data,
+                    file_name=f"prompt_tuning_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                    mime="text/csv"
+                )
+        else:
+            st.warning("튜닝 결과가 없습니다.")
+
+# 튜닝 시작 버튼
+if st.button("프롬프트 튜닝 시작", type="primary"):
+    # API 키 확인
+    required_keys = {
+        "solar": "SOLAR_API_KEY",
+        "gpt4o": "OPENAI_API_KEY",
+        "claude": "ANTHROPIC_API_KEY"
+    }
+    
+    # 사용되는 모델들의 API 키 확인
+    used_models = set([model_name, evaluator_model])
+    missing_keys = []
+    
+    for model in used_models:
+        key = required_keys[model]
+        if not os.getenv(key):
+            missing_keys.append(f"{MODEL_INFO[model]['name']} ({key})")
+    
+    if missing_keys:
+        st.error(f"다음 API 키가 필요합니다: {', '.join(missing_keys)}")
+        st.info("API 키를 .env 파일에 설정하세요.")
+    else:
+        # 메타프롬프트가 입력된 경우에만 설정
+        if meta_system_prompt.strip() and meta_user_prompt.strip():
+            tuner.set_meta_prompt(meta_system_prompt, meta_user_prompt)
+        
+        # 프로그레스 바 설정
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        
+        def progress_callback(iteration, test_case_index):
+            # 현재 iteration의 진행도 (0부터 시작)
+            iteration_progress = (iteration - 1) / iterations
+            # 현재 test case의 진행도 (0부터 시작)
+            test_case_progress = test_case_index / num_samples
+            # 전체 진행도 계산
+            progress = iteration_progress + (test_case_progress / iterations)
+            progress_bar.progress(progress)
+            status_text.text(f"Iteration {iteration}/{iterations}, Test Case {test_case_index}/{num_samples}")
+        
+        tuner.progress_callback = progress_callback
+        
+        # 프롬프트 튜닝 실행
+        run_tuning_process() 

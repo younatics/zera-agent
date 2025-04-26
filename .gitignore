@@ -43,7 +43,16 @@ prompt-autotuning-agent.pem
 
 # Evaluation results
 evaluation/results/ 
+agent/dataset/cnn_data/
+agent/dataset/gsm8k_data/
+agent/dataset/mmlu_data/
 
 # Samples and sample results
 evaluation/samples/
 evaluation/llm_judge/comparison_results_*.csv 
+
+# Cache directories
+.pytest_cache/
+*/__pycache__/
+*/*/__pycache__/
+*/*/*/__pycache__/ 
