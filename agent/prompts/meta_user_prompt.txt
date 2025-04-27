@@ -11,14 +11,11 @@ Task Description:
 Review these cases carefully:
 {random_cases}
 
-- Check if the prompt aligns with the expected output structure
-- Detect any formatting mismatch
-- Consider whether the prompt clearly instructs the model to produce only the expected format
-- Identify missing constraints that could improve output alignment
-- Carefully study the Expected Output examples to infer required structural patterns, format constraints, and brevity expectations.
-- When analyzing cases, prioritize extracting generalizable structural rules (e.g., output length, formatting style, section headings) from both successful and failed samples.
-- If score improvements stagnate, attempt a structural innovation based on observed patterns, ensuring alignment with the Expected Output requirements.
-- Focus on enforcing concrete output format instructions (e.g., number of bullet points, sentence limits, required headers) explicitly within the generated prompts.
+- Check whether the prompts allow free-form reasoning without early formatting constraints.
+- Check if formatting is enforced only at the final answer presentation.
+- Identify if the prompts are unnecessarily verbose or over-constrained.
+- Study the Expected Output examples to infer the minimum necessary structural patterns.
+- Extract generalizable rules for brevity, clarity, and minimal instruction sets.
 
 ## 3. PROMPT REVIEW
 Recent Prompt History:
@@ -34,8 +31,11 @@ Current User Prompt:
 {user_prompt}
 
 ## 4. IMPROVEMENT TASK
-- Your goal is to generate improved system and user prompts that reflect the task requirements, including any formatting constraints. If the task requires a fixed output structure, enforce this strictly in the prompt. Ensure all outputs will comply with the expected output format and that prompts are as concise, direct, and task-aligned as possible.
-- If the evaluation scores appear to be declining or stagnating, you are encouraged to attempt a structural innovation. Don't hesitate to try a new format, omit less critical content, or adopt a more compressed and abstract style if appropriate. The goal is to break free from repetitive patterns and explore sharper, more efficient prompt designs.
+- Your goal is to generate a new system prompt and user prompt that:
+    - Encourage free, logical reasoning during the main solution phase
+    - Consider and apply the required output structure only at the final improvement
+    - Keep the prompt short, clear, and non-burdensome
+- If evaluation scores stagnate, prioritize simplifying prompts and reinforcing the separation between reasoning and formatting.
 
 ## 5. OUTPUT FORMAT
 TASK_TYPE:

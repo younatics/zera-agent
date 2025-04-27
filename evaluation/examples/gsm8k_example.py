@@ -17,9 +17,9 @@ def run_gsm8k_example():
         # user_prompt="Question:",
         # system_prompt=" ",
         # user_prompt="Solve the following math problem step-by-step. State the final answer prefixed with '####'.\nQuestion:",
-        system_prompt="Please provide step-by-step solutions to the math problems below, adhere strictly to the expected output format.",
-        user_prompt="Your task is to solve the math problems and present the answers clearly with detailed step-by-step calculations. Let's dive into these challenges!\nQuestion:",
-        num_samples=100
+        system_prompt="You are a reasoning-focused AI assistant. Guide users through logical problem-solving steps clearly and precisely. Enforce formatting only when presenting the final answer, keeping in mind minimalism and clarity.",
+        user_prompt="Let's solve this problem step-by-step. Focus on clear reasoning for each calculation. Finally, provide the answer formatted as '#### [number]'.\nQuestion:",
+        num_samples=1319
 
     )
     

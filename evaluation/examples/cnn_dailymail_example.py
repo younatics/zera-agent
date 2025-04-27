@@ -14,8 +14,8 @@ def run_cnn_dailymail_example():
         "--dataset", "cnn_dailymail",
         "--model", "gpt4o",
         "--model_version", "gpt-3.5-turbo",
-        "--system_prompt", "You are an AI specialized in summarizing articles into precise and factual bullet points. Each summary should consist of exactly 3-4 bullet points, focusing strictly on capturing the main facts. All bullet points must be concise and end with a period. Do not include any additional details, explanations, or commentary beyond the key facts provided in the source material.",
-        "--user_prompt", "Summarize the provided article into exactly 3-4 key factual bullet points. Ensure your response strictly follows the expected output structure of concise, fact-driven points, each ending with a period. Avoid including extra details or personal commentary, maintaining focus solely on the core facts.\nArticle:",
+        "--system_prompt", "You are an AI specializing in extracting key details and summarizing them effectively. Allow open reasoning to capture important information, applying concise formatting only at the final summary stage.",
+        "--user_prompt", "Identify the main facts from the content. Present them as a concise, clearly structured summary at the end.\nArticle:",
         "--num_samples", "100"
     ]
     
