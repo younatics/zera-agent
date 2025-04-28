@@ -535,6 +535,9 @@ class SessionState:
     @staticmethod
     def update_results(result):
         """새로운 결과를 추가합니다."""
+        # 로깅 추가
+        logging.info(f"Updating results for iteration {result.iteration}")
+        
         # 결과가 이미 있는지 확인
         if not hasattr(st.session_state, 'all_iteration_results'):
             st.session_state.all_iteration_results = []
@@ -548,11 +551,14 @@ class SessionState:
         if existing_result:
             index = st.session_state.all_iteration_results.index(existing_result)
             st.session_state.all_iteration_results[index] = result
+            logging.info(f"Updated existing result at index {index}")
         else:
             st.session_state.all_iteration_results.append(result)
+            logging.info(f"Added new result, total results: {len(st.session_state.all_iteration_results)}")
         
         st.session_state.current_iteration = result.iteration - 1  # 0-based index
         st.session_state.show_results = True
+        logging.info(f"Session state updated: current_iteration={st.session_state.current_iteration}, show_results={st.session_state.show_results}")
     
     @staticmethod
     def get_results():
@@ -812,8 +818,11 @@ def run_tuning_process():
     
     with st.spinner('프롬프트 튜닝 중...'):
         def iteration_callback(result):
+            logging.info(f"Iteration callback called for iteration {result.iteration}")
             SessionState.update_results(result)
+            logging.info("Results updated, updating display...")
             results_display.update()
+            logging.info("Display updated")
         
         # iteration_callback 설정
         tuner.iteration_callback = iteration_callback
@@ -831,11 +840,13 @@ def run_tuning_process():
         )
         
         st.session_state.tuning_complete = True
+        logging.info("Tuning process completed")
         
         # 최종 결과
         results = SessionState.get_results()
         if results:
             st.success("프롬프트 튜닝 완료!")
+            logging.info(f"Final results count: {len(results)}")
             
             # 전체 결과에서 가장 높은 평균 점수를 가진 프롬프트 찾기
             best_result = max(results, key=lambda x: x.avg_score)

@@ -252,7 +252,7 @@ class PromptTuner:
                     expected_output=test_case['expected'],
                     actual_output=output,
                     score=score,
-                    evaluation_details=evaluation_details if isinstance(evaluation_details, dict) else {'error': str(evaluation_details)}
+                    evaluation_details=evaluation_details if isinstance(evaluation_details, dict) else {'error': str(evaluation_details), 'category_scores': {}}
                 )
                 test_case_results.append(test_case_result)
                 
