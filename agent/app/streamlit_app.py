@@ -30,6 +30,7 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(project_root)
 
 from agent.dataset.mmlu_dataset import MMLUDataset
+from agent.dataset.mmlu_pro_dataset import MMLUProDataset
 from agent.dataset.cnn_dataset import CNNDataset
 from agent.dataset.gsm8k_dataset import GSM8KDataset
 
@@ -59,6 +60,8 @@ with open(os.path.join(prompts_dir, 'meta_user_prompt.txt'), 'r', encoding='utf-
 
 # MMLU 데이터셋 인스턴스 생성
 mmlu_dataset = MMLUDataset()
+# MMLU Pro 데이터셋 인스턴스 생성
+mmlu_pro_dataset = MMLUProDataset()
 
 # 사이드바에서 파라미터 설정
 with st.sidebar:
@@ -292,7 +295,7 @@ def process_dataset(data, dataset_type):
     test_cases = []
     display_data = []
     
-    if dataset_type == "MMLU":
+    if dataset_type in ["MMLU", "MMLU Pro"]:
         for item in data:
             # 선택지를 문자열로 변환
             choices_str = "\n".join([f"{i+1}. {choice}" for i, choice in enumerate(item['choices'])])
@@ -367,7 +370,7 @@ def process_dataset(data, dataset_type):
 st.header("Dataset Selection")
 dataset_type = st.radio(
     "Select Dataset Type",
-    ["CSV", "MMLU", "CNN", "GSM8K"],
+    ["CSV", "MMLU", "MMLU Pro", "CNN", "GSM8K"],
     horizontal=True
 )
 
@@ -393,7 +396,7 @@ if dataset_type == "CSV":
             st.info("CSV 파일이 올바른 형식인지 확인하세요. 파일이 비어있거나, 인코딩이 UTF-8이 아닐 수 있습니다.")
             st.stop()
     else:
-        st.info("CSV 파일을 업로드하거나 MMLU 데이터셋을 선택하세요.")
+        st.info("CSV 파일을 업로드하거나 다른 데이터셋을 선택하세요.")
         st.stop()
 elif dataset_type == "CNN":
     # CNN 데이터셋 인스턴스 생성
@@ -469,11 +472,19 @@ elif dataset_type == "GSM8K":
     except Exception as e:
         st.error(f"GSM8K 데이터셋 로드 중 오류 발생: {str(e)}")
         st.stop()
-else:
-    # MMLU 데이터셋 선택에 '모든 과목' 옵션 추가
-    subject_options = ["모든 과목"] + mmlu_dataset.subjects
+elif dataset_type in ["MMLU", "MMLU Pro"]:  # MMLU or MMLU Pro
+    # 선택된 데이터셋에 따라 적절한 데이터셋 인스턴스와 과목 리스트 선택
+    if dataset_type == "MMLU":
+        dataset = mmlu_dataset
+        dataset_name = "MMLU"
+    else:  # MMLU Pro
+        dataset = mmlu_pro_dataset
+        dataset_name = "MMLU Pro"
+    
+    # 데이터셋 선택에 '모든 과목' 옵션 추가
+    subject_options = ["모든 과목"] + dataset.subjects
     subject = st.selectbox(
-        "Select MMLU Subject",
+        f"Select {dataset_name} Subject",
         subject_options,
         index=0
     )
@@ -485,19 +496,19 @@ else:
     try:
         if subject == "모든 과목":
             # 모든 과목의 데이터 로드
-            all_subjects_data = mmlu_dataset.get_all_subjects_data()
+            all_subjects_data = dataset.get_all_subjects_data()
             # 모든 과목의 데이터를 하나의 리스트로 합치기
             data = []
             for subject_data in all_subjects_data.values():
                 data.extend(subject_data[split])
         else:
             # 특정 과목의 데이터 로드
-            subject_data = mmlu_dataset.get_subject_data(subject)
+            subject_data = dataset.get_subject_data(subject)
             data = subject_data[split]
         
-        test_cases, num_samples = process_dataset(data, "MMLU")
+        test_cases, num_samples = process_dataset(data, dataset_type)
     except Exception as e:
-        st.error(f"MMLU 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.error(f"{dataset_name} 데이터셋 로드 중 오류 발생: {str(e)}")
         st.stop()
 
 class SessionState:
