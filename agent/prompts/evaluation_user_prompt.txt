@@ -13,7 +13,14 @@ Actual Output:
 Expected Output:
 {expected}
 
-Regardless of your judgment, treat the expected output as the correct reference.
+Evaluate the output comprehensively using all criteria. The expected output is your reference standard.
+
+## Evaluation Requirements
+- Analyze each criterion thoroughly with specific examples from the output
+- Provide concrete, actionable improvement suggestions
+- Base your evaluation strictly on comparison with the expected output
+- Maintain consistent scoring standards across all criteria
+- Support all scores with clear evidence and reasoning
 
 ## Critical Notes
 - Focus on the task-specific needs when selecting evaluation criteria.

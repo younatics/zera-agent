@@ -155,7 +155,7 @@ class PromptTuner:
                     raise ValueError("JSON 응답에 scores 필드가 없습니다")
                 
                 # 최종 점수와 세부 점수 추출
-                final_score = float(evaluation_data.get('final_score', 0))
+                final_score = self._convert_to_float(evaluation_data.get('final_score', 0))
                 scores_data = evaluation_data.get('scores', {})
                 
                 # 평가 상세 정보 구성
@@ -166,11 +166,22 @@ class PromptTuner:
                 
                 # 각 카테고리별 점수와 피드백 정보 추출
                 for category, details in scores_data.items():
-                    evaluation_details['category_scores'][category] = {
-                        'score': float(details.get('score', 0)),
-                        'current_state': details.get('current_state', ''),
-                        'improvement_action': details.get('improvement_action', '')
-                    }
+                    if isinstance(details, str):
+                        # 문자열인 경우 (예: 'PASS', 'FAIL') 직접 변환
+                        score = self._convert_to_float(details)
+                        evaluation_details['category_scores'][category] = {
+                            'score': score,
+                            'current_state': details,
+                            'improvement_action': ''
+                        }
+                    else:
+                        # 딕셔너리인 경우 기존 로직 사용
+                        score = self._convert_to_float(details.get('score', 0))
+                        evaluation_details['category_scores'][category] = {
+                            'score': score,
+                            'current_state': details.get('current_state', ''),
+                            'improvement_action': details.get('improvement_action', '')
+                        }
                 
                 self.logger.info(f"Evaluation score: {final_score}")
                 self.logger.info(f"Evaluation details: {evaluation_details}")
@@ -185,7 +196,31 @@ class PromptTuner:
         except (ValueError, TypeError, json.JSONDecodeError) as e:
             self.logger.error(f"Error during evaluation: {str(e)}")
             return 0.0, {'final_score': 0.0, 'category_scores': {}}
-    
+
+    def _convert_to_float(self, value) -> float:
+        """
+        Convert a value to float, handling special cases like 'PASS'
+        
+        Args:
+            value: The value to convert
+            
+        Returns:
+            float: The converted value
+        """
+        if isinstance(value, (int, float)):
+            return float(value)
+        elif isinstance(value, str):
+            value = value.upper().strip()
+            if value == 'PASS':
+                return 0.5
+            elif value == 'FAIL':
+                return 0.0
+            try:
+                return float(value)
+            except (ValueError, TypeError):
+                return 0.0
+        return 0.0
+
     def tune_prompt(self, initial_system_prompt: str, initial_user_prompt: str, initial_test_cases: List[Dict], num_iterations: int = 3, score_threshold: Optional[float] = None, evaluation_score_threshold: float = 0.8, use_meta_prompt: bool = True, num_samples: Optional[int] = None) -> List[IterationResult]:
         """
         Tune a system prompt using a set of test cases.
