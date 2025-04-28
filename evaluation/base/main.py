@@ -1,6 +1,8 @@
 import argparse
 from dotenv import load_dotenv
 import os
+import sys
+from pathlib import Path
 from evaluation.dataset_evaluator.gsm8k_evaluator import GSM8KEvaluator
 from evaluation.dataset_evaluator.mmlu_evaluator import MMLUEvaluator
 from evaluation.dataset_evaluator.bbh_evaluator import BBHEvaluator
@@ -8,8 +10,33 @@ from evaluation.dataset_evaluator.cnn_dailymail_evaluator import CNNDailyMailEva
 from evaluation.dataset_evaluator.samsum_evaluator import SAMSumEvaluator
 from evaluation.dataset_evaluator.mbpp_evaluator import MBPPEvaluator
 
-# .env 파일 로드
-load_dotenv()
+def setup_environment():
+    # Try to load from different possible locations
+    env_paths = [
+        '.env',  # Current directory
+        '../.env',  # Parent directory
+        '../../.env',  # Parent's parent directory
+        str(Path.home() / '.env'),  # User's home directory
+    ]
+    
+    env_loaded = False
+    for env_path in env_paths:
+        if os.path.exists(env_path):
+            load_dotenv(env_path)
+            env_loaded = True
+            break
+    
+    # Verify required environment variables
+    required_vars = ['OPENAI_API_KEY']
+    missing_vars = [var for var in required_vars if not os.getenv(var)]
+    
+    if missing_vars:
+        print(f"Error: Missing required environment variables: {', '.join(missing_vars)}")
+        print("Please ensure these variables are set in your .env file or environment")
+        sys.exit(1)
+
+# Call setup at import time
+setup_environment()
 
 def main(args=None):
     if args is None:

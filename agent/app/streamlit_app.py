@@ -17,13 +17,43 @@ from typing import List, Dict
 import numpy as np
 from datetime import datetime
 import json
+from pathlib import Path
 
 # set_page_config은 반드시 첫 번째 Streamlit 명령어여야 함
 st.set_page_config(page_title="Prompt Auto Tuning Agent", layout="wide")
 
-# .env 파일 로드
-env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
-load_dotenv(env_path, override=True)
+def setup_environment():
+    # Try to load from different possible locations
+    env_paths = [
+        '.env',  # Current directory
+        '../.env',  # Parent directory
+        '../../.env',  # Parent's parent directory
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env'),  # Project root
+        str(Path.home() / '.env'),  # User's home directory
+    ]
+    
+    env_loaded = False
+    for env_path in env_paths:
+        if os.path.exists(env_path):
+            load_dotenv(env_path, override=True)
+            print(f"Loaded environment from: {env_path}")
+            env_loaded = True
+            break
+    
+    if not env_loaded:
+        print("Warning: No .env file found")
+    
+    # Verify required environment variables
+    required_vars = ['OPENAI_API_KEY']
+    missing_vars = [var for var in required_vars if not os.getenv(var)]
+    
+    if missing_vars:
+        st.error(f"Error: Missing required environment variables: {', '.join(missing_vars)}")
+        st.error("Please ensure these variables are set in your .env file or environment")
+        st.stop()
+
+# Call setup at the start
+setup_environment()
 
 # 프로젝트 루트 디렉토리를 Python 경로에 추가
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
