@@ -6,6 +6,8 @@ import numpy as np
 from pathlib import Path
 import shutil
 import glob
+import json
+import time
 
 class MMLUProDataset:
     def __init__(self, base_dir: str = None):
@@ -14,11 +16,9 @@ class MMLUProDataset:
             base_dir = os.path.join(current_dir, 'mmlu_pro_data')
         self.base_dir = base_dir
         self.subjects = [
-            "accounting", "astronomy", "chemistry", "college_computer_science", "college_mathematics",
-            "computer_security", "economics", "electrical_engineering", "elementary_mathematics",
-            "formal_logic", "global_facts", "high_school_biology", "high_school_chemistry",
-            "high_school_computer_science", "high_school_mathematics", "high_school_physics",
-            "high_school_statistics", "machine_learning", "philosophy", "physics", "world_religions"
+            "computer science", "economics", "engineering", "history", "law",
+            "other", "philosophy", "psychology", "biology", "business",
+            "chemistry", "health", "math", "physics"
         ]
         
         # 기본 디렉토리 생성
@@ -45,33 +45,50 @@ class MMLUProDataset:
         return True
     
     def _download_and_process_dataset(self) -> None:
-        """모든 과목의 MMLU Pro 데이터셋을 다운로드하고 처리"""
-        for subject in self.subjects:
-            print(f"Processing {subject} subject...")
-            subject_dir = os.path.join(self.base_dir, subject)
-            os.makedirs(subject_dir, exist_ok=True)
+        """MMLU Pro 데이터셋을 다운로드하고 처리"""
+        print("Downloading MMLU-Pro dataset...")
+        
+        try:
+            # Hugging Face에서 데이터셋 로드
+            dataset = load_dataset("TIGER-Lab/MMLU-Pro")
             
-            try:
-                # Hugging Face에서 데이터셋 로드
-                dataset = load_dataset("cais/mmlu-pro", subject)
+            # 각 분할 데이터를 처리
+            for split in ['test', 'validation']:
+                if split not in dataset:
+                    print(f"Warning: {split} split not found in dataset")
+                    continue
                 
-                # 각 분할 데이터를 저장
-                for split in ['test', 'validation']:
-                    data = []
-                    for item in dataset[split]:
-                        data.append({
-                            'question': item['question'],
-                            'choices': item['choices'],
-                            'answer': item['answer']
-                        })
+                split_data = dataset[split]
+                
+                # 카테고리별로 데이터 그룹화
+                category_data = {}
+                for item in split_data:
+                    category = item['category'].lower()
+                    if category not in category_data:
+                        category_data[category] = []
                     
-                    # 데이터를 CSV로 저장
-                    df = pd.DataFrame(data)
-                    df.to_csv(os.path.join(subject_dir, f"{split}.csv"), index=False)
-                    print(f"Saved {subject}'s {split} data")
+                    # 데이터 형식을 MMLU 형식으로 변환
+                    question_data = {
+                        'question': item['question'],
+                        'choices': item['options'],
+                        'answer': item['answer_index']  # 0-based index
+                    }
+                    category_data[category].append(question_data)
+                
+                # 각 카테고리의 데이터를 CSV로 저장
+                for category, questions in category_data.items():
+                    category_dir = os.path.join(self.base_dir, category)
+                    os.makedirs(category_dir, exist_ok=True)
                     
-            except Exception as e:
-                print(f"Error processing {subject} subject: {str(e)}")
+                    # DataFrame 생성 및 CSV 저장
+                    df = pd.DataFrame(questions)
+                    csv_path = os.path.join(category_dir, f"{split}.csv")
+                    df.to_csv(csv_path, index=False)
+                    print(f"Saved {category}'s {split} data with {len(questions)} questions")
+                
+        except Exception as e:
+            print(f"Error downloading and processing dataset: {str(e)}")
+            raise
     
     def get_subject_data(self, subject: str) -> Dict[str, List[Dict]]:
         """특정 과목의 데이터를 가져옴"""
@@ -96,7 +113,7 @@ class MMLUProDataset:
                 data[split].append({
                     'question': row['question'],
                     'choices': choices,
-                    'answer': row['answer']
+                    'answer': row['answer']  # 0-based index
                 })
         
         return data
@@ -119,9 +136,10 @@ if __name__ == "__main__":
     
     # 특정 과목 데이터 접근 예시
     try:
-        subject_data = dataset.get_subject_data("physics")
-        print(f"테스트 예제 수: {len(subject_data['test'])}")
-        print(f"검증 예제 수: {len(subject_data['validation'])}")
+        subject_data = dataset.get_subject_data("computer science")
+        for split in ['test', 'validation']:
+            if split in subject_data:
+                print(f"{split} 예제 수: {len(subject_data[split])}")
         
         # 첫 번째 예제 출력
         if subject_data['test']:

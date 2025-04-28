@@ -1,0 +1,7 @@
+question,choices,answer
+"Which of the given formulas of PL is the best symbolization of the following sentence?
+Turtles live long lives and are happy creatures, unless they are injured.","['(L • H) ≡ I', '(L • H) ∨ I', 'L • (H ∨ I)', 'L • (H ⊃ R).', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A']",1
+Select the best translation into predicate logic.George borrows Hector's lawnmower. (g: George; h: Hector; l: Hector's lawnmower; Bxyx: x borrows y from z).,"['Bhgh', 'Bggh', 'Bhlh', 'Bghl', 'Bhlg', 'Blhg', 'Bllg', 'Blgh', 'Bhhg', 'Bglh']",9
+"The study of reality in the broadest sense, an inquiry into the elemental nature of the universe and the things in it, is known as _____.","['quantum physics', 'metaphysics', 'ontology', 'phenomenology', 'cosmology', 'teleology', 'epistemology', 'axiology', 'N/A', 'N/A']",1
+"According to Moore’s “ideal utilitarianism,” the right action is the one that brings about the greatest amount of:","['wealth.', 'virtue.', 'fairness.', 'pleasure.', 'peace.', 'justice.', 'happiness.', 'power.', 'good.', 'knowledge.']",8
+What is the sign of the covenant for Jewish males?,"['Fasting on Yom Kippur', 'Lighting Shabbat candles', 'The rainbow', 'Circumcision', 'The Torah', 'Bar mitzvah', 'Keeping kosher', 'Wearing a kippah', 'A son', 'The Star of David']",3

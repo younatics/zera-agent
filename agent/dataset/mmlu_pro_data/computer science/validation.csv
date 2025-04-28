@@ -1,0 +1,26 @@
+question,choices,answer
+"A certain pipelined RISC machine has 8 general-purpose registers R0, R1, . . . , R7 and supports the following operations:
+ADD Rs1, Rs2, Rd (Add Rs1 to Rs2 and put the sum in Rd)
+MUL Rs1, Rs2, Rd (Multiply Rs1 by Rs2 and put the product in Rd)
+An operation normally takes one cycle; however, an operation takes two cycles if it produces a result required by the immediately following operation in an operation sequence.
+Consider the expression AB + ABC + BC, where variables A, B, C are located in registers R0, R1, R2. If the contents of these three registers must not be modified, what is the minimum number of clock cycles required for an operation sequence that computes the value of AB + ABC + BC?","['10', '6', '9', '5', '12', '4', '7', '8', 'N/A', 'N/A']",1
+"A compiler generates code for the following assignment statement.
+G := (A + B) * C - (D + E) * F
+The target machine has a single accumulator and a single-address instruction set consisting of instructions load, store, add, subtract, and multiply. For the arithmetic operations, the left operand is taken from the accumulator and the result appears in the accumulator. The smallest possible number of instructions in the resulting code is","['7', '5', '12', '4', '11', '6', '8', '10', '9', '3']",8
+SHA-1 has a message digest of,"['628 bits', '780 bits', '160 bits', '256 bits', '2048 bits', '820 bits', '128 bits', '512 bits', '1024 bits', '64 bits']",2
+"_____________ can modify data on your system – so that your system doesn’t run correctly or you can no longer access specific data, or it may even ask for ransom in order to give your access.","['Email Trojans', 'Backdoor Trojans', 'Rootkit Trojans', 'Banking Trojans', 'Trojan-Downloader', 'Spyware Trojans', 'Network Trojans', 'Worm Trojans', 'Ransom Trojan', 'IM – Trojans']",8
+"In the program below, the initial value of X is 5 and the initial value of Y is 10.
+IF (X < 0){
+ DISPLAY (""Foxtrot"")
+} ELSE {
+ IF (X > Y){
+  DISPLAY (""Hotel"")
+ } ELSE {
+  IF (Y > 0){
+   DISPLAY (""November"")
+  } ELSE {
+   DISPLAY (""Yankee"")
+  }
+ }
+}
+What is displayed as a result of running the program?","['November', 'Foxtrot', 'Zulu', 'Alpha', 'Charlie', 'Bravo', 'Yankee', 'Echo', 'Hotel', 'Delta']",0

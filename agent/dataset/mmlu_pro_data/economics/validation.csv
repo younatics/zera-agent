@@ -1,0 +1,12 @@
+question,choices,answer
+"For a stationary autoregressive process, shocks will","['Never occur', 'Persist indefinitely', 'Cause a permanent change in the trend', 'Grow exponentially', 'Only affect the next period', 'Eventually die away', 'Cause the process to become non-stationary', 'Immediately disappear', 'Lead to a cyclical pattern', 'Be balanced out by subsequent shocks']",5
+"Consider the following AR(1) model with the disturbances having zero mean and unit variance
+yt = 0.2 + 0.4 yt-1 + ut
+The (unconditional) mean of y will be given by","['0.45', '0.2', '0.4', '0.1', '0.3', '0.55', '0.25', '0.33', '0.6', '0.5']",7
+"Suppose that a test statistic has associated with it a p-value of 0.08. Which one of the following statements is true?
+(i) If the size of the test were exactly 8%, we would be indifferent between rejecting and not rejecting the null hypothesis
+(ii) The null would be rejected if a 10% size of test were used
+(iii) The null would not be rejected if a 1% size of test were used
+(iv) The null would be rejected if a 5% size of test were used.","['(iii) and (iv) only', '(i) and (iv) only', '(i), (ii), and (iii) only', '(i) and (ii) only', '(i) and (iii) only', '(i), (ii), (iii), and (iv).', '(ii), (iii), and (iv) only', '(ii) and (iii) only', '(ii) and (iv) only', '(i), (iii), and (iv) only']",2
+Which of the following policies best describes supply-side fiscal policy?,"['Higher taxes on household income', 'Increased government spending', 'Increased taxes on corporate profits', 'Increased import tariffs', 'Decreased interest rates', 'Lower taxes on consumer goods', 'Lower taxes on research and development of new technology', 'Reduced government spending', 'Higher taxes on capital gains', 'An increase in the money supply']",6
+The concentration ratio for a monopoly is,"['50', '5', '10', '90', '15', '100', '0', '25', '75', 'N/A']",5

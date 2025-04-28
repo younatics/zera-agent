@@ -1,0 +1,6 @@
+question,choices,answer
+A point pole has a strength of 4π * 10^-4 weber. The force in newtons on a point pole of 4π * 1.5 * 10^-4 weber placed at a distance of 10 cm from it will be,"['25 N.', '12.5 N.', '15 N.', '10 N.', '7.5 N.', '20 N.', '5 N.', '3.75 N.', 'N/A', 'N/A']",2
+"The coil of a moving coil meter has 100 turns, is 40 mm long and 30 mm wide. The control torque is 240*10-6 N-m on full scale. If magnetic flux density is 1Wb/m2 range of meter is","['2 mA.', '5 mA.', '1.5 mA.', '0.5 mA.', '6 mA.', '4 mA.', '3 mA.', '1 mA.', '2.5 mA.', '3.5 mA.']",0
+"In an SR latch built from NOR gates, which condition is not allowed","['S=0, R=2', 'S=2, R=2', 'S=1, R=1', 'S=1, R=-1', 'S=1, R=2', 'S=0, R=0', 'S=2, R=0', 'S=1, R=0', 'S=2, R=1', 'S=0, R=1']",2
+"Two long parallel conductors carry 100 A. If the conductors are separated by 20 mm, the force per meter of length of each conductor will be","['100 N.', '0.01 N.', '10 N.', '0.5 N.', '0.001 N.', '5 N.', '1 N.', '50 N.', '0.1 N.', '0.0001 N.']",8
+"In a 2 pole lap winding dc machine , the resistance of one conductor is 2Ω and total number of conductors is 100. Find the total resistance","['50Ω', '1Ω', '25Ω', '200Ω', '10Ω', '100Ω', '500Ω', '150Ω', '75Ω', '20Ω']",0
