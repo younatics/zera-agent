@@ -19,6 +19,11 @@ class DatasetLoader:
             "split": "test",
             "local_path": "datasets/mmlu/test.json"
         },
+        "mmlu_pro": {
+            "path": "TIGER-Lab/MMLU-Pro",
+            "split": "test",
+            "local_path": "datasets/mmlu_pro/test.json"
+        },
         "bbh": {
             "path": "BAAI/big-bench-hard",
             "split": "test",

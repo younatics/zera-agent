@@ -328,15 +328,19 @@ def process_dataset(data, dataset_type):
     if dataset_type in ["MMLU", "MMLU Pro"]:
         for item in data:
             # 선택지를 문자열로 변환
-            choices_str = "\n".join([f"{i+1}. {choice}" for i, choice in enumerate(item['choices'])])
+            choices_str = "\n".join([f"{chr(65+i)}. {choice}" for i, choice in enumerate(item['choices'])])
             question = f"{item['question']}\n\nChoices:\n{choices_str}"
-            expected = str(item['answer'] + 1)  # 0-based를 1-based로 변환
-            
+            # answer 타입에 따라 expected 처리
+            if isinstance(item['answer'], int):
+                expected = chr(65 + item['answer'])
+            elif isinstance(item['answer'], str) and len(item['answer']) == 1 and item['answer'].isalpha():
+                expected = item['answer']
+            else:
+                expected = item['answer']  # 해설 등 기타 문자열
             test_cases.append({
                 'question': question,
                 'expected': expected
             })
-            
             if len(display_data) < 2000:  # display_data를 2000개로 제한
                 display_data.append({
                     'question': question,

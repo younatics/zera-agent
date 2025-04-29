@@ -8,6 +8,7 @@ import shutil
 import glob
 import json
 import time
+import csv
 
 class MMLUProDataset:
     def __init__(self, base_dir: str = None):
@@ -67,11 +68,15 @@ class MMLUProDataset:
                     if category not in category_data:
                         category_data[category] = []
                     
-                    # 데이터 형식을 MMLU 형식으로 변환
+                    # split에 따라 answer에 저장할 값 결정
+                    if split == 'test':
+                        answer_value = item['answer']
+                    else:  # validation
+                        answer_value = item['cot_content']
                     question_data = {
                         'question': item['question'],
                         'choices': item['options'],
-                        'answer': item['answer_index']  # 0-based index
+                        'answer': answer_value
                     }
                     category_data[category].append(question_data)
                 
@@ -82,8 +87,9 @@ class MMLUProDataset:
                     
                     # DataFrame 생성 및 CSV 저장
                     df = pd.DataFrame(questions)
+                    print(df.head())  # 2단계
                     csv_path = os.path.join(category_dir, f"{split}.csv")
-                    df.to_csv(csv_path, index=False)
+                    df.to_csv(csv_path, index=False, quoting=csv.QUOTE_ALL)
                     print(f"Saved {category}'s {split} data with {len(questions)} questions")
                 
         except Exception as e:
@@ -104,7 +110,7 @@ class MMLUProDataset:
                 raise FileNotFoundError(f"Data file not found: {csv_path}")
             
             # CSV 파일에서 데이터 로드
-            df = pd.read_csv(csv_path)
+            df = pd.read_csv(csv_path, dtype=str)
             data[split] = []
             
             for _, row in df.iterrows():
@@ -113,7 +119,7 @@ class MMLUProDataset:
                 data[split].append({
                     'question': row['question'],
                     'choices': choices,
-                    'answer': row['answer']  # 0-based index
+                    'answer': row['answer']  # cot_content가 answer에 들어감
                 })
         
         return data
@@ -149,6 +155,6 @@ if __name__ == "__main__":
             print("선택지:")
             for i, choice in enumerate(first_example['choices'], 1):
                 print(f"{i}. {choice}")
-            print(f"정답: {first_example['answer'] + 1}")  # 0-based를 1-based로 변환
+            print(f"정답: {first_example['answer']}")  # cot_content가 answer에 들어감
     except ValueError as e:
         print(e) 

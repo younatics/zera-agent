@@ -21,8 +21,3 @@ Evaluate the output comprehensively using all criteria. The expected output is y
 - Base your evaluation strictly on comparison with the expected output
 - Maintain consistent scoring standards across all criteria
 - Support all scores with clear evidence and reasoning
-
-## Critical Notes
-- Focus on the task-specific needs when selecting evaluation criteria.
-- Do not penalize for aspects unrelated to the selected criteria.
-- Ensure consistency and precision in your scoring.
