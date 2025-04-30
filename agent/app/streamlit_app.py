@@ -71,6 +71,7 @@ from agent.dataset.mmlu_pro_dataset import MMLUProDataset
 from agent.dataset.cnn_dataset import CNNDataset
 from agent.dataset.gsm8k_dataset import GSM8KDataset
 from agent.dataset.mbpp_dataset import MBPPDataset
+from agent.dataset.xsum_dataset import XSumDataset
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -100,6 +101,9 @@ with open(os.path.join(prompts_dir, 'meta_user_prompt.txt'), 'r', encoding='utf-
 mmlu_dataset = MMLUDataset()
 # MMLU Pro 데이터셋 인스턴스 생성
 mmlu_pro_dataset = MMLUProDataset()
+
+# XSum 데이터셋 인스턴스 생성 (한 번만 생성)
+xsum_dataset = XSumDataset()
 
 # 사이드바에서 파라미터 설정
 with st.sidebar:
@@ -345,6 +349,18 @@ def process_dataset(data, dataset_type):
                     'question': item['text'],
                     'expected_answer': f"```python\n{item['code']}\n```"
                 })
+    elif dataset_type == "XSum":
+        for item in data:
+            test_cases.append({
+                'question': item['document'],
+                'expected': item['summary']
+            })
+            
+            if len(display_data) < 2000:  # display_data를 2000개로 제한
+                display_data.append({
+                    'question': item['document'][:200] + "...",  # 처음 200자만 표시
+                    'expected_answer': item['summary']
+                })
     elif dataset_type in ["MMLU", "MMLU Pro"]:
         for item in data:
             # 선택지를 문자열로 변환
@@ -424,7 +440,7 @@ def process_dataset(data, dataset_type):
 st.header("Dataset Selection")
 dataset_type = st.radio(
     "Select Dataset Type",
-    ["CSV", "MMLU", "MMLU Pro", "CNN", "GSM8K", "MBPP"],
+    ["CSV", "MMLU", "MMLU Pro", "CNN", "GSM8K", "MBPP", "XSum"],
     horizontal=True
 )
 
@@ -546,6 +562,25 @@ elif dataset_type == "MBPP":
         st.info(f"MBPP {split} 데이터셋: {len(data):,}개 예제")
     except Exception as e:
         st.error(f"MBPP 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.stop()
+elif dataset_type == "XSum":
+    # 이미 생성된 XSumDataset 인스턴스를 사용
+    try:
+        # 데이터셋 선택
+        split = st.selectbox(
+            "데이터셋 선택",
+            ["train", "test", "validation"],  # validation을 validation로 변경
+            index=0
+        )
+        
+        # 데이터 로드
+        data = xsum_dataset.get_split_data(split)
+        test_cases, num_samples = process_dataset(data, "XSum")
+        
+        # 데이터셋 정보 표시
+        st.info(f"XSum {split} 데이터셋: {len(data):,}개 예제")
+    except Exception as e:
+        st.error(f"XSum 데이터셋 로드 중 오류 발생: {str(e)}")
         st.stop()
 elif dataset_type in ["MMLU", "MMLU Pro"]:  # MMLU or MMLU Pro
     # 선택된 데이터셋에 따라 적절한 데이터셋 인스턴스와 과목 리스트 선택
