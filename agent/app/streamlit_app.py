@@ -23,6 +23,10 @@ from pathlib import Path
 st.set_page_config(page_title="Prompt Auto Tuning Agent", layout="wide")
 
 def setup_environment():
+    # 이미 환경이 로드되었는지 확인
+    if hasattr(setup_environment, 'loaded'):
+        return
+    
     # Try to load from different possible locations
     env_paths = [
         '.env',  # Current directory
@@ -51,6 +55,9 @@ def setup_environment():
         st.error(f"Error: Missing required environment variables: {', '.join(missing_vars)}")
         st.error("Please ensure these variables are set in your .env file or environment")
         st.stop()
+    
+    # 환경이 로드되었음을 표시
+    setup_environment.loaded = True
 
 # Call setup at the start
 setup_environment()
