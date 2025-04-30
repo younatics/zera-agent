@@ -63,22 +63,26 @@ class XSumDataset:
 
     def get_split_data(self, split: str) -> List[Dict]:
         """특정 분할의 데이터를 가져옴"""
-        if split not in ['train', 'test', 'validation']:
+        if split not in ['test', 'validation']:  # train 제외
             raise ValueError(f"Invalid split name: {split}")
         
         csv_path = os.path.join(self.data_dir, f"{split}.csv")
         if not os.path.exists(csv_path):
             raise FileNotFoundError(f"Data file not found: {csv_path}")
         
-        # CSV 파일에서 데이터 로드
-        df = pd.read_csv(csv_path)
+        # CSV 파일에서 데이터 로드 (데이터 타입 명시)
+        df = pd.read_csv(csv_path, dtype={
+            'document': str,
+            'summary': str,
+            'id': str
+        })
         data = []
         
         for _, row in df.iterrows():
             data.append({
-                'document': row['document'],
-                'summary': row['summary'],
-                'id': row['id']
+                'document': str(row['document']),
+                'summary': str(row['summary']),
+                'id': str(row['id'])
             })
         
         return data

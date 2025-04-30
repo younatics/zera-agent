@@ -566,10 +566,10 @@ elif dataset_type == "MBPP":
 elif dataset_type == "XSum":
     # 이미 생성된 XSumDataset 인스턴스를 사용
     try:
-        # 데이터셋 선택
+        # 데이터셋 선택 (train 제외)
         split = st.selectbox(
             "데이터셋 선택",
-            ["train", "test", "validation"],  # validation을 validation로 변경
+            ["test", "validation"],  # train 제외
             index=0
         )
         
