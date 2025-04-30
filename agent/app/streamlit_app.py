@@ -73,6 +73,7 @@ from agent.dataset.gsm8k_dataset import GSM8KDataset
 from agent.dataset.mbpp_dataset import MBPPDataset
 from agent.dataset.xsum_dataset import XSumDataset
 from agent.dataset.bbh_dataset import BBHDataset
+from agent.dataset.truthfulqa_dataset import TruthfulQADataset
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -107,6 +108,8 @@ mmlu_pro_dataset = MMLUProDataset()
 xsum_dataset = XSumDataset()
 # BBH 데이터셋 인스턴스 생성 (한 번만 생성)
 bbh_dataset = BBHDataset()
+# TruthfulQA 데이터셋 인스턴스 생성 (한 번만 생성)
+truthfulqa_dataset = TruthfulQADataset()
 
 # 사이드바에서 파라미터 설정
 with st.sidebar:
@@ -444,6 +447,18 @@ def process_dataset(data, dataset_type):
                     'question': item['question'],
                     'expected_answer': item['answer']
                 })
+    elif dataset_type == "TruthfulQA":
+        for item in data:
+            test_cases.append({
+                'question': item['input'],
+                'expected': item['target']
+            })
+            
+            if len(display_data) < 2000:  # display_data를 2000개로 제한
+                display_data.append({
+                    'question': item['input'],
+                    'expected_answer': item['target']
+                })
     
     # 전체 데이터 표시
     st.write("데이터셋 내용:")
@@ -455,7 +470,7 @@ def process_dataset(data, dataset_type):
 st.header("Dataset Selection")
 dataset_type = st.radio(
     "Select Dataset Type",
-    ["CSV", "MMLU", "MMLU Pro", "CNN", "GSM8K", "MBPP", "XSum", "BBH"],
+    ["CSV", "MMLU", "MMLU Pro", "CNN", "GSM8K", "MBPP", "XSum", "BBH", "TruthfulQA"],
     horizontal=True
 )
 
@@ -608,6 +623,18 @@ elif dataset_type == "BBH":
         st.info(f"BBH 테스트 데이터셋: {len(data):,}개 예제")
     except Exception as e:
         st.error(f"BBH 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.stop()
+elif dataset_type == "TruthfulQA":
+    # 이미 생성된 TruthfulQADataset 인스턴스를 사용
+    try:
+        # 데이터 로드
+        data = truthfulqa_dataset.get_split_data("test")
+        test_cases, num_samples = process_dataset(data, "TruthfulQA")
+        
+        # 데이터셋 정보 표시
+        st.info(f"TruthfulQA 테스트 데이터셋: {len(data):,}개 예제")
+    except Exception as e:
+        st.error(f"TruthfulQA 데이터셋 로드 중 오류 발생: {str(e)}")
         st.stop()
 elif dataset_type in ["MMLU", "MMLU Pro"]:  # MMLU or MMLU Pro
     # 선택된 데이터셋에 따라 적절한 데이터셋 인스턴스와 과목 리스트 선택
