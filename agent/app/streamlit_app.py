@@ -63,6 +63,7 @@ from agent.dataset.mmlu_dataset import MMLUDataset
 from agent.dataset.mmlu_pro_dataset import MMLUProDataset
 from agent.dataset.cnn_dataset import CNNDataset
 from agent.dataset.gsm8k_dataset import GSM8KDataset
+from agent.dataset.mbpp_dataset import MBPPDataset
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -325,7 +326,19 @@ def process_dataset(data, dataset_type):
     test_cases = []
     display_data = []
     
-    if dataset_type in ["MMLU", "MMLU Pro"]:
+    if dataset_type == "MBPP":
+        for item in data:
+            test_cases.append({
+                'question': item['text'],
+                'expected': item['code']
+            })
+            
+            if len(display_data) < 2000:  # display_data를 2000개로 제한
+                display_data.append({
+                    'question': item['text'],
+                    'expected_answer': f"```python\n{item['code']}\n```"
+                })
+    elif dataset_type in ["MMLU", "MMLU Pro"]:
         for item in data:
             # 선택지를 문자열로 변환
             choices_str = "\n".join([f"{chr(65+i)}. {choice}" for i, choice in enumerate(item['choices'])])
@@ -404,7 +417,7 @@ def process_dataset(data, dataset_type):
 st.header("Dataset Selection")
 dataset_type = st.radio(
     "Select Dataset Type",
-    ["CSV", "MMLU", "MMLU Pro", "CNN", "GSM8K"],
+    ["CSV", "MMLU", "MMLU Pro", "CNN", "GSM8K", "MBPP"],
     horizontal=True
 )
 
@@ -505,6 +518,27 @@ elif dataset_type == "GSM8K":
         st.info(f"GSM8K {split} 데이터셋: {len(data):,}개 예제")
     except Exception as e:
         st.error(f"GSM8K 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.stop()
+elif dataset_type == "MBPP":
+    # MBPP 데이터셋 인스턴스 생성
+    mbpp_dataset = MBPPDataset()
+    
+    # 데이터셋 선택
+    split = st.selectbox(
+        "데이터셋 선택",
+        ["train", "test", "validation"],
+        index=1  # test를 기본값으로 설정
+    )
+    
+    try:
+        # 데이터 로드
+        data = mbpp_dataset.get_split_data(split)
+        test_cases, num_samples = process_dataset(data, "MBPP")
+        
+        # 데이터셋 정보 표시
+        st.info(f"MBPP {split} 데이터셋: {len(data):,}개 예제")
+    except Exception as e:
+        st.error(f"MBPP 데이터셋 로드 중 오류 발생: {str(e)}")
         st.stop()
 elif dataset_type in ["MMLU", "MMLU Pro"]:  # MMLU or MMLU Pro
     # 선택된 데이터셋에 따라 적절한 데이터셋 인스턴스와 과목 리스트 선택
