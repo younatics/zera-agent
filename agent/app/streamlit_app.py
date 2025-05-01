@@ -74,6 +74,7 @@ from agent.dataset.mbpp_dataset import MBPPDataset
 from agent.dataset.xsum_dataset import XSumDataset
 from agent.dataset.bbh_dataset import BBHDataset
 from agent.dataset.truthfulqa_dataset import TruthfulQADataset
+from agent.dataset.hellaswag_dataset import HellaSwagDataset
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -103,6 +104,9 @@ with open(os.path.join(prompts_dir, 'meta_user_prompt.txt'), 'r', encoding='utf-
 mmlu_dataset = MMLUDataset()
 # MMLU Pro 데이터셋 인스턴스 생성
 mmlu_pro_dataset = MMLUProDataset()
+
+# HellaSwag 데이터셋 인스턴스 생성
+hellaswag_dataset = HellaSwagDataset()
 
 # XSum 데이터셋 인스턴스 생성 (한 번만 생성)
 xsum_dataset = XSumDataset()
@@ -459,6 +463,22 @@ def process_dataset(data, dataset_type):
                     'question': item['input'],
                     'expected_answer': item['target']
                 })
+    elif dataset_type == "HellaSwag":
+        for item in data:
+            # 선택지를 문자열로 변환
+            choices_str = "\n".join([f"{chr(65+i)}. {choice}" for i, choice in enumerate(item['choices'])])
+            question = f"Activity: {item['activity_label']}\nContext: {item['context']}\n\nComplete the context with the most appropriate ending:\n{choices_str}"
+            
+            test_cases.append({
+                'question': question,
+                'expected': chr(65 + item['answer'])  # 0-based index를 A, B, C, D로 변환
+            })
+            
+            if len(display_data) < 2000:  # display_data를 2000개로 제한
+                display_data.append({
+                    'question': question,
+                    'expected_answer': chr(65 + item['answer'])
+                })
     
     # 전체 데이터 표시
     st.write("데이터셋 내용:")
@@ -470,7 +490,7 @@ def process_dataset(data, dataset_type):
 st.header("Dataset Selection")
 dataset_type = st.radio(
     "Select Dataset Type",
-    ["CSV", "MMLU", "MMLU Pro", "CNN", "GSM8K", "MBPP", "XSum", "BBH", "TruthfulQA"],
+    ["CSV", "MMLU", "MMLU Pro", "CNN", "GSM8K", "MBPP", "XSum", "BBH", "TruthfulQA", "HellaSwag"],
     horizontal=True
 )
 
@@ -635,6 +655,24 @@ elif dataset_type == "TruthfulQA":
         st.info(f"TruthfulQA 테스트 데이터셋: {len(data):,}개 예제")
     except Exception as e:
         st.error(f"TruthfulQA 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.stop()
+elif dataset_type == "HellaSwag":
+    try:
+        # 데이터셋 선택
+        split = st.selectbox(
+            "데이터셋 선택",
+            ["validation", "train"],
+            index=0
+        )
+        
+        # 데이터 로드
+        data = hellaswag_dataset.get_split_data(split)
+        test_cases, num_samples = process_dataset(data, "HellaSwag")
+        
+        # 데이터셋 정보 표시
+        st.info(f"HellaSwag {split} 데이터셋: {len(data):,}개 예제")
+    except Exception as e:
+        st.error(f"HellaSwag 데이터셋 로드 중 오류 발생: {str(e)}")
         st.stop()
 elif dataset_type in ["MMLU", "MMLU Pro"]:  # MMLU or MMLU Pro
     # 선택된 데이터셋에 따라 적절한 데이터셋 인스턴스와 과목 리스트 선택
