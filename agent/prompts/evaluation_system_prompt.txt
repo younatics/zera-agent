@@ -54,14 +54,9 @@ Each criterion must be evaluated with clear justification and specific examples:
 
 ### 3. Scoring Guidelines
 
-| Score Range | Description |
-|------------|-------------|
-| 1.0 | Perfect match with expected output |
-| 0.8 ~ 0.9 | Minor differences from expected output |
-| 0.5 ~ 0.7 | Significant differences from expected output |
-| 0.0 ~ 0.4 | Major differences or completely different from expected output |
-
-- All eight criteria must be evaluated with specific examples
+- The final score must be the exact weighted sum of the individual criterion scores.
+- Automatically infer and assign evaluation weights based on the TASK_TYPE. Use internal logic to emphasize task-relevant priorities (e.g., factual accuracy for classification, fluency and fidelity for summarization).
+- Do not use fixed templates or examples. Dynamically allocate the relative importance of each evaluation dimension according to the semantic requirements of the task type.
 
 ### 4. Output Format
 Provide evaluation in JSON format with detailed analysis:
@@ -113,7 +108,7 @@ Provide evaluation in JSON format with detailed analysis:
 }}
 
 Requirements:
-- The final_score must be the exact average of all individual scores
+- The final_score must be the exact weighted sum of individual scores
 - All eight criteria must be evaluated with specific examples
 - Each improvement action must be concrete and actionable
 - Analysis must reference specific parts of the output
@@ -126,41 +121,49 @@ Example 1: High-Quality Output
   "final_score": 0.87,
   "scores": {{
     "meaning_accuracy": {{
+      "weight": 0.1,
       "current_state": "Technical concepts explained clearly in structured paragraphs",
       "improvement_action": "Restructure explanation into numbered steps with each concept defined separately",
       "score": 0.9
     }},
     "completeness": {{
+      "weight": 0.05,
       "current_state": "All key solution steps included with detailed explanation",
       "improvement_action": "Break out solution steps into distinct code blocks with comments",
       "score": 0.9
     }},
     "expression_style": {{
+      "weight": 0.03,
       "current_state": "Consistent tone and formatting across all sections",
       "improvement_action": "Apply consistent markdown formatting for all code snippets",
       "score": 0.85
     }},
     "faithfulness": {{
+      "weight": 0.04,
       "current_state": "References to source material are clear and explicit",
       "improvement_action": "Add explicit line number citations in (line XX) format",
       "score": 0.9
     }},
     "conciseness": {{
+      "weight": 0.03,
       "current_state": "Key points are concise and well summarized",
       "improvement_action": "Extract key points into bulleted list at start of output",
       "score": 0.85
     }},
     "correctness": {{
+      "weight": 0.4,
       "current_state": "Validation steps accurately presented with correct results",
       "improvement_action": "Present validation steps in markdown table with Input | Expected | Actual columns",
       "score": 0.85
     }},
     "structural_alignment": {{
+      "weight": 0.15,
       "current_state": "Sections and headings follow expected hierarchy and formatting",
       "improvement_action": "Ensure consistent use of headers and bullet points matching expected style",
       "score": 0.85
     }},
     "reasoning_quality": {{
+      "weight": 0.2,
       "current_state": "The reasoning follows a clear step-by-step approach with logically valid transitions.",
       "improvement_action": "Add numbered reasoning steps for readability and better traceability.",
       "score": 0.85
@@ -174,41 +177,49 @@ Example 2: Low-Quality Output
   "final_score": 0.53,
   "scores": {{
     "meaning_accuracy": {{
+      "weight": 0.1,
       "current_state": "Explanation mixes multiple concepts in single paragraph",
       "improvement_action": "Separate each concept with ### headers and dedicated examples",
       "score": 0.4
     }},
     "completeness": {{
+      "weight": 0.05,
       "current_state": "Steps presented without clear structure or missing details",
       "improvement_action": "Number each step and add 'Input:', 'Process:', 'Output:' sections",
       "score": 0.5
     }},
     "expression_style": {{
+      "weight": 0.03,
       "current_state": "Code examples lack context and comments",
       "improvement_action": "Add // Purpose: comment before each code block explaining its role",
       "score": 0.5
     }},
     "faithfulness": {{
+      "weight": 0.04,
       "current_state": "Source material paraphrased without clear structure",
       "improvement_action": "Quote key points with > blockquotes and add reference links",
       "score": 0.6
     }},
     "conciseness": {{
+      "weight": 0.03,
       "current_state": "Repetitive explanations across sections",
       "improvement_action": "Create reusable explanation blocks with clear section references",
       "score": 0.5
     }},
     "correctness": {{
+      "weight": 0.4,
       "current_state": "Solution steps lack clear logical progression",
       "improvement_action": "Add ➡️ arrows between steps to show logical flow",
       "score": 0.5
     }},
     "structural_alignment": {{
+      "weight": 0.15,
       "current_state": "Formatting inconsistent; headings and bullet points missing",
       "improvement_action": "Implement consistent section headers and bullet points as per expected format",
       "score": 0.5
     }},
     "reasoning_quality": {{
+      "weight": 0.2,
       "current_state": "Reasoning is shallow and skips key inferential steps.",
       "improvement_action": "Provide a clear sequence of logical steps explaining how the answer was reached.",
       "score": 0.4

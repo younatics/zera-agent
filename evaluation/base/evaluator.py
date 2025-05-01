@@ -13,23 +13,27 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class BaseEvaluator(ABC):
-    def __init__(self, model_name: str, model_version: str, temperature: float = 0.7, top_p: float = 0.9):
+    def __init__(self, model_name: str, model_version: str, temperature: float = None, top_p: float = None):
         """
         평가기를 초기화합니다.
         
         Args:
             model_name: 사용할 모델의 이름
             model_version: 사용할 모델의 버전
-            temperature: 모델의 temperature 값 (기본값: 0.7)
-            top_p: 모델의 top_p 값 (기본값: 0.9)
+            temperature: 모델의 temperature 값 (선택사항)
+            top_p: 모델의 top_p 값 (선택사항)
         """
         self.model_name = model_name
         self.model_version = model_version
         self.model = Model(model_name).set_version(model_version)
-        self.model.set_temperature(temperature)
-        self.model.set_top_p(top_p)
-        self.temperature = temperature
-        self.top_p = top_p
+        
+        # temperature와 top_p가 제공된 경우에만 설정
+        if temperature is not None:
+            self.model.set_temperature(temperature)
+            self.temperature = temperature
+        if top_p is not None:
+            self.model.set_top_p(top_p)
+            self.top_p = top_p
 
         self.results_dir = Path("evaluation/results")
         self.results_dir.mkdir(parents=True, exist_ok=True)

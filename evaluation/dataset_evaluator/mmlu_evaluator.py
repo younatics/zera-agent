@@ -50,12 +50,28 @@ class MMLUEvaluator(BaseEvaluator):
     
     def evaluate_response(self, response: str, ground_truth: Dict[str, Any]) -> bool:
         """MMLU 응답을 평가합니다."""
-        # 응답에서 첫 번째 알파벳 추출 (정규식 사용)
-        match = re.match(r'^([A-D])', response.strip().upper())
-        if not match:
-            return False
+        response_clean = response.strip().upper()
+        
+        # 괄호 안에 있는 알파벳(A~D) 우선 추출
+        match = re.search(r'\(([A-D])\)', response_clean)
+        if match:
+            model_answer = match.group(1)
+        else:
+            # "final answer:" 또는 "the answer is" 패턴 검색
+            match = re.search(r'(?:FINAL|THE)\s+ANSWER(?:\s+IS)?[:\s]*([A-D])', response_clean)
+            if not match:
+                # 첫 번째 알파벳 추출 (기존 방식)
+                match = re.match(r'^([A-D])', response_clean)
+            if not match:
+                # 마지막에 등장하는 한 글자 알파벳 추출 (A~D)
+                matches = re.findall(r'([A-D])', response_clean)
+                if matches:
+                    model_answer = matches[-1]
+                else:
+                    return False
+            else:
+                model_answer = match.group(1)
             
-        model_answer = match.group(1)  # 'A', 'B', 'C', 'D'
         correct_answer = chr(65 + ground_truth['answer'])  # 0->A, 1->B, 2->C, 3->D
         
         print(f"모델 답변: {model_answer}, 정답: {correct_answer}")  # 디버깅용
