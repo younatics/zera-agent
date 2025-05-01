@@ -39,6 +39,30 @@ def setup_environment():
 # Call setup at import time
 setup_environment()
 
+def run_single_evaluation(evaluator, dataset, system_prompt, user_prompt, num_samples, sample_indices=None):
+    results = evaluator.run_evaluation(
+        dataset,
+        system_prompt,
+        user_prompt,
+        num_samples,
+        sample_indices=sample_indices
+    )
+    return results
+
+def print_evaluation_results(results, prompt_type=""):
+    print(f"\n{prompt_type} 평가 결과:")
+    print(f"총 샘플 수: {results['total']}")
+    print(f"정답 수: {results['correct']}")
+    print(f"정확도: {results['accuracy']:.2%}")
+    
+    if "rouge_scores" in results:
+        print(f"\n{prompt_type} ROUGE 점수 (평균):")
+        for metric, scores in results["rouge_scores"].items():
+            print(f"  {metric}:")
+            print(f"    F1: {scores['f']:.3f}")
+    
+    return results['accuracy']
+
 def main(args=None):
     if args is None:
         parser = argparse.ArgumentParser(description="LLM 평가 스크립트")
@@ -49,12 +73,20 @@ def main(args=None):
                           help="사용할 모델 (기본값: gpt4o)")
         parser.add_argument("--model_version", type=str, default="gpt-3.5-turbo",
                           help="모델 버전 (기본값: gpt-3.5-turbo)")
-        parser.add_argument("--system_prompt", type=str,
-                          help="시스템 프롬프트")
-        parser.add_argument("--user_prompt", type=str,
-                          help="유저 프롬프트")
+        parser.add_argument("--base_system_prompt", type=str,
+                          help="기존 시스템 프롬프트")
+        parser.add_argument("--base_user_prompt", type=str,
+                          help="기존 유저 프롬프트")
+        parser.add_argument("--zera_system_prompt", type=str,
+                          help="제라 시스템 프롬프트")
+        parser.add_argument("--zera_user_prompt", type=str,
+                          help="제라 유저 프롬프트")
         parser.add_argument("--num_samples", type=int, default=10,
                           help="평가할 샘플 수 (기본값: 10)")
+        parser.add_argument("--temperature", type=float, default=0.7,
+                          help="모델의 temperature 값 (기본값: 0.7)")
+        parser.add_argument("--top_p", type=float, default=0.9,
+                          help="모델의 top_p 값 (기본값: 0.9)")
         
         args = parser.parse_args()
     
@@ -70,27 +102,44 @@ def main(args=None):
     }
     
     evaluator_class = evaluators[args.dataset]
-    evaluator = evaluator_class(args.model, args.model_version)
+    evaluator = evaluator_class(args.model, args.model_version, args.temperature, args.top_p)
     
-    # 평가 실행
-    results = evaluator.run_evaluation(
+    # 첫 번째 평가에서 사용할 샘플 인덱스 생성
+    sample_indices = evaluator.get_sample_indices(args.num_samples)
+    
+    # 기존 프롬프트로 평가 실행
+    base_results = run_single_evaluation(
+        evaluator,
         args.dataset,
-        args.system_prompt,
-        args.user_prompt,
-        args.num_samples
+        args.base_system_prompt,
+        args.base_user_prompt,
+        args.num_samples,
+        sample_indices
     )
+    base_accuracy = print_evaluation_results(base_results, "기존 프롬프트")
     
-    print(f"\n평가 결과:")
-    print(f"총 샘플 수: {results['total']}")
-    print(f"정답 수: {results['correct']}")
-    print(f"정확도: {results['accuracy']:.2%}")
+    # 제라 프롬프트로 평가 실행
+    zera_results = run_single_evaluation(
+        evaluator,
+        args.dataset,
+        args.zera_system_prompt,
+        args.zera_user_prompt,
+        args.num_samples,
+        sample_indices
+    )
+    zera_accuracy = print_evaluation_results(zera_results, "제라 프롬프트")
     
-    # ROUGE 점수 출력
-    if "rouge_scores" in results:
-        print("\nROUGE 점수 (평균):")
-        for metric, scores in results["rouge_scores"].items():
-            print(f"  {metric}:")
-            print(f"    F1: {scores['f']:.3f}")
+    # 비교 결과 출력
+    print("\n=== 최종 비교 결과 ===")
+    print(f"기존 프롬프트 정확도: {base_accuracy:.2%}")
+    print(f"제라 프롬프트 정확도: {zera_accuracy:.2%}")
+    print(f"정확도 차이 (제라 - 기존): {(zera_accuracy - base_accuracy):.2%}")
+    
+    if "rouge_scores" in base_results and "rouge_scores" in zera_results:
+        print("\nROUGE 점수 차이 (제라 - 기존):")
+        for metric in base_results["rouge_scores"].keys():
+            diff = zera_results["rouge_scores"][metric]["f"] - base_results["rouge_scores"][metric]["f"]
+            print(f"  {metric} F1 차이: {diff:.3f}")
 
 if __name__ == "__main__":
     main() 

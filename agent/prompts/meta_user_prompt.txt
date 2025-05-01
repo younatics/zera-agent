@@ -35,6 +35,7 @@ Current User Prompt:
     - Encourage free, logical reasoning during the main solution phase
     - Consider and apply the required output structure only at the final improvement
     - Keep the prompt short, clear, and non-burdensome
+    - Include an example if it helps clarify expected output patterns or structural constraints
 - If evaluation scores stagnate, prioritize simplifying prompts and reinforcing the separation between reasoning and formatting.
 - Instead of mimicking the expected output, extract its intent by applying our core evaluation criteria and use these insights to guide prompt improvement.
 
