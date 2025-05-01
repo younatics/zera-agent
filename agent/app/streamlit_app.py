@@ -75,6 +75,7 @@ from agent.dataset.xsum_dataset import XSumDataset
 from agent.dataset.bbh_dataset import BBHDataset
 from agent.dataset.truthfulqa_dataset import TruthfulQADataset
 from agent.dataset.hellaswag_dataset import HellaSwagDataset
+from agent.dataset.humaneval_dataset import HumanEvalDataset
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -107,6 +108,9 @@ mmlu_pro_dataset = MMLUProDataset()
 
 # HellaSwag 데이터셋 인스턴스 생성
 hellaswag_dataset = HellaSwagDataset()
+
+# HumanEval 데이터셋 인스턴스 생성
+humaneval_dataset = HumanEvalDataset()
 
 # XSum 데이터셋 인스턴스 생성 (한 번만 생성)
 xsum_dataset = XSumDataset()
@@ -479,6 +483,18 @@ def process_dataset(data, dataset_type):
                     'question': question,
                     'expected_answer': chr(65 + item['answer'])
                 })
+    elif dataset_type == "HumanEval":
+        for item in data:
+            test_cases.append({
+                'question': item['prompt'],
+                'expected': item['canonical_solution']
+            })
+            
+            if len(display_data) < 2000:  # display_data를 2000개로 제한
+                display_data.append({
+                    'question': item['prompt'],
+                    'expected_answer': item['canonical_solution']
+                })
     
     # 전체 데이터 표시
     st.write("데이터셋 내용:")
@@ -490,7 +506,7 @@ def process_dataset(data, dataset_type):
 st.header("Dataset Selection")
 dataset_type = st.radio(
     "Select Dataset Type",
-    ["CSV", "MMLU", "MMLU Pro", "CNN", "GSM8K", "MBPP", "XSum", "BBH", "TruthfulQA", "HellaSwag"],
+    ["CSV", "MMLU", "MMLU Pro", "CNN", "GSM8K", "MBPP", "XSum", "BBH", "TruthfulQA", "HellaSwag", "HumanEval"],
     horizontal=True
 )
 
@@ -673,6 +689,17 @@ elif dataset_type == "HellaSwag":
         st.info(f"HellaSwag {split} 데이터셋: {len(data):,}개 예제")
     except Exception as e:
         st.error(f"HellaSwag 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.stop()
+elif dataset_type == "HumanEval":
+    try:
+        # HumanEval은 test split만 있음
+        data = humaneval_dataset.get_split_data("test")
+        test_cases, num_samples = process_dataset(data, "HumanEval")
+        
+        # 데이터셋 정보 표시
+        st.info(f"HumanEval 테스트 데이터셋: {len(data):,}개 예제")
+    except Exception as e:
+        st.error(f"HumanEval 데이터셋 로드 중 오류 발생: {str(e)}")
         st.stop()
 elif dataset_type in ["MMLU", "MMLU Pro"]:  # MMLU or MMLU Pro
     # 선택된 데이터셋에 따라 적절한 데이터셋 인스턴스와 과목 리스트 선택
