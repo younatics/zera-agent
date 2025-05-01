@@ -35,7 +35,8 @@ Current User Prompt:
     - Encourage free, logical reasoning during the main solution phase
     - Consider and apply the required output structure only at the final improvement
     - Keep the prompt short, clear, and non-burdensome
-    - Include an example if it helps clarify expected output patterns or structural constraints
+    - Based on the task type and recent performance, determine whether the USER_PROMPT should emphasize free-form reasoning, output formatting, or a balance of both. If examples can help clarify output structure or improve model performance, insert them directly into the USER_PROMPT—not in the instructions. Let the model decide how many examples are appropriate based on the task characteristics and observed performance patterns. Avoid imposing rigid heuristics—adapt dynamically to the context.
+
 - If evaluation scores stagnate, prioritize simplifying prompts and reinforcing the separation between reasoning and formatting.
 - Instead of mimicking the expected output, extract its intent by applying our core evaluation criteria and use these insights to guide prompt improvement.
 
@@ -50,4 +51,4 @@ SYSTEM_PROMPT:
 [Optimized system prompt]
 
 USER_PROMPT:
-[Optimized user prompt]
+[Optimized user prompt that clearly guides the model’s behavior, with examples or format cues if appropriate. Style and structure should reflect the task’s reasoning depth, format sensitivity, and output clarity needs.]

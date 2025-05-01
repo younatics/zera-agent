@@ -839,7 +839,8 @@ class ResultsDisplay:
             'faithfulness': [],
             'conciseness': [],
             'correctness': [],
-            'structural_alignment': []
+            'structural_alignment': [],
+            'reasoning_quality': []
         }
         
         for result in results:
