@@ -14,7 +14,7 @@ Review these cases carefully:
 - Check whether the prompts allow free-form reasoning without early formatting constraints.
 - Check if formatting is enforced only at the final answer presentation.
 - Identify if the prompts are unnecessarily verbose or over-constrained.
-- Study the Expected Output examples to infer the minimum necessary structural patterns.
+- Study the Expected Output cases to infer the necessary structural patterns.
 - Extract generalizable rules for brevity, clarity, and minimal instruction sets.
 
 ## 3. PROMPT REVIEW
@@ -36,6 +36,7 @@ Current User Prompt:
     - Consider and apply the required output structure only at the final improvement
     - Keep the prompt short, clear, and non-burdensome
 - If evaluation scores stagnate, prioritize simplifying prompts and reinforcing the separation between reasoning and formatting.
+- Instead of mimicking the expected output, extract its intent by applying our core evaluation criteria and use these insights to guide prompt improvement.
 
 ## 5. OUTPUT FORMAT
 TASK_TYPE:
