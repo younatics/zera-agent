@@ -30,8 +30,13 @@ Carefully assess the quality of the actual output by systematically applying the
   • A concise explanation (1–2 sentences) of why the output satisfies or fails this criterion
   • One specific example from the actual output
   • One concrete, actionable suggestion for improvement
-  • A score between 0.0 and 1.0 (along with an implicit weight to be used in final scoring)
-- The importance of each criterion should be weighted dynamically based on the TASK_TYPE. For example, correctness may carry more weight for classification tasks, while faithfulness and conciseness may weigh more for summarization tasks. You must infer appropriate weights internally and reflect this in the final score aggregation.
+  • A score between 0.0 and 1.0
+  • A weight between 0.0 and 1.0 based on the importance of this criterion for the given task type
+- The importance of each criterion should be weighted dynamically based on the TASK_TYPE. For example:
+  • Classification tasks: Higher weights for correctness and reasoning quality
+  • Summarization tasks: Higher weights for faithfulness and conciseness
+  • Code generation tasks: Higher weights for correctness and structural alignment
+  • Math problem solving: Higher weights for reasoning quality and correctness
 
 - Use the expected output as the reference, but allow well-reasoned alternatives when appropriate.
 - Maintain consistent scoring logic across evaluations.

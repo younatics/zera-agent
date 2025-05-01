@@ -848,17 +848,21 @@ class ResultsDisplay:
         
         for result in results:
             iteration_category_scores = {category: [] for category in category_scores.keys()}
+            iteration_category_weights = {category: [] for category in category_scores.keys()}  # 각 이터레이션의 가중치
             
             for test_case in result.test_case_results:
                 if test_case.evaluation_details and 'category_scores' in test_case.evaluation_details:
                     for category, details in test_case.evaluation_details['category_scores'].items():
                         if category in iteration_category_scores:
                             iteration_category_scores[category].append(details['score'])
+                            iteration_category_weights[category].append(details.get('weight', 0.5))  # 가중치 추가
             
-            # 각 카테고리의 평균 점수 추가
+            # 각 카테고리의 평균 점수와 가중치 추가
             for category in category_scores:
                 scores = iteration_category_scores[category]
+                weights = iteration_category_weights[category]
                 avg_score = np.mean(scores) if scores else 0
+                avg_weight = np.mean(weights) if weights else 0.5
                 category_scores[category].append(avg_score)
         
         # 통합 그래프 생성
@@ -882,7 +886,6 @@ class ResultsDisplay:
             line=dict(color='blue', width=2)
         ))
         
-        # 표준편차를 별도의 선으로 표시
         fig.add_trace(go.Scatter(
             x=x_values,
             y=std_devs,
@@ -972,6 +975,36 @@ class ResultsDisplay:
                         st.markdown("### User Prompt")
                         st.code(iteration_result.user_prompt, language="text")
                 
+                # 가중치 점수 expander 추가
+                with st.expander("현재 가중치 점수 보기", expanded=False):
+                    # 가중치 데이터 수집
+                    weight_data = []
+                    for test_case in iteration_result.test_case_results:
+                        if test_case.evaluation_details and 'category_scores' in test_case.evaluation_details:
+                            for category, details in test_case.evaluation_details['category_scores'].items():
+                                weight = details.get('weight', 0.5)
+                                weight_data.append({
+                                    'Category': category,
+                                    'Weight': weight
+                                })
+                    
+                    if weight_data:
+                        # 카테고리별 평균 가중치 계산
+                        df = pd.DataFrame(weight_data)
+                        avg_weights = df.groupby('Category')['Weight'].mean().round(3)
+                        avg_weights = avg_weights.reset_index()
+                        avg_weights.columns = ['Category', 'Average Weight']
+                        
+                        # 데이터프레임 스타일링
+                        def highlight_weights(val):
+                            color = f'background-color: rgba(255, 99, 71, {val})'
+                            return color
+                        
+                        # 스타일이 적용된 데이터프레임 표시
+                        st.write("Category Weights:")
+                        styled_df = avg_weights.style.apply(lambda x: [highlight_weights(v) for v in x], subset=['Average Weight'])
+                        st.dataframe(styled_df, use_container_width=True)
+                
                 # 출력 결과를 데이터프레임으로 변환
                 outputs_data = []
                 for i, test_case in enumerate(iteration_result.test_case_results):
@@ -988,6 +1021,7 @@ class ResultsDisplay:
                     if test_case.evaluation_details and 'category_scores' in test_case.evaluation_details:
                         for category, details in test_case.evaluation_details['category_scores'].items():
                             row[f"{category} Score"] = f"{details['score']:.2f}"
+                            row[f"{category} Weight"] = f"{details.get('weight', 1.0):.2f}"  # 가중치 표시 추가
                             row[f"{category} State"] = details['current_state']
                             row[f"{category} Action"] = details['improvement_action']
                     

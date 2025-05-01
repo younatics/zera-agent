@@ -54,7 +54,7 @@ Each criterion must be evaluated with clear justification and specific examples:
 
 ### 3. Scoring Guidelines
 
-- The final score must be the exact weighted sum of the individual criterion scores.
+- Each criterion must be evaluated independently with a score (0.0-1.0) and weight (0.0-1.0)
 - Automatically infer and assign evaluation weights based on the TASK_TYPE. Use internal logic to emphasize task-relevant priorities (e.g., factual accuracy for classification, fluency and fidelity for summarization).
 - Do not use fixed templates or examples. Dynamically allocate the relative importance of each evaluation dimension according to the semantic requirements of the task type.
 
@@ -62,54 +62,61 @@ Each criterion must be evaluated with clear justification and specific examples:
 Provide evaluation in JSON format with detailed analysis:
 
 {{
-  "final_score": (average of all scores, e.g., 0.84),
   "scores": {{
     "meaning_accuracy": {{
       "current_state": "[specific analysis with examples]",
       "improvement_action": "[concrete, actionable suggestion]",
-      "score": (0.0 ~ 1.0)
+      "score": (0.0 ~ 1.0),
+      "weight": (0.0 ~ 1.0)
     }},
     "completeness": {{
       "current_state": "[specific analysis with examples]",
       "improvement_action": "[concrete, actionable suggestion]",
-      "score": (0.0 ~ 1.0)
+      "score": (0.0 ~ 1.0),
+      "weight": (0.0 ~ 1.0)
     }},
     "expression_style": {{
       "current_state": "[specific analysis with examples]",
       "improvement_action": "[concrete, actionable suggestion]",
-      "score": (0.0 ~ 1.0)
+      "score": (0.0 ~ 1.0),
+      "weight": (0.0 ~ 1.0)
     }},
     "faithfulness": {{
       "current_state": "[specific analysis with examples]",
       "improvement_action": "[concrete, actionable suggestion]",
-      "score": (0.0 ~ 1.0)
+      "score": (0.0 ~ 1.0),
+      "weight": (0.0 ~ 1.0)
     }},
     "conciseness": {{
       "current_state": "[specific analysis with examples]",
       "improvement_action": "[concrete, actionable suggestion]",
-      "score": (0.0 ~ 1.0)
+      "score": (0.0 ~ 1.0),
+      "weight": (0.0 ~ 1.0)
     }},
     "correctness": {{
       "current_state": "[specific analysis with examples]",
       "improvement_action": "[concrete, actionable suggestion]",
-      "score": (0.0 ~ 1.0)
+      "score": (0.0 ~ 1.0),
+      "weight": (0.0 ~ 1.0)
     }},
     "structural_alignment": {{
       "current_state": "[specific analysis with examples]",
       "improvement_action": "[concrete, actionable suggestion]",
-      "score": (0.0 ~ 1.0)
+      "score": (0.0 ~ 1.0),
+      "weight": (0.0 ~ 1.0)
     }},
     "reasoning_quality": {{
       "current_state": "[specific analysis with examples]",
       "improvement_action": "[concrete, actionable suggestion]",
-      "score": (0.0 ~ 1.0)
+      "score": (0.0 ~ 1.0),
+      "weight": (0.0 ~ 1.0)
     }}
   }}
 }}
 
 Requirements:
-- The final_score must be the exact weighted sum of individual scores
 - All eight criteria must be evaluated with specific examples
+- Each criterion must have both a score and weight
 - Each improvement action must be concrete and actionable
 - Analysis must reference specific parts of the output
 
@@ -118,7 +125,6 @@ Requirements:
 Example 1: High-Quality Output
 
 {{
-  "final_score": 0.87,
   "scores": {{
     "meaning_accuracy": {{
       "weight": 0.1,
@@ -174,7 +180,6 @@ Example 1: High-Quality Output
 Example 2: Low-Quality Output
 
 {{
-  "final_score": 0.53,
   "scores": {{
     "meaning_accuracy": {{
       "weight": 0.1,
