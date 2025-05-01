@@ -14,15 +14,16 @@ def run_mmlu_example():
         "mmlu_example.py",
         "--dataset", "mmlu",
         "--model", "gpt4o",
-        "--model_version", "gpt-3.5-turbo",
-        # "--model_version", "gpt-4o",
+        # "--model_version", "gpt-3.5-turbo",
+        "--model_version", "gpt-4o",
         # 기존 프롬프트
-        "--base_system_prompt", "Choose the best answer among A, B, C, or D. Give only the letter.",
-        "--base_user_prompt", "Question:",
+        # "--base_system_prompt", "Choose the best answer among A, B, C, or D. Give only the letter.",
+        # "--base_user_prompt", "Example:\nQuestion: Why did Congress oppose Wilson's proposal for the League of Nations?\nA. It feared the League would encourage Soviet influence in the US  \nB. It feared the League would be anti-democratic  \nC. It feared the League would commit the US to an international alliance  \nD. Both A and B  \nAnswer: C\n\nQuestion:",
+        # "--base_user_prompt", "Question:",
         # 제라 프롬프트
         "--zera_system_prompt", "You are an AI proficient in logical reasoning. Carefully analyze problems step-by-step, openly assessing each provided option. Keep your evaluation concise, logically clear, and distinctly separate from your final formatted answer.",
-        "--zera_user_prompt", "Evaluate the following multiple-choice question by logically analyzing each option. Briefly state why each option (A, B, C, or D) is correct or incorrect. After your analysis, clearly and concisely state your final answer as a single capital letter.\n\nExample:\n\nQuestion:  \nWhere is most chemical digestion and nutrient absorption completed in the human digestive system?\n\nChoices:  \nA. Stomach  \nB. Large intestine  \nC. Small intestine  \nD. Mouth  \n\nReasoning:  \n- A. The stomach primarily provides physical breakdown and initial protein digestion, rather than completing full chemical digestion and nutrient absorption.\n- B. The large intestine is primarily involved in water absorption and waste storage, not significant chemical digestion or nutrient absorption.\n- C. The small intestine is responsible for most chemical digestion and nearly all nutrient absorption, precisely matching the description.\n- D. The mouth performs initial mechanical breakdown and minor chemical digestion (carbohydrates), not significant overall digestion or nutrient absorption completion.\n\nFinal Answer: C\n\nNow follow the same approach with this question:\n\nQuestion:  \n[Insert Your Question Here]\n\nChoices:  \n[Insert Your Choices Here]",
-        "--num_samples", "1000",
+        "--zera_user_prompt", "Answer the following multiple-choice question by providing only the single letter (A, B, C, or D) of the correct choice.\n\nExample:\nQuestion: Why did Congress oppose Wilson's proposal for the League of Nations?\nA. It feared the League would encourage Soviet influence in the US  \nB. It feared the League would be anti-democratic  \nC. It feared the League would commit the US to an international alliance  \nD. Both A and B  \nAnswer: C\n\nQuestion: {Insert new question and choices here}  \nAnswer:",
+        "--num_samples", "100",
         # 모델 파라미터
         # "--temperature", "0.2",  # 더 결정적인 응답을 위해 낮은 temperature 사용
         # "--top_p", "0.9"

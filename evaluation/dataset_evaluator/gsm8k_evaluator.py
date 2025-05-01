@@ -2,6 +2,7 @@ from typing import List, Dict, Any, Optional
 import json
 import re
 import pandas as pd
+import random
 from evaluation.base.evaluator import BaseEvaluator
 
 class GSM8KEvaluator(BaseEvaluator):
@@ -19,6 +20,14 @@ class GSM8KEvaluator(BaseEvaluator):
         """GSM8K 질문을 포맷팅합니다."""
         return item['question']
     
+    def get_sample_indices(self, num_samples: int) -> List[int]:
+        """평가할 샘플의 인덱스를 반환합니다."""
+        dataset = self.load_dataset("gsm8k")
+        total_samples = len(dataset)
+        if num_samples > total_samples:
+            num_samples = total_samples
+        return random.sample(range(total_samples), num_samples)
+    
     def evaluate_response(self, response: str, ground_truth: str) -> bool:
         """GSM8K 응답을 평가합니다."""
         try:
@@ -29,8 +38,21 @@ class GSM8KEvaluator(BaseEvaluator):
                     return None
                 return float(numbers[-1].replace(',', ''))
 
-            # 답변에서 마지막 숫자 추출
-            model_number = extract_last_number(response)
+            def extract_answer_after_hash(text: str) -> float:
+                """#### 뒤에 나오는 숫자를 추출합니다."""
+                match = re.search(r'####\s*(-?\d+(?:,\d{3})*(?:\.\d+)?)', str(text))
+                if not match:
+                    return None
+                return float(match.group(1).replace(',', ''))
+
+            # #### 뒤의 숫자 추출 시도
+            model_number = extract_answer_after_hash(response)
+            
+            # #### 형식이 없으면 마지막 숫자 사용
+            if model_number is None:
+                model_number = extract_last_number(response)
+                print("\n[주의] #### 형식을 찾을 수 없어 마지막 숫자를 사용합니다.")
+
             ground_truth_number = extract_last_number(ground_truth)
 
             if not model_number:

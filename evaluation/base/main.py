@@ -107,16 +107,18 @@ def main(args=None):
     # 첫 번째 평가에서 사용할 샘플 인덱스 생성
     sample_indices = evaluator.get_sample_indices(args.num_samples)
     
-    # 기존 프롬프트로 평가 실행
-    base_results = run_single_evaluation(
-        evaluator,
-        args.dataset,
-        args.base_system_prompt,
-        args.base_user_prompt,
-        args.num_samples,
-        sample_indices
-    )
-    base_accuracy = print_evaluation_results(base_results, "기존 프롬프트")
+    # 기존 프롬프트가 있는 경우에만 평가 실행
+    base_accuracy = None
+    if args.base_system_prompt is not None and args.base_user_prompt is not None:
+        base_results = run_single_evaluation(
+            evaluator,
+            args.dataset,
+            args.base_system_prompt,
+            args.base_user_prompt,
+            args.num_samples,
+            sample_indices
+        )
+        base_accuracy = print_evaluation_results(base_results, "기존 프롬프트")
     
     # 제라 프롬프트로 평가 실행
     zera_results = run_single_evaluation(
@@ -129,17 +131,18 @@ def main(args=None):
     )
     zera_accuracy = print_evaluation_results(zera_results, "제라 프롬프트")
     
-    # 비교 결과 출력
-    print("\n=== 최종 비교 결과 ===")
-    print(f"기존 프롬프트 정확도: {base_accuracy:.2%}")
-    print(f"제라 프롬프트 정확도: {zera_accuracy:.2%}")
-    print(f"정확도 차이 (제라 - 기존): {(zera_accuracy - base_accuracy):.2%}")
-    
-    if "rouge_scores" in base_results and "rouge_scores" in zera_results:
-        print("\nROUGE 점수 차이 (제라 - 기존):")
-        for metric in base_results["rouge_scores"].keys():
-            diff = zera_results["rouge_scores"][metric]["f"] - base_results["rouge_scores"][metric]["f"]
-            print(f"  {metric} F1 차이: {diff:.3f}")
+    # 비교 결과 출력 (기존 프롬프트가 있는 경우에만)
+    if base_accuracy is not None:
+        print("\n=== 최종 비교 결과 ===")
+        print(f"기존 프롬프트 정확도: {base_accuracy:.2%}")
+        print(f"제라 프롬프트 정확도: {zera_accuracy:.2%}")
+        print(f"정확도 차이 (제라 - 기존): {(zera_accuracy - base_accuracy):.2%}")
+        
+        if "rouge_scores" in base_results and "rouge_scores" in zera_results:
+            print("\nROUGE 점수 차이 (제라 - 기존):")
+            for metric in base_results["rouge_scores"].keys():
+                diff = zera_results["rouge_scores"][metric]["f"] - base_results["rouge_scores"][metric]["f"]
+                print(f"  {metric} F1 차이: {diff:.3f}")
 
 if __name__ == "__main__":
     main() 
