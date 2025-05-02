@@ -17,13 +17,13 @@ def run_mmlu_example():
         # "--model_version", "gpt-3.5-turbo",
         "--model_version", "gpt-4o",
         # 기존 프롬프트
-        # "--base_system_prompt", "Choose the best answer among A, B, C, or D. Give only the letter.",
-        # "--base_user_prompt", "Example:\nQuestion: Why did Congress oppose Wilson's proposal for the League of Nations?\nA. It feared the League would encourage Soviet influence in the US  \nB. It feared the League would be anti-democratic  \nC. It feared the League would commit the US to an international alliance  \nD. Both A and B  \nAnswer: C\n\nQuestion:",
+        "--base_system_prompt", "Answer with only the letter of the correct choice.",
+        "--base_user_prompt", "Question:",
         # "--base_user_prompt", "Question:",
         # 제라 프롬프트
         "--zera_system_prompt", "You are an AI proficient in logical reasoning. Carefully analyze problems step-by-step, openly assessing each provided option. Keep your evaluation concise, logically clear, and distinctly separate from your final formatted answer.",
         "--zera_user_prompt", "Answer the following multiple-choice question by providing only the single letter (A, B, C, or D) of the correct choice.\n\nExample:\nQuestion: Why did Congress oppose Wilson's proposal for the League of Nations?\nA. It feared the League would encourage Soviet influence in the US  \nB. It feared the League would be anti-democratic  \nC. It feared the League would commit the US to an international alliance  \nD. Both A and B  \nAnswer: C\n\nQuestion: {Insert new question and choices here}  \nAnswer:",
-        "--num_samples", "100",
+        "--num_samples", "1000",
         # 모델 파라미터
         # "--temperature", "0.2",  # 더 결정적인 응답을 위해 낮은 temperature 사용
         # "--top_p", "0.9"
