@@ -1,6 +1,7 @@
 from typing import List, Dict, Any, Optional
 from evaluation.base.evaluator import BaseEvaluator
 from agent.dataset.truthfulqa_dataset import TruthfulQADataset
+from evaluation.dataset_evaluator.llm_judge.judge import LLMJudge
 import json
 import random
 import time
@@ -18,6 +19,7 @@ class TruthfulQAEvaluator(BaseEvaluator):
         self.samples_dir = Path("evaluation/samples")
         self.samples_dir.mkdir(exist_ok=True)
         self.rouge = Rouge()
+        self.judge = LLMJudge()
 
     def load_dataset(self, dataset_path: str, num_samples: Optional[int] = None) -> List[Dict[str, Any]]:
         """TruthfulQA 데이터셋을 로드합니다."""
@@ -52,31 +54,21 @@ class TruthfulQAEvaluator(BaseEvaluator):
     def evaluate_response(self, response: str, ground_truth: Dict[str, Any]) -> Dict[str, Any]:
         """TruthfulQA 응답을 평가합니다."""
         try:
-            # ROUGE 점수 계산 (best_answer와 비교)
+            # LLM 판사에게 평가를 요청
+            judge_result = self.judge.evaluate(
+                ground_truth['question'],
+                response,
+                ground_truth
+            )
+            
+            # ROUGE 점수는 참고용으로만 계산
             rouge_scores = self.rouge.get_scores(response, ground_truth['best_answer'])[0]
             
-            # 정답과 오답 목록에 대한 ROUGE 점수 계산
-            correct_scores = []
-            for correct_answer in ground_truth['correct_answers']:
-                scores = self.rouge.get_scores(response, correct_answer)[0]
-                correct_scores.append(scores['rouge-l']['f'])
-            
-            incorrect_scores = []
-            for incorrect_answer in ground_truth['incorrect_answers']:
-                scores = self.rouge.get_scores(response, incorrect_answer)[0]
-                incorrect_scores.append(scores['rouge-l']['f'])
-            
-            # 정답과의 최대 유사도가 오답과의 최대 유사도보다 높으면 정답으로 판단
-            max_correct_score = max(correct_scores) if correct_scores else 0
-            max_incorrect_score = max(incorrect_scores) if incorrect_scores else 0
-            
-            is_correct = max_correct_score > max_incorrect_score
-            
             return {
-                'is_passed': is_correct,
-                'rouge_scores': rouge_scores,
-                'max_correct_score': max_correct_score,
-                'max_incorrect_score': max_incorrect_score
+                'is_passed': judge_result['is_passed'],
+                'judge_score': judge_result['judge_score'],
+                'judge_response': judge_result['judge_response'],
+                'rouge_scores': rouge_scores
             }
             
         except Exception as e:
@@ -140,8 +132,8 @@ class TruthfulQAEvaluator(BaseEvaluator):
                     "incorrect_answers": item["incorrect_answers"],
                     "is_correct": is_correct,
                     "rouge_scores": eval_result['rouge_scores'],
-                    "max_correct_score": eval_result.get('max_correct_score'),
-                    "max_incorrect_score": eval_result.get('max_incorrect_score')
+                    "judge_score": eval_result.get('judge_score'),
+                    "judge_response": eval_result.get('judge_response')
                 }
                 results["samples"].append(sample_info)
                 
@@ -155,8 +147,8 @@ class TruthfulQAEvaluator(BaseEvaluator):
                     print("ROUGE 점수:")
                     for metric, scores in eval_result['rouge_scores'].items():
                         print(f"  {metric}: F1={scores['f']:.3f}")
-                print(f"정답군과의 최대 유사도: {eval_result.get('max_correct_score', 0):.3f}")
-                print(f"오답군과의 최대 유사도: {eval_result.get('max_incorrect_score', 0):.3f}")
+                print(f"판사의 평가 점수: {eval_result.get('judge_score', 0):.3f}")
+                print(f"판사의 평가 설명: {eval_result.get('judge_response')}")
                 print("-" * 50)
                 
                 logger.info(f"Processed {idx+1}/{len(dataset)} samples")
