@@ -10,6 +10,7 @@ from evaluation.dataset_evaluator.cnn_dailymail_evaluator import CNNDailyMailEva
 from evaluation.dataset_evaluator.samsum_evaluator import SAMSumEvaluator
 from evaluation.dataset_evaluator.mbpp_evaluator import MBPPEvaluator
 from evaluation.dataset_evaluator.mmlu_pro_evaluator import MMLUProEvaluator
+from evaluation.dataset_evaluator.truthfulqa_evaluator import TruthfulQAEvaluator
 
 def setup_environment():
     # Try to load from different possible locations
@@ -67,7 +68,7 @@ def main(args=None):
     if args is None:
         parser = argparse.ArgumentParser(description="LLM 평가 스크립트")
         parser.add_argument("--dataset", type=str, required=True, 
-                          choices=["gsm8k", "mmlu", "mmlu_pro", "bbh", "cnn_dailymail", "samsum", "mbpp"],
+                          choices=["gsm8k", "mmlu", "mmlu_pro", "bbh", "cnn_dailymail", "samsum", "mbpp", "truthfulqa"],
                           help="평가할 데이터셋")
         parser.add_argument("--model", type=str, default="gpt4o",
                           help="사용할 모델 (기본값: gpt4o)")
@@ -98,7 +99,8 @@ def main(args=None):
         "cnn_dailymail": CNNDailyMailEvaluator,
         "samsum": SAMSumEvaluator,
         "mbpp": MBPPEvaluator,
-        "mmlu_pro": MMLUProEvaluator
+        "mmlu_pro": MMLUProEvaluator,
+        "truthfulqa": TruthfulQAEvaluator
     }
     
     evaluator_class = evaluators[args.dataset]

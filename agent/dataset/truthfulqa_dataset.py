@@ -45,11 +45,16 @@ class TruthfulQADataset:
             data = []
             for item in dataset['validation']:  # TruthfulQA는 validation을 test로 사용
                 data.append({
-                    'input': item['question'],  # 질문
-                    'target': item['best_answer'],  # 정답
+                    'question': item['question'],  # 질문
+                    'best_answer': item['best_answer'],  # 가장 좋은 정답
+                    'correct_answers': item['correct_answers'],  # 모든 정답 목록
+                    'incorrect_answers': item['incorrect_answers']  # 오답 목록
                 })
             
             df = pd.DataFrame(data)
+            # 리스트 형태의 데이터를 문자열로 변환하여 저장
+            df['correct_answers'] = df['correct_answers'].apply(str)
+            df['incorrect_answers'] = df['incorrect_answers'].apply(str)
             df.to_csv(os.path.join(self.data_dir, "test.csv"), index=False)
             print(f"Saved test data with {len(data)} examples")
                 
@@ -67,15 +72,23 @@ class TruthfulQADataset:
         
         # CSV 파일에서 데이터 로드 (데이터 타입 명시)
         df = pd.read_csv(csv_path, dtype={
-            'input': str,
-            'target': str
+            'question': str,
+            'best_answer': str,
+            'correct_answers': str,
+            'incorrect_answers': str
         })
         data = []
         
         for _, row in df.iterrows():
+            # 문자열로 저장된 리스트를 다시 리스트로 변환
+            correct_answers = eval(row['correct_answers'])
+            incorrect_answers = eval(row['incorrect_answers'])
+            
             data.append({
-                'input': str(row['input']),
-                'target': str(row['target'])
+                'question': str(row['question']),
+                'best_answer': str(row['best_answer']),
+                'correct_answers': correct_answers,
+                'incorrect_answers': incorrect_answers
             })
         
         return data
@@ -105,7 +118,13 @@ if __name__ == "__main__":
         if test_data:
             first_example = test_data[0]
             print("\n첫 번째 테스트 예제:")
-            print(f"Input:\n{first_example['input']}")
-            print(f"Target: {first_example['target']}")
+            print(f"질문: {first_example['question']}")
+            print(f"가장 좋은 정답: {first_example['best_answer']}")
+            print("정답 목록:")
+            for i, answer in enumerate(first_example['correct_answers'], 1):
+                print(f"{i}. {answer}")
+            print("\n오답 목록:")
+            for i, answer in enumerate(first_example['incorrect_answers'], 1):
+                print(f"{i}. {answer}")
     except ValueError as e:
         print(e) 
