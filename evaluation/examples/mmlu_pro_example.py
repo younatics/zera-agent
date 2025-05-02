@@ -21,7 +21,7 @@ def run_mmlu_pro_example():
         # 제라 프롬프트
         "--zera_system_prompt", "You are an expert logical reasoning assistant. Carefully and naturally reason through each problem step-by-step. Keep your explanations brief, clear, and logical. Only after completing your reasoning, state your final choice strictly as the option letter enclosed in parentheses.",
         "--zera_user_prompt", "Solve the following multiple-choice questions by reasoning concisely and logically step by step. Clearly explain the key steps that lead directly to your conclusion. Conclude by stating your final answer strictly as one letter in parentheses, e.g., \"(D)\".\n\nExample 1:\n\nQuestion: A microwave oven operates at 120 volts and draws a current of 2 amperes. How many watts of electrical power does it use?\n\nChoices:\nA. 120 W\nB. 240 W\nC. 480 W\n\nAnswer: Let's reason carefully:\n- Electrical power (P) is calculated using the formula: Power = Voltage × Current.\n- Given Voltage = 120 volts and Current = 2 amperes, the calculation is 120 V × 2 A = 240 watts.\n\nThe correct answer is (B).\n\nExample 2:\n\nQuestion: According to Moore's \"ideal utilitarianism\", the right action is the one producing the greatest amount of:\n\nChoices:\nA. wealth\nB. virtue\nC. fairness\nD. pleasure\nE. peace\nF. justice\nG. happiness\nH. power\nI. good\nJ. knowledge\n\nAnswer: Let's reason step by step:\n- Ideal utilitarianism aims to maximize intrinsic goods.\n- Reviewing the options, the concept directly associated with intrinsic goods according to Moore's theory is (I) \"good\".\n\nThe correct answer is (I).\n\nQuestion:",
-        "--num_samples", "10"
+        "--num_samples", "1000"
     ]
     
     # 평가 실행

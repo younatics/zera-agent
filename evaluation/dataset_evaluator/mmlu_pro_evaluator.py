@@ -51,10 +51,10 @@ class MMLUProEvaluator(BaseEvaluator):
     def evaluate_response(self, response: str, ground_truth: Dict[str, Any]) -> bool:
         """MMLU Pro 응답을 평가합니다."""
         response_clean = response.strip().upper()
-        # 0. 괄호 안에 있는 알파벳(A~J) 우선 추출
-        match = re.search(r'\(([A-J])\)', response_clean)
-        if match:
-            model_answer = match.group(1)
+        # 0. 괄호 안에 있는 알파벳(A~J) 추출 (맨 뒤의 것 우선)
+        matches = re.findall(r'\(([A-J])\)', response_clean)
+        if matches:
+            model_answer = matches[-1]  # 맨 뒤의 괄호 안 알파벳 사용
         else:
             # 1. '**J. ...**' 또는 '**J**' 또는 'J. ...' 또는 'J ...' 등 다양한 패턴
             match = re.search(r'\*\*?([A-J])\*\*?[\s\.]', response_clean)  # '**J. ...' '**J**' 등
