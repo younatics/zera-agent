@@ -69,13 +69,8 @@ class HumanEvalDataset:
         data = []
         
         for _, row in df.iterrows():
-            try:
-                # JSON 문자열을 파싱하여 test_cases 복원
-                test_cases = json.loads(row['test_cases']) if isinstance(row['test_cases'], str) else row['test_cases']
-            except json.JSONDecodeError:
-                # JSON 파싱 실패 시 빈 리스트로 처리
-                test_cases = []
-            
+            # test_cases는 멀티라인 파이썬 코드이므로 문자열 그대로 사용
+            test_cases = row['test_cases'] if isinstance(row['test_cases'], str) else ""
             data.append({
                 'task_id': row['task_id'],
                 'prompt': row['prompt'],
@@ -111,5 +106,9 @@ if __name__ == "__main__":
             print(f"프롬프트:\n{first_example['prompt']}")
             print(f"\n정답:\n{first_example['canonical_solution']}")
             print(f"\n테스트 케이스:\n{first_example['test_cases']}")
+        # test_cases가 빈 샘플 진단
+        empty_cases = [d['task_id'] for d in test_data if not d['test_cases'] or not str(d['test_cases']).strip()]
+        print(f"test_cases가 빈 샘플 수: {len(empty_cases)}")
+        print(f"예시 task_id: {empty_cases[:5]}")
     except ValueError as e:
         print(e) 
