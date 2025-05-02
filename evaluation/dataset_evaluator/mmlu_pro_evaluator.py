@@ -3,26 +3,45 @@ from evaluation.base.evaluator import BaseEvaluator
 from datasets import load_dataset
 import json
 import re
+import random
 
 class MMLUProEvaluator(BaseEvaluator):
+    def __init__(self, model_name: str, model_version: str, temperature: float = 0.7, top_p: float = 0.9):
+        """MMLU Pro 평가기를 초기화합니다."""
+        super().__init__(model_name, model_version, temperature, top_p)
+        self.dataset_cache = None
+
     def load_dataset(self, dataset_path: str) -> List[Dict[str, Any]]:
         """MMLU Pro 데이터셋을 로드합니다."""
-        # Hugging Face에서 MMLU 데이터셋 로드
-        dataset = load_dataset("TIGER-Lab/MMLU-Pro", "default")
-        test_data = dataset["test"]
-        
-        # 필요한 형식으로 변환
-        formatted_data = []
-        for item in test_data:
-            formatted_item = {
-                "question": item["question"],
-                "choices": item["options"],
-                "answer": item["answer"]
-            }
-            formatted_data.append(formatted_item)
+        if self.dataset_cache is None:
+            # Hugging Face에서 MMLU 데이터셋 로드
+            dataset = load_dataset("TIGER-Lab/MMLU-Pro", "default")
+            test_data = dataset["test"]
             
-        return formatted_data
+            # 필요한 형식으로 변환
+            formatted_data = []
+            for item in test_data:
+                formatted_item = {
+                    "question": item["question"],
+                    "choices": item["options"],
+                    "answer": item["answer"]
+                }
+                formatted_data.append(formatted_item)
+            
+            self.dataset_cache = formatted_data
+            
+        return self.dataset_cache
     
+    def get_sample_indices(self, num_samples: int) -> List[int]:
+        """평가에 사용할 샘플의 인덱스를 반환합니다."""
+        if self.dataset_cache is None:
+            self.load_dataset("")
+        
+        total_samples = len(self.dataset_cache)
+        # 중복 없이 랜덤하게 인덱스 선택
+        indices = random.sample(range(total_samples), min(num_samples, total_samples))
+        return indices
+
     def format_question(self, item: Dict[str, Any]) -> str:
         """MMLU Pro 질문을 포맷팅합니다."""
         question = item['question']
