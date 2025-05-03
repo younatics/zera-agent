@@ -10,8 +10,12 @@ from evaluation.examples.xsum_example import run_xsum_example
 from evaluation.examples.hellaswag_example import run_hellaswag_example
 
 def main():
-    model = "gpt4o"
-    model_version = "gpt-3.5-turbo"
+    # model = "gpt4o"
+    # model_version = "gpt-3.5-turbo"
+
+    model = "local"
+    model_version = "local"
+    
     print("\n===== mmlu_example.py 실행 =====")
     run_mmlu_example(model, model_version)
     print("\n===== mmlu_pro_example.py 실행 =====")
