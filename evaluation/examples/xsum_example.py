@@ -42,7 +42,7 @@ Now summarize the most newsworthy event in the text below:
 Text: [Insert user's text here]
 Concise summary:
         """,
-        "--num_samples", "2",
+        "--num_samples", "30",
         # 모델 파라미터
         # "--temperature", "0.2",  # 더 결정적인 응답을 위해 낮은 temperature 사용
         # "--top_p", "0.9"
