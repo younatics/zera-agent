@@ -40,6 +40,12 @@ class Model:
             "description": "Anthropic의 Claude 3.5 Sonnet",
             "default_version": "claude-3-5-sonnet-20240620",
             "base_url": None
+        },
+        "local": {
+            "name": "Local Model",
+            "description": "로컬 서버에서 실행되는 모델",
+            "default_version": "local",
+            "base_url": "http://localhost:8001/v1"
         }
     }
 
@@ -60,8 +66,8 @@ class Model:
         self.model_id = version or self.model_info[model_name]["default_version"]
         self.system_prompt = None
         self.user_prompt = None
-        self.temperature = None  # 기본값 None으로 설정
-        self.top_p = None  # 기본값 None으로 설정
+        self.temperature = None
+        self.top_p = None
         
         # Initialize appropriate client
         if model_name == "claude":
@@ -69,6 +75,11 @@ class Model:
         elif model_name == "solar":
             self.client = OpenAI(
                 api_key=os.getenv("SOLAR_API_KEY"),
+                base_url=self.model_info[model_name]["base_url"]
+            )
+        elif model_name == "local":
+            self.client = OpenAI(
+                api_key="EMPTY",
                 base_url=self.model_info[model_name]["base_url"]
             )
         else:  # gpt4o
