@@ -13,12 +13,27 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class BaseEvaluator(ABC):
-    def __init__(self, model_name: str = "gpt4o", model_version: str = "gpt-3.5-turbo"):
+    def __init__(self, model_name: str, model_version: str, temperature: float = None, top_p: float = None):
+        """
+        평가기를 초기화합니다.
+        
+        Args:
+            model_name: 사용할 모델의 이름
+            model_version: 사용할 모델의 버전
+            temperature: 모델의 temperature 값 (선택사항)
+            top_p: 모델의 top_p 값 (선택사항)
+        """
         self.model_name = model_name
         self.model_version = model_version
         self.model = Model(model_name).set_version(model_version)
-        self.model.set_temperature(0.7)
-        self.model.set_top_p(0.9)
+        
+        # temperature와 top_p가 제공된 경우에만 설정
+        if temperature is not None:
+            self.model.set_temperature(temperature)
+            self.temperature = temperature
+        if top_p is not None:
+            self.model.set_top_p(top_p)
+            self.top_p = top_p
 
         self.results_dir = Path("evaluation/results")
         self.results_dir.mkdir(parents=True, exist_ok=True)
@@ -48,12 +63,16 @@ class BaseEvaluator(ABC):
                       dataset_name: str, 
                       system_prompt: Optional[str] = None,
                       user_prompt: Optional[str] = None,
-                      num_samples: Optional[int] = None) -> Dict[str, Any]:
+                      num_samples: Optional[int] = None,
+                      sample_indices: Optional[List[int]] = None) -> Dict[str, Any]:
         """전체 평가를 실행하는 메서드"""
         dataset = self.load_dataset(dataset_name)
         
-        # 랜덤 샘플링
-        if num_samples:
+        # 샘플 인덱스가 제공된 경우 해당 샘플만 사용
+        if sample_indices is not None:
+            dataset = [dataset[i] for i in sample_indices]
+        # 샘플 수가 지정된 경우 랜덤 샘플링
+        elif num_samples:
             dataset = random.sample(dataset, min(num_samples, len(dataset)))
             
         results = {
@@ -108,7 +127,7 @@ class BaseEvaluator(ABC):
         result_file = self.results_dir / f"{self.__class__.__name__}_{timestamp}.json"
         self.save_results(results, str(result_file))
             
-        return results 
+        return results
 
     def save_results(self, results: List[Dict[str, Any]], output_path: str):
         """결과를 저장합니다."""

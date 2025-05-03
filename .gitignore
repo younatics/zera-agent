@@ -43,6 +43,7 @@ prompt-autotuning-agent.pem
 
 # Evaluation results
 evaluation/results/ 
+evaluation/examples/evaluation/
 agent/dataset/cnn_data/
 agent/dataset/gsm8k_data/
 agent/dataset/mmlu_data/

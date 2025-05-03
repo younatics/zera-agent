@@ -23,6 +23,10 @@ from pathlib import Path
 st.set_page_config(page_title="Prompt Auto Tuning Agent", layout="wide")
 
 def setup_environment():
+    # 이미 환경이 로드되었는지 확인
+    if hasattr(setup_environment, 'loaded'):
+        return
+    
     # Try to load from different possible locations
     env_paths = [
         '.env',  # Current directory
@@ -51,6 +55,9 @@ def setup_environment():
         st.error(f"Error: Missing required environment variables: {', '.join(missing_vars)}")
         st.error("Please ensure these variables are set in your .env file or environment")
         st.stop()
+    
+    # 환경이 로드되었음을 표시
+    setup_environment.loaded = True
 
 # Call setup at the start
 setup_environment()
@@ -63,6 +70,12 @@ from agent.dataset.mmlu_dataset import MMLUDataset
 from agent.dataset.mmlu_pro_dataset import MMLUProDataset
 from agent.dataset.cnn_dataset import CNNDataset
 from agent.dataset.gsm8k_dataset import GSM8KDataset
+from agent.dataset.mbpp_dataset import MBPPDataset
+from agent.dataset.xsum_dataset import XSumDataset
+from agent.dataset.bbh_dataset import BBHDataset
+from agent.dataset.truthfulqa_dataset import TruthfulQADataset
+from agent.dataset.hellaswag_dataset import HellaSwagDataset
+from agent.dataset.humaneval_dataset import HumanEvalDataset
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -92,6 +105,19 @@ with open(os.path.join(prompts_dir, 'meta_user_prompt.txt'), 'r', encoding='utf-
 mmlu_dataset = MMLUDataset()
 # MMLU Pro 데이터셋 인스턴스 생성
 mmlu_pro_dataset = MMLUProDataset()
+
+# HellaSwag 데이터셋 인스턴스 생성
+hellaswag_dataset = HellaSwagDataset()
+
+# HumanEval 데이터셋 인스턴스 생성
+humaneval_dataset = HumanEvalDataset()
+
+# XSum 데이터셋 인스턴스 생성 (한 번만 생성)
+xsum_dataset = XSumDataset()
+# BBH 데이터셋 인스턴스 생성 (한 번만 생성)
+bbh_dataset = BBHDataset()
+# TruthfulQA 데이터셋 인스턴스 생성 (한 번만 생성)
+truthfulqa_dataset = TruthfulQADataset()
 
 # 사이드바에서 파라미터 설정
 with st.sidebar:
@@ -156,6 +182,7 @@ with st.sidebar:
             "모델 선택",
             options=list(MODEL_INFO.keys()),
             format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
+            index=list(MODEL_INFO.keys()).index("gpt4o"),  # GPT-4를 기본값으로 설정
             help="프롬프트 튜닝에 사용할 모델을 선택하세요."
         )
         st.caption(MODEL_INFO[model_name]['description'])
@@ -163,14 +190,14 @@ with st.sidebar:
         # 튜닝 모델 버전 선택
         use_custom_tuning_version = st.toggle(
             "커스텀 버전 사용",
-            value=False,
+            value=True,  # 기본값을 True로 변경
             help="튜닝 모델의 기본 버전 대신 커스텀 버전을 사용합니다."
         )
         
         if use_custom_tuning_version:
             tuning_model_version = st.text_input(
                 "모델 버전",
-                value=MODEL_INFO[model_name]['default_version'],
+                value="gpt-3.5-turbo",  # 기본값을 gpt-3.5-turbo로 변경
                 help="튜닝에 사용할 모델 버전을 입력하세요."
             )
         else:
@@ -183,6 +210,7 @@ with st.sidebar:
             "모델 선택",
             options=list(MODEL_INFO.keys()),
             format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
+            index=list(MODEL_INFO.keys()).index("gpt4o"),  # GPT-4를 기본값으로 설정
             help="메타 프롬프트 생성에 사용할 모델을 선택하세요."
         )
         st.caption(MODEL_INFO[meta_prompt_model]['description'])
@@ -190,14 +218,14 @@ with st.sidebar:
         # 메타 프롬프트 모델 버전 선택
         use_custom_meta_version = st.toggle(
             "커스텀 버전 사용",
-            value=False,
+            value=True,  # 기본값을 True로 변경
             help="메타 프롬프트 모델의 기본 버전 대신 커스텀 버전을 사용합니다."
         )
         
         if use_custom_meta_version:
             meta_model_version = st.text_input(
                 "모델 버전",
-                value=MODEL_INFO[meta_prompt_model]['default_version'],
+                value="gpt-4.5-preview",  # 기본값을 gpt-4.5-preview로 변경
                 help="메타 프롬프트 생성에 사용할 모델 버전을 입력하세요."
             )
         else:
@@ -210,6 +238,7 @@ with st.sidebar:
             "모델 선택",
             options=list(MODEL_INFO.keys()),
             format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
+            index=list(MODEL_INFO.keys()).index("claude"),  # Claude를 기본값으로 설정
             help="출력 평가에 사용할 모델을 선택하세요."
         )
         st.caption(MODEL_INFO[evaluator_model]['description'])
@@ -325,7 +354,43 @@ def process_dataset(data, dataset_type):
     test_cases = []
     display_data = []
     
-    if dataset_type in ["MMLU", "MMLU Pro"]:
+    if dataset_type == "BBH":
+        for item in data:
+            test_cases.append({
+                'question': item['input'],
+                'expected': item['target']
+            })
+            
+            if len(display_data) < 2000:  # display_data를 2000개로 제한
+                display_data.append({
+                    'question': item['input'],
+                    'expected_answer': item['target']
+                })
+    elif dataset_type == "MBPP":
+        for item in data:
+            test_cases.append({
+                'question': item['text'],
+                'expected': item['code']
+            })
+            
+            if len(display_data) < 2000:  # display_data를 2000개로 제한
+                display_data.append({
+                    'question': item['text'],
+                    'expected_answer': f"```python\n{item['code']}\n```"
+                })
+    elif dataset_type == "XSum":
+        for item in data:
+            test_cases.append({
+                'question': item['document'],
+                'expected': item['summary']
+            })
+            
+            if len(display_data) < 2000:  # display_data를 2000개로 제한
+                display_data.append({
+                    'question': item['document'],  # 처음 200자만 표시
+                    'expected_answer': item['summary']
+                })
+    elif dataset_type in ["MMLU", "MMLU Pro"]:
         for item in data:
             # 선택지를 문자열로 변환
             choices_str = "\n".join([f"{chr(65+i)}. {choice}" for i, choice in enumerate(item['choices'])])
@@ -393,6 +458,46 @@ def process_dataset(data, dataset_type):
                     'question': item['question'],
                     'expected_answer': item['answer']
                 })
+    elif dataset_type == "TruthfulQA":
+        for item in data:
+            test_cases.append({
+                'question': item['input'],
+                'expected': item['target']
+            })
+            
+            if len(display_data) < 2000:  # display_data를 2000개로 제한
+                display_data.append({
+                    'question': item['input'],
+                    'expected_answer': item['target']
+                })
+    elif dataset_type == "HellaSwag":
+        for item in data:
+            # 선택지를 문자열로 변환
+            choices_str = "\n".join([f"{chr(65+i)}. {choice}" for i, choice in enumerate(item['choices'])])
+            question = f"Activity: {item['activity_label']}\nContext: {item['context']}\n\nComplete the context with the most appropriate ending:\n{choices_str}"
+            
+            test_cases.append({
+                'question': question,
+                'expected': chr(65 + item['answer'])  # 0-based index를 A, B, C, D로 변환
+            })
+            
+            if len(display_data) < 2000:  # display_data를 2000개로 제한
+                display_data.append({
+                    'question': question,
+                    'expected_answer': chr(65 + item['answer'])
+                })
+    elif dataset_type == "HumanEval":
+        for item in data:
+            test_cases.append({
+                'question': item['prompt'],
+                'expected': item['canonical_solution']
+            })
+            
+            if len(display_data) < 2000:  # display_data를 2000개로 제한
+                display_data.append({
+                    'question': item['prompt'],
+                    'expected_answer': item['canonical_solution']
+                })
     
     # 전체 데이터 표시
     st.write("데이터셋 내용:")
@@ -404,7 +509,7 @@ def process_dataset(data, dataset_type):
 st.header("Dataset Selection")
 dataset_type = st.radio(
     "Select Dataset Type",
-    ["CSV", "MMLU", "MMLU Pro", "CNN", "GSM8K"],
+    ["CSV", "MMLU", "MMLU Pro", "CNN", "GSM8K", "MBPP", "XSum", "BBH", "TruthfulQA", "HellaSwag", "HumanEval"],
     horizontal=True
 )
 
@@ -505,6 +610,99 @@ elif dataset_type == "GSM8K":
         st.info(f"GSM8K {split} 데이터셋: {len(data):,}개 예제")
     except Exception as e:
         st.error(f"GSM8K 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.stop()
+elif dataset_type == "MBPP":
+    # MBPP 데이터셋 인스턴스 생성
+    mbpp_dataset = MBPPDataset()
+    
+    # 데이터셋 선택
+    split = st.selectbox(
+        "데이터셋 선택",
+        ["train", "test", "validation"],
+        index=1  # test를 기본값으로 설정
+    )
+    
+    try:
+        # 데이터 로드
+        data = mbpp_dataset.get_split_data(split)
+        test_cases, num_samples = process_dataset(data, "MBPP")
+        
+        # 데이터셋 정보 표시
+        st.info(f"MBPP {split} 데이터셋: {len(data):,}개 예제")
+    except Exception as e:
+        st.error(f"MBPP 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.stop()
+elif dataset_type == "XSum":
+    # 이미 생성된 XSumDataset 인스턴스를 사용
+    try:
+        # 데이터셋 선택 (train 제외)
+        split = st.selectbox(
+            "데이터셋 선택",
+            ["test", "validation"],  # train 제외
+            index=0
+        )
+        
+        # 데이터 로드
+        data = xsum_dataset.get_split_data(split)
+        test_cases, num_samples = process_dataset(data, "XSum")
+        
+        # 데이터셋 정보 표시
+        st.info(f"XSum {split} 데이터셋: {len(data):,}개 예제")
+    except Exception as e:
+        st.error(f"XSum 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.stop()
+elif dataset_type == "BBH":
+    # 이미 생성된 BBHDataset 인스턴스를 사용
+    try:
+        # 데이터 로드
+        data = bbh_dataset.get_split_data("test")
+        test_cases, num_samples = process_dataset(data, "BBH")
+        
+        # 데이터셋 정보 표시
+        st.info(f"BBH 테스트 데이터셋: {len(data):,}개 예제")
+    except Exception as e:
+        st.error(f"BBH 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.stop()
+elif dataset_type == "TruthfulQA":
+    # 이미 생성된 TruthfulQADataset 인스턴스를 사용
+    try:
+        # 데이터 로드
+        data = truthfulqa_dataset.get_split_data("test")
+        test_cases, num_samples = process_dataset(data, "TruthfulQA")
+        
+        # 데이터셋 정보 표시
+        st.info(f"TruthfulQA 테스트 데이터셋: {len(data):,}개 예제")
+    except Exception as e:
+        st.error(f"TruthfulQA 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.stop()
+elif dataset_type == "HellaSwag":
+    try:
+        # 데이터셋 선택
+        split = st.selectbox(
+            "데이터셋 선택",
+            ["validation", "train"],
+            index=0
+        )
+        
+        # 데이터 로드
+        data = hellaswag_dataset.get_split_data(split)
+        test_cases, num_samples = process_dataset(data, "HellaSwag")
+        
+        # 데이터셋 정보 표시
+        st.info(f"HellaSwag {split} 데이터셋: {len(data):,}개 예제")
+    except Exception as e:
+        st.error(f"HellaSwag 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.stop()
+elif dataset_type == "HumanEval":
+    try:
+        # HumanEval은 test split만 있음
+        data = humaneval_dataset.get_split_data("test")
+        test_cases, num_samples = process_dataset(data, "HumanEval")
+        
+        # 데이터셋 정보 표시
+        st.info(f"HumanEval 테스트 데이터셋: {len(data):,}개 예제")
+    except Exception as e:
+        st.error(f"HumanEval 데이터셋 로드 중 오류 발생: {str(e)}")
         st.stop()
 elif dataset_type in ["MMLU", "MMLU Pro"]:  # MMLU or MMLU Pro
     # 선택된 데이터셋에 따라 적절한 데이터셋 인스턴스와 과목 리스트 선택
@@ -644,22 +842,27 @@ class ResultsDisplay:
             'faithfulness': [],
             'conciseness': [],
             'correctness': [],
-            'structural_alignment': []
+            'structural_alignment': [],
+            'reasoning_quality': []
         }
         
         for result in results:
             iteration_category_scores = {category: [] for category in category_scores.keys()}
+            iteration_category_weights = {category: [] for category in category_scores.keys()}  # 각 이터레이션의 가중치
             
             for test_case in result.test_case_results:
                 if test_case.evaluation_details and 'category_scores' in test_case.evaluation_details:
                     for category, details in test_case.evaluation_details['category_scores'].items():
                         if category in iteration_category_scores:
                             iteration_category_scores[category].append(details['score'])
+                            iteration_category_weights[category].append(details.get('weight', 0.5))  # 가중치 추가
             
-            # 각 카테고리의 평균 점수 추가
+            # 각 카테고리의 평균 점수와 가중치 추가
             for category in category_scores:
                 scores = iteration_category_scores[category]
+                weights = iteration_category_weights[category]
                 avg_score = np.mean(scores) if scores else 0
+                avg_weight = np.mean(weights) if weights else 0.5
                 category_scores[category].append(avg_score)
         
         # 통합 그래프 생성
@@ -683,7 +886,6 @@ class ResultsDisplay:
             line=dict(color='blue', width=2)
         ))
         
-        # 표준편차를 별도의 선으로 표시
         fig.add_trace(go.Scatter(
             x=x_values,
             y=std_devs,
@@ -773,6 +975,36 @@ class ResultsDisplay:
                         st.markdown("### User Prompt")
                         st.code(iteration_result.user_prompt, language="text")
                 
+                # 가중치 점수 expander 추가
+                with st.expander("현재 가중치 점수 보기", expanded=False):
+                    # 가중치 데이터 수집
+                    weight_data = []
+                    for test_case in iteration_result.test_case_results:
+                        if test_case.evaluation_details and 'category_scores' in test_case.evaluation_details:
+                            for category, details in test_case.evaluation_details['category_scores'].items():
+                                weight = details.get('weight', 0.5)
+                                weight_data.append({
+                                    'Category': category,
+                                    'Weight': weight
+                                })
+                    
+                    if weight_data:
+                        # 카테고리별 평균 가중치 계산
+                        df = pd.DataFrame(weight_data)
+                        avg_weights = df.groupby('Category')['Weight'].mean().round(3)
+                        avg_weights = avg_weights.reset_index()
+                        avg_weights.columns = ['Category', 'Average Weight']
+                        
+                        # 데이터프레임 스타일링
+                        def highlight_weights(val):
+                            color = f'background-color: rgba(255, 99, 71, {val})'
+                            return color
+                        
+                        # 스타일이 적용된 데이터프레임 표시
+                        st.write("Category Weights:")
+                        styled_df = avg_weights.style.apply(lambda x: [highlight_weights(v) for v in x], subset=['Average Weight'])
+                        st.dataframe(styled_df, use_container_width=True)
+                
                 # 출력 결과를 데이터프레임으로 변환
                 outputs_data = []
                 for i, test_case in enumerate(iteration_result.test_case_results):
@@ -789,6 +1021,7 @@ class ResultsDisplay:
                     if test_case.evaluation_details and 'category_scores' in test_case.evaluation_details:
                         for category, details in test_case.evaluation_details['category_scores'].items():
                             row[f"{category} Score"] = f"{details['score']:.2f}"
+                            row[f"{category} Weight"] = f"{details.get('weight', 1.0):.2f}"  # 가중치 표시 추가
                             row[f"{category} State"] = details['current_state']
                             row[f"{category} Action"] = details['improvement_action']
                     

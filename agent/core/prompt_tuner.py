@@ -149,39 +149,44 @@ class PromptTuner:
                 evaluation_data = json.loads(json_str)
                 
                 # 필수 필드 검증
-                if 'final_score' not in evaluation_data:
-                    raise ValueError("JSON 응답에 final_score 필드가 없습니다")
                 if 'scores' not in evaluation_data:
                     raise ValueError("JSON 응답에 scores 필드가 없습니다")
                 
-                # 최종 점수와 세부 점수 추출
-                final_score = self._convert_to_float(evaluation_data.get('final_score', 0))
+                # 카테고리별 점수와 가중치 추출
                 scores_data = evaluation_data.get('scores', {})
-                
-                # 평가 상세 정보 구성
-                evaluation_details = {
-                    'final_score': final_score,
-                    'category_scores': {}
-                }
+                evaluation_details = {'category_scores': {}}
+                total_weighted_score = 0.0
+                total_weight = 0.0
                 
                 # 각 카테고리별 점수와 피드백 정보 추출
                 for category, details in scores_data.items():
                     if isinstance(details, str):
                         # 문자열인 경우 (예: 'PASS', 'FAIL') 직접 변환
                         score = self._convert_to_float(details)
+                        weight = 0.5  # 기본 가중치를 0.5로 변경
                         evaluation_details['category_scores'][category] = {
                             'score': score,
                             'current_state': details,
-                            'improvement_action': ''
+                            'improvement_action': '',
+                            'weight': weight
                         }
                     else:
                         # 딕셔너리인 경우 기존 로직 사용
                         score = self._convert_to_float(details.get('score', 0))
+                        weight = self._convert_to_float(details.get('weight', 0.5))  # 기본 가중치를 0.5로 변경
                         evaluation_details['category_scores'][category] = {
                             'score': score,
                             'current_state': details.get('current_state', ''),
-                            'improvement_action': details.get('improvement_action', '')
+                            'improvement_action': details.get('improvement_action', ''),
+                            'weight': weight
                         }
+                    
+                    # 가중치가 적용된 점수 누적
+                    total_weighted_score += score * weight
+                    total_weight += weight
+                
+                # 최종 점수 계산 (가중치 합으로 나누어 정규화)
+                final_score = total_weighted_score / total_weight if total_weight > 0 else 0.0
                 
                 self.logger.info(f"Evaluation score: {final_score}")
                 self.logger.info(f"Evaluation details: {evaluation_details}")

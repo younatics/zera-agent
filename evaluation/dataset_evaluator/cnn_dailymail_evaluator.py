@@ -68,6 +68,14 @@ class CNNDailyMailEvaluator(BaseEvaluator):
                 formatted_data.append(formatted_item)
             return formatted_data
     
+    def get_sample_indices(self, num_samples: int) -> List[int]:
+        """평가할 샘플의 인덱스를 반환합니다."""
+        dataset = self.load_dataset("cnn_dailymail", num_samples)
+        total_samples = len(dataset)
+        if num_samples > total_samples:
+            num_samples = total_samples
+        return random.sample(range(total_samples), num_samples)
+    
     def format_question(self, item: Dict[str, Any]) -> str:
         """CNN/DailyMail 기사를 포맷팅합니다."""
         return item['article']
@@ -95,9 +103,14 @@ class CNNDailyMailEvaluator(BaseEvaluator):
                       dataset_name: str, 
                       system_prompt: Optional[str] = None,
                       user_prompt: Optional[str] = None,
-                      num_samples: Optional[int] = None) -> Dict[str, Any]:
+                      num_samples: Optional[int] = None,
+                      sample_indices: Optional[List[int]] = None) -> Dict[str, Any]:
         """전체 평가를 실행하는 메서드"""
         dataset = self.load_dataset(dataset_name, num_samples)
+        
+        # If sample indices are provided, use only those samples
+        if sample_indices is not None:
+            dataset = [dataset[i] for i in sample_indices]
         
         results = {
             "total": len(dataset),

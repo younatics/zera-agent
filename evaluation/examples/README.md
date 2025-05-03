@@ -10,7 +10,6 @@
 - `mmlu/`: 다중 선택형 문제 풀이 예제
 - `bbh/`: Big-Bench Hard 태스크 예제
 - `cnn_dailymail/`: 뉴스 요약 예제
-- `samsum/`: 대화 요약 예제
 - `mbpp/`: 프로그래밍 문제 풀이 예제
 
 ## 사용 방법
