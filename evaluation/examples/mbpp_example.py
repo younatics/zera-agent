@@ -10,13 +10,13 @@ from evaluation.base.main import main
 from typing import List
 import random
 
-def run_mbpp_example():
+def run_mbpp_example(model="gpt4o", model_version="gpt-3.5-turbo"):
     # 명령행 인자 설정
     sys.argv = [
         "mbpp_example.py",
         "--dataset", "mbpp",
-        "--model", "gpt4o",
-        "--model_version", "gpt-3.5-turbo",
+        "--model", model,
+        "--model_version", model_version,
         # # # 기존 프롬프트
         "--base_system_prompt", "Write a Python function that satisfies the following specification.",
         "--base_user_prompt", "Problem:",

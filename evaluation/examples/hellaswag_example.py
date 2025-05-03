@@ -8,13 +8,13 @@ HellaSwag 데이터셋 평가 예제
 import sys
 from evaluation.base.main import main
 
-def run_hellaswag_example():
+def run_hellaswag_example(model="gpt4o", model_version="gpt-3.5-turbo"):
     # 명령행 인자 설정
     sys.argv = [
         "hellaswag_example.py",
         "--dataset", "hellaswag",
-        "--model", "gpt4o",
-        "--model_version", "gpt-3.5-turbo",
+        "--model", model,
+        "--model_version", model_version,
         # 기존 프롬프트
         "--base_system_prompt", "What happens next?",
         "--base_user_prompt", "Question:",
@@ -77,7 +77,7 @@ C. [Option C text]
 D. [Option D text]
 
 Reasoning:""",
-        "--num_samples", "5",
+        "--num_samples", "1000",
         # 모델 파라미터
         # "--temperature", "0.2",  # 더 결정적인 응답을 위해 낮은 temperature 사용
         # "--top_p", "0.9"

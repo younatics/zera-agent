@@ -10,26 +10,28 @@ from evaluation.examples.xsum_example import run_xsum_example
 from evaluation.examples.hellaswag_example import run_hellaswag_example
 
 def main():
+    model = "gpt4o"
+    model_version = "gpt-3.5-turbo"
     print("\n===== mmlu_example.py 실행 =====")
-    run_mmlu_example()
+    run_mmlu_example(model, model_version)
     print("\n===== mmlu_pro_example.py 실행 =====")
-    run_mmlu_pro_example()
+    run_mmlu_pro_example(model, model_version)
     print("\n===== gsm8k_example.py 실행 =====")
-    run_gsm8k_example()
+    run_gsm8k_example(model, model_version)
     print("\n===== cnn_dailymail_example.py 실행 =====")
-    run_cnn_dailymail_example()
+    run_cnn_dailymail_example(model, model_version)
     print("\n===== mbpp_example.py 실행 =====")
-    run_mbpp_example()
+    run_mbpp_example(model, model_version)
     print("\n===== humaneval_example.py 실행 =====")
-    run_humaneval_example()
+    run_humaneval_example(model, model_version)
     print("\n===== truthfulqa_example.py 실행 =====")
-    # run_truthfulqa_example()
+    # run_truthfulqa_example(model, model_version)
     print("\n===== bbh_example.py 실행 =====")
-    run_bbh_example()
+    run_bbh_example(model, model_version)
     print("\n===== xsum_example.py 실행 =====")
-    run_xsum_example()
+    run_xsum_example(model, model_version)
     print("\n===== hellaswag_example.py 실행 =====")
-    run_hellaswag_example()
+    run_hellaswag_example(model, model_version)
 
 if __name__ == "__main__":
     main() 

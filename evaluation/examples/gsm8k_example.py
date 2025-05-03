@@ -8,13 +8,13 @@ GSM8K 데이터셋 평가 예제
 import sys
 from evaluation.base.main import main
 
-def run_gsm8k_example():
+def run_gsm8k_example(model="gpt4o", model_version="gpt-3.5-turbo"):
     # 명령행 인자 설정
     sys.argv = [
         "gsm8k_example.py",
         "--dataset", "gsm8k",
-        "--model", "gpt4o",
-        "--model_version", "gpt-3.5-turbo",
+        "--model", model,
+        "--model_version", model_version,
         # 기존 프롬프트
         "--base_system_prompt", "Provide the final answer prefixed with '####'.",
         "--base_user_prompt", "Question:\n",

@@ -8,13 +8,13 @@ CNN/DailyMail 데이터셋 평가 예제
 from evaluation.base.main import main
 import sys
 
-def run_cnn_dailymail_example():
+def run_cnn_dailymail_example(model="gpt4o", model_version="gpt-3.5-turbo"):
     # 명령줄 인자 설정
     sys.argv = [
         "example.py",
         "--dataset", "cnn_dailymail",
-        "--model", "gpt4o",
-        "--model_version", "gpt-3.5-turbo",
+        "--model", model,
+        "--model_version", model_version,
         # 기존 프롬프트
         "--base_system_prompt", "You are a summarization assistant. Summarize the following article in 2–3 sentences, focusing on the main idea.",
         "--base_user_prompt", "Article:",

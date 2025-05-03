@@ -3,12 +3,12 @@ from evaluation.base.main import main
 from typing import List
 import random
 
-def run_humaneval_example():
+def run_humaneval_example(model="gpt4o", model_version="gpt-3.5-turbo"):
     sys.argv = [
         "humaneval_example.py",
         "--dataset", "humaneval",
-        "--model", "gpt4o",
-        "--model_version", "gpt-3.5-turbo",
+        "--model", model,
+        "--model_version", model_version,
         # 기존 프롬프트
         # "--base_system_prompt", "Write a Python function that satisfies the following specification.",
         # "--base_user_prompt", "Problem:",

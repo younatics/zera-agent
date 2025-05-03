@@ -8,13 +8,13 @@ BBH (Big-Bench Hard) 데이터셋 평가 예제
 import sys
 from evaluation.base.main import main
 
-def run_bbh_example():
+def run_bbh_example(model="gpt4o", model_version="gpt-3.5-turbo"):
     # 명령행 인자 설정
     sys.argv = [
         "bbh_example.py",
         "--dataset", "bbh",
-        "--model", "gpt4o",
-        "--model_version", "gpt-3.5-turbo",
+        "--model", model,
+        "--model_version", model_version,
         # 기존 프롬프트
         "--base_system_prompt", "Answer the following question.",
         "--base_user_prompt", "Question:",

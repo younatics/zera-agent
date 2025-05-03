@@ -8,13 +8,13 @@ MMLU 데이터셋 평가 예제
 import sys
 from evaluation.base.main import main
 
-def run_mmlu_pro_example():
+def run_mmlu_pro_example(model="gpt4o", model_version="gpt-3.5-turbo"):
     # 명령행 인자 설정
     sys.argv = [
         "mmlu_pro_example.py",
         "--dataset", "mmlu_pro",
-        "--model", "gpt4o",
-        "--model_version", "gpt-3.5-turbo",
+        "--model", model,
+        "--model_version", model_version,
         # 기존 프롬프트
         "--base_system_prompt", "Answer with only the letter of the correct choice.",
         "--base_user_prompt", "Question:",

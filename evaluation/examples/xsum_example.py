@@ -8,13 +8,13 @@ XSUM 데이터셋 평가 예제
 from evaluation.base.main import main
 import sys
 
-def run_xsum_example():
+def run_xsum_example(model="gpt4o", model_version="gpt-3.5-turbo"):
     # 명령줄 인자 설정
     sys.argv = [
         "xsum_example.py",
         "--dataset", "xsum",
-        "--model", "gpt4o",
-        "--model_version", "gpt-3.5-turbo",
+        "--model", model,
+        "--model_version", model_version,
         # 기존 프롬프트
         "--base_system_prompt", "Summarize the following article in one sentence:",
         "--base_user_prompt", "Article:",
@@ -42,7 +42,7 @@ Now summarize the most newsworthy event in the text below:
 Text: [Insert user's text here]
 Concise summary:
         """,
-        "--num_samples", "30",
+        "--num_samples", "1000",
         # 모델 파라미터
         # "--temperature", "0.2",  # 더 결정적인 응답을 위해 낮은 temperature 사용
         # "--top_p", "0.9"
