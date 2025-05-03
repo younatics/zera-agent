@@ -44,7 +44,7 @@ class Model:
         "local": {
             "name": "Local Model",
             "description": "로컬 서버에서 실행되는 모델",
-            "default_version": "local",
+            "default_version": "/data/project/private/kyle/hf_models/Meta-Llama-3-70B-Instruct",
             "base_url": "http://localhost:8001/v1"
         }
     }
