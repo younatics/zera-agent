@@ -34,10 +34,10 @@ class DatasetLoader:
             "split": "test",
             "local_path": "datasets/cnn_dailymail/test.json"
         },
-        "samsum": {
-            "path": "samsum",
+        "xsum": {
+            "path": "xsum",
             "split": "test",
-            "local_path": "datasets/samsum/test.json"
+            "local_path": "agent/dataset/xsum_data/test.csv"
         },
         "mbpp": {
             "path": "mbpp",

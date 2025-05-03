@@ -42,7 +42,7 @@ def is_prime(n):
 # is_prime(7) ➞ True
 # is_prime(10) ➞ False
 ```""",
-        "--num_samples", "100",
+        "--num_samples", "1000",
     ]
     
     # 평가 실행

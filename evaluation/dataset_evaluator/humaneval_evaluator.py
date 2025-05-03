@@ -42,10 +42,12 @@ class HumanEvalEvaluator(BaseEvaluator):
                 return False
             # candidate alias 코드 추가
             candidate_alias = f"\ncandidate = {func_name}\n"
-            # 전체 코드 합치기
-            full_code = f"{import_lines}\n{code_block}\n{candidate_alias}\n{test_cases_code}"
+            # 전체 코드 합치기 (마지막에 check(candidate) 호출 추가)
+            full_code = f"{import_lines}\n{code_block}\n{candidate_alias}\n{test_cases_code}\n\ncheck(candidate)"
+            print("[FULL_CODE]====================\n" + full_code + "\n============================\n")
             # subprocess로 실행
             stdout, stderr, success = run_safely(full_code, timeout=180)
+            print(f"[EVAL_RESULT] success={success}\nstdout=\n{stdout}\nstderr=\n{stderr}")
             if not success:
                 logger.error(f"[서브프로세스실패] stdout: {stdout} | stderr: {stderr}")
                 return False

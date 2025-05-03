@@ -7,11 +7,12 @@ from evaluation.dataset_evaluator.gsm8k_evaluator import GSM8KEvaluator
 from evaluation.dataset_evaluator.mmlu_evaluator import MMLUEvaluator
 from evaluation.dataset_evaluator.bbh_evaluator import BBHEvaluator
 from evaluation.dataset_evaluator.cnn_dailymail_evaluator import CNNDailyMailEvaluator
-from evaluation.dataset_evaluator.samsum_evaluator import SAMSumEvaluator
 from evaluation.dataset_evaluator.mbpp_evaluator import MBPPEvaluator
 from evaluation.dataset_evaluator.mmlu_pro_evaluator import MMLUProEvaluator
 from evaluation.dataset_evaluator.truthfulqa_evaluator import TruthfulQAEvaluator
 from evaluation.dataset_evaluator.humaneval_evaluator import HumanEvalEvaluator
+from evaluation.dataset_evaluator.xsum_evaluator import XSUMEvaluator
+from evaluation.dataset_evaluator.hellaswag_evaluator import HellaSwagEvaluator
 
 def setup_environment():
     # Try to load from different possible locations
@@ -69,7 +70,7 @@ def main(args=None):
     if args is None:
         parser = argparse.ArgumentParser(description="LLM 평가 스크립트")
         parser.add_argument("--dataset", type=str, required=True, 
-                          choices=["gsm8k", "mmlu", "mmlu_pro", "bbh", "cnn_dailymail", "samsum", "mbpp", "truthfulqa", "humaneval"],
+                          choices=["gsm8k", "mmlu", "mmlu_pro", "bbh", "cnn_dailymail", "mbpp", "truthfulqa", "humaneval", "xsum", "hellaswag"],
                           help="평가할 데이터셋")
         parser.add_argument("--model", type=str, default="gpt4o",
                           help="사용할 모델 (기본값: gpt4o)")
@@ -98,11 +99,12 @@ def main(args=None):
         "mmlu": MMLUEvaluator,
         "bbh": BBHEvaluator,
         "cnn_dailymail": CNNDailyMailEvaluator,
-        "samsum": SAMSumEvaluator,
         "mbpp": MBPPEvaluator,
         "mmlu_pro": MMLUProEvaluator,
         "truthfulqa": TruthfulQAEvaluator,
-        "humaneval": HumanEvalEvaluator
+        "humaneval": HumanEvalEvaluator,
+        "xsum": XSUMEvaluator,
+        "hellaswag": HellaSwagEvaluator
     }
     
     evaluator_class = evaluators[args.dataset]
@@ -145,8 +147,15 @@ def main(args=None):
         if "rouge_scores" in base_results and "rouge_scores" in zera_results:
             print("\nROUGE 점수 차이 (제라 - 기존):")
             for metric in base_results["rouge_scores"].keys():
-                diff = zera_results["rouge_scores"][metric]["f"] - base_results["rouge_scores"][metric]["f"]
-                print(f"  {metric} F1 차이: {diff:.3f}")
+                base_rouge = base_results["rouge_scores"][metric]["f"]
+                zera_rouge = zera_results["rouge_scores"][metric]["f"]
+                diff = zera_rouge - base_rouge
+                print(f"  {metric} F1 (기존): {base_rouge:.3f}  |  (제라): {zera_rouge:.3f}  |  차이: {diff:.3f}")
+            # ROUGE-L만 별도 강조
+            if "rouge-l" in base_results["rouge_scores"]:
+                base_rouge_l = base_results["rouge_scores"]["rouge-l"]["f"]
+                zera_rouge_l = zera_results["rouge_scores"]["rouge-l"]["f"]
+                print(f"\nROUGE-L F1 (기존): {base_rouge_l:.3f}  |  (제라): {zera_rouge_l:.3f}  |  차이: {zera_rouge_l - base_rouge_l:.3f}")
 
 if __name__ == "__main__":
     main() 
