@@ -28,30 +28,37 @@ class HellaSwagEvaluator(BaseEvaluator):
 
     def evaluate_response(self, response: str, ground_truth: Dict[str, Any]) -> bool:
         response_clean = response.strip().upper()
-        # 괄호 안의 숫자/알파벳 우선 추출
-        match = re.search(r'\(([A-D1-4])\)', response_clean)
+        # 'Answer:' 이후에 나오는 첫 번째 A/B/C/D 또는 1/2/3/4 추출
+        match = re.search(r'ANSWER[:\s]*([A-D1-4])', response_clean)
         if match:
             model_answer = match.group(1)
         else:
-            # "final answer:" 등 패턴
-            match = re.search(r'(?:FINAL|THE)\s+ANSWER(?:\s+IS)?[:\s]*([A-D1-4])', response_clean)
-            if not match:
-                # 첫 알파벳/숫자
-                match = re.match(r'^([A-D1-4])', response_clean)
-            if not match:
-                # 마지막 등장하는 알파벳/숫자
-                matches = re.findall(r'([A-D1-4])', response_clean)
-                if matches:
-                    model_answer = matches[-1]
-                else:
-                    return False
-            else:
+            # 괄호 안의 숫자/알파벳 우선 추출
+            match = re.search(r'\(([A-D1-4])\)', response_clean)
+            if match:
                 model_answer = match.group(1)
+            else:
+                # "final answer:" 등 패턴
+                match = re.search(r'(?:FINAL|THE)\s+ANSWER(?:\s+IS)?[:\s]*([A-D1-4])', response_clean)
+                if not match:
+                    # 첫 알파벳/숫자
+                    match = re.match(r'^([A-D1-4])', response_clean)
+                if not match:
+                    # 마지막 등장하는 알파벳/숫자
+                    matches = re.findall(r'([A-D1-4])', response_clean)
+                    if matches:
+                        model_answer = matches[-1]
+                    else:
+                        return False
+                else:
+                    model_answer = match.group(1)
 
         # 정답 변환
         correct_idx = int(ground_truth['answer'])
         correct_letter = chr(65 + correct_idx)  # 0->A, 1->B, ...
         correct_number = str(correct_idx + 1)   # 0->1, 1->2, ...
 
-        print(f"모델 답변: {model_answer}, 정답: {correct_letter} or {correct_number}")  # 디버깅용
+        # 디버깅용 상세 로그 추가
+        print(f"모델 답변: {model_answer}, correct_letter: {correct_letter}, correct_number: {correct_number}, 실제 답변: {ground_truth['answer']}")
+        print(f"비교 결과: {model_answer in [correct_letter, correct_number]}")
         return model_answer in [correct_letter, correct_number] 
