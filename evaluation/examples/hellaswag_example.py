@@ -16,7 +16,7 @@ def run_hellaswag_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--model", model,
         "--model_version", model_version,
         # 기존 프롬프트
-        "--base_system_prompt", "What happens next?",
+        "--base_system_prompt", "Answer with only the letter of the correct choice.",
         "--base_user_prompt", "Question:",
         # 제라 프롬프트
         "--zera_system_prompt", "You are an AI assistant skilled at logical reasoning through contextual scenarios. For each scenario, reason carefully and naturally to assess the logical flow. Clearly analyze the suitability of each continuation. Only after completing your reasoning, provide your final answer strictly as a single letter (A, B, C, or D), without further explanation.",
