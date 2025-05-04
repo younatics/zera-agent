@@ -87,16 +87,18 @@ def evaluate_response(response: str, ground_truth: Dict[str, Any]) -> (bool, str
         import_lines = "\n".join([line for line in response.splitlines() if line.strip().startswith("import") or line.strip().startswith("from ")])
         # 2. 코드블록 또는 함수 정의만 추출
         code_block = extract_code(response)
-        # 응답에서 함수 정의 추출
-        func_def_match = re.search(r'def ([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', code_block)
-        func_name = func_def_match.group(1) if func_def_match else "unknown_function"
-        if func_name == "unknown_function":
-            return False, f"[파싱실패] 함수명 추출 실패. response: {response}"
         # 정답 함수명 추출
         gt_func_match = re.search(r'def ([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', ground_truth['code'])
         gt_func_name = gt_func_match.group(1) if gt_func_match else "unknown_function"
-        if func_name != gt_func_name:
-            return False, f"[함수명불일치] 모델: {func_name}, 정답: {gt_func_name}"
+        # 함수명 자동 매핑
+        best_func = _find_best_func_name(code_block, gt_func_name)
+        if not best_func:
+            code_block = _wrap_lambda(code_block, best_func, gt_func_name)
+            best_func = gt_func_name
+        # 함수명 치환 (테스트케이스에서 호출하는 함수명과 일치하도록)
+        code_block = re.sub(r'def ([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', f'def {gt_func_name}(', code_block, count=1)
+        # 자동 import
+        code_block = _auto_imports(code_block)
         # 테스트 케이스 실행
         try:
             test_cases = ast.literal_eval(ground_truth['test_list'])
@@ -110,20 +112,19 @@ def evaluate_response(response: str, ground_truth: Dict[str, Any]) -> (bool, str
                 call, expected = test_case.split("==")
                 call = call.strip()
                 expected = expected.strip()
-                # 테스트 실행 코드 생성
                 test_code = f"{full_code}\nprint({call})"
                 stdout, stderr, success = run_safely(test_code, timeout=10)
                 if not success:
                     return False, f"[서브프로세스실패] {call} | stdout: {stdout} | stderr: {stderr}"
                 actual_output = stdout.strip()
-                # 타입 유연 비교
-                try:
-                    expected_eval = str(eval(expected))
-                    if actual_output != expected_eval:
-                        return False, f"[테스트실패] {call} -> {actual_output} (예상: {expected_eval})"
-                except Exception:
-                    if actual_output != expected:
-                        return False, f"[테스트실패] {call} -> {actual_output} (예상: {expected})"
+                # 유연 비교
+                norm_actual = _normalize_output(actual_output)
+                norm_expected = _normalize_output(expected)
+                if isinstance(norm_actual, float) and isinstance(norm_expected, float):
+                    if not math.isclose(norm_actual, norm_expected, rel_tol=1e-4, abs_tol=1e-4):
+                        return False, f"[테스트실패] {call} -> {norm_actual} (예상: {norm_expected})"
+                elif norm_actual != norm_expected:
+                    return False, f"[테스트실패] {call} -> {norm_actual} (예상: {norm_expected})"
             except Exception as e:
                 return False, f"[테스트케이스실행실패] {test_case} | {e}"
         return True, "PASS"

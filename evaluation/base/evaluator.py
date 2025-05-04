@@ -9,6 +9,8 @@ from .dataset_loader import DatasetLoader
 import os
 import random
 from agent.common.slack_notify import send_file_to_slack, notify_slack
+import subprocess
+import sys
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -137,6 +139,18 @@ class BaseEvaluator(ABC):
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w') as f:
             json.dump(results, f, indent=2)
+        # MBPP 평가 결과라면 추가 분석 파일 생성
+        if 'MBPPEvaluator' in os.path.basename(output_path):
+            try:
+                # 분석 파일명 결정
+                analysis_path = output_path.replace('.json', '_analysis.json')
+                # analyze_mbpp_json_eval.py 실행
+                subprocess.run([
+                    sys.executable, 'evaluation/demotest/analyze_mbpp_json_eval.py', output_path
+                ], check=True)
+                print(f"MBPP 추가 분석 파일 생성: {analysis_path}")
+            except Exception as e:
+                print(f"MBPP 분석 파일 생성 실패: {e}")
         if slack_file_upload:
             webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
             model_version = getattr(self, 'model_version', 'unknown')

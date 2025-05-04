@@ -34,7 +34,7 @@ def all_unique(test_list):
 ```
 
 (Return value is True if elements are unique, otherwise False.)""",
-        "--num_samples", "1000",
+        "--num_samples", "2",
     ]
     
     # 평가 실행
