@@ -8,6 +8,7 @@ import logging
 from .dataset_loader import DatasetLoader
 import os
 import random
+from agent.common.slack_notify import send_file_to_slack
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -131,8 +132,15 @@ class BaseEvaluator(ABC):
             
         return results
 
-    def save_results(self, results: List[Dict[str, Any]], output_path: str):
-        """결과를 저장합니다."""
+    def save_results(self, results: List[Dict[str, Any]], output_path: str, slack_file_upload: bool = True):
+        """결과를 저장합니다. slack_file_upload가 True면 슬랙으로 파일도 전송합니다."""
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w') as f:
-            json.dump(results, f, indent=2) 
+            json.dump(results, f, indent=2)
+        if slack_file_upload:
+            bot_token = os.environ.get("SLACK_BOT_TOKEN")
+            channel = os.environ.get("SLACK_CHANNEL")
+            if bot_token and channel:
+                send_file_to_slack(output_path, channel, f"[자동알림] 평가 결과 파일 업로드: {os.path.basename(output_path)}", bot_token)
+            else:
+                print("슬랙 파일 업로드를 위해 SLACK_BOT_TOKEN, SLACK_CHANNEL 환경변수가 필요합니다.") 
