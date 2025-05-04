@@ -124,7 +124,9 @@ class BaseEvaluator(ABC):
         
         # 결과 저장
         timestamp = time.strftime("%Y%m%d_%H%M%S")
-        result_file = self.results_dir / f"{self.__class__.__name__}_{timestamp}.json"
+        # 모델 버전만 파일명에 포함
+        model_version_safe = self.model_version.replace('/', '_')
+        result_file = self.results_dir / f"{self.__class__.__name__}_{model_version_safe}_{timestamp}.json"
         self.save_results(results, str(result_file))
             
         return results
