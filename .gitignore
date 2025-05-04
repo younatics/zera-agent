@@ -57,3 +57,5 @@ evaluation/llm_judge/comparison_results_*.csv
 */__pycache__/
 */*/__pycache__/
 */*/*/__pycache__/ 
+evaluation/code_analysis/HumanEvalEvaluator_20250504_144658_analysis.json
+evaluation/code_analysis/HumanEvalEvaluator_20250504_144658.json
