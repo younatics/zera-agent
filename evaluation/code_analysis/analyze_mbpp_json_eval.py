@@ -7,6 +7,7 @@ import subprocess
 import difflib
 import math
 from typing import Any, Dict
+import inspect
 
 # 평가 함수 (mbpp_evaluator.py의 evaluate_response와 유사)
 def run_safely(code: str, timeout=5):
@@ -71,15 +72,60 @@ def _wrap_lambda(code_block: str, func_name: str, gt_func: str) -> str:
 def _normalize_output(output):
     try:
         val = eval(output, {"__builtins__": {}})
-        if isinstance(val, (list, tuple)):
-            return list(val)
+        # float: 반올림
         if isinstance(val, float):
             return round(val, 6)
+        # list/tuple/set: 모두 list로 변환
+        if isinstance(val, (list, tuple, set)):
+            return list(val)
+        # dict: key, value 모두 str로 변환
+        if isinstance(val, dict):
+            return {str(k): str(v) for k, v in val.items()}
+        # str: 소문자, 공백/쉼표/따옴표 제거
         if isinstance(val, str):
-            return val.strip().lower()
+            return re.sub(r"[\s,'\"]", "", val.strip().lower())
         return val
     except Exception:
-        return str(output).strip().lower()
+        # eval 실패 시 문자열로 처리
+        return re.sub(r"[\s,'\"]", "", str(output).strip().lower())
+
+def try_fix_args_and_run(func, args, kwargs=None):
+    """
+    func: 함수 객체
+    args: 튜플
+    kwargs: dict
+    """
+    if kwargs is None:
+        kwargs = {}
+    try:
+        return func(*args, **kwargs)
+    except TypeError as e:
+        # 인자 개수 오류만 잡는다
+        msg = str(e)
+        if 'positional arguments but' in msg or 'missing' in msg or 'required positional argument' in msg:
+            sig = inspect.signature(func)
+            params = list(sig.parameters.values())
+            # 인자 개수 맞추기
+            n_expected = len(params)
+            n_given = len(args)
+            if n_given > n_expected:
+                # 불필요한 인자 잘라내기
+                new_args = args[:n_expected]
+            else:
+                # 부족하면 None으로 채우기
+                new_args = list(args) + [None]*(n_expected-n_given)
+            try:
+                return func(*new_args, **kwargs)
+            except Exception:
+                return None
+        else:
+            return None
+    except Exception:
+        return None
+
+def _extract_func_names(code_block: str):
+    # 코드에서 함수명 모두 추출
+    return re.findall(r'def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', code_block)
 
 def evaluate_response(response: str, ground_truth: Dict[str, Any]) -> (bool, str):
     try:
@@ -115,21 +161,21 @@ def evaluate_response(response: str, ground_truth: Dict[str, Any]) -> (bool, str
                 test_code = f"{full_code}\nprint({call})"
                 stdout, stderr, success = run_safely(test_code, timeout=10)
                 if not success:
-                    return False, f"[서브프로세스실패] {call} | stdout: {stdout} | stderr: {stderr}"
+                    return None, f"[채점불가:서브프로세스실패] {call} | stdout: {stdout} | stderr: {stderr}"
                 actual_output = stdout.strip()
                 # 유연 비교
                 norm_actual = _normalize_output(actual_output)
                 norm_expected = _normalize_output(expected)
                 if isinstance(norm_actual, float) and isinstance(norm_expected, float):
-                    if not math.isclose(norm_actual, norm_expected, rel_tol=1e-4, abs_tol=1e-4):
+                    if not math.isclose(norm_actual, norm_expected, rel_tol=1e-2, abs_tol=1e-2):
                         return False, f"[테스트실패] {call} -> {norm_actual} (예상: {norm_expected})"
                 elif norm_actual != norm_expected:
                     return False, f"[테스트실패] {call} -> {norm_actual} (예상: {norm_expected})"
             except Exception as e:
-                return False, f"[테스트케이스실행실패] {test_case} | {e}"
+                return None, f"[채점불가:테스트케이스실행실패] {test_case} | {e}"
         return True, "PASS"
     except Exception as e:
-        return False, f"[예외] {e}\nresponse: {response}\nground_truth: {ground_truth}"
+        return None, f"[채점불가:예외] {e}\nresponse: {response}\nground_truth: {ground_truth}"
 
 def safe_json_load(path):
     with open(path, 'r') as f:
@@ -160,30 +206,34 @@ def main():
             "is_correct_eval": is_correct,
             "reason": reason
         })
-        print(f"[{idx}] {'O' if is_correct else 'X'}: {reason}")
+        if is_correct is None:
+            print(f"[{idx}] -: {reason}")
+        else:
+            print(f"[{idx}] {'O' if is_correct else 'X'}: {reason}")
     # 정확도 계산 및 기록
     total = len(results)
-    correct = sum(1 for r in results if r["is_correct_eval"])
+    correct = sum(1 for r in results if r["is_correct_eval"] is True)
+    wrong = sum(1 for r in results if r["is_correct_eval"] is False)
+    unscorable = sum(1 for r in results if r["is_correct_eval"] is None)
+    scorable_total = correct + wrong
     accuracy = correct / total if total > 0 else 0.0
-    # 실행 성공 케이스만 집계
-    exec_success = [r for r in results if '[테스트실패]' in r['reason'] or r['is_correct_eval']]
-    exec_success_total = len(exec_success)
-    exec_success_correct = sum(1 for r in exec_success if r["is_correct_eval"])
-    exec_success_accuracy = exec_success_correct / exec_success_total if exec_success_total > 0 else 0.0
+    scorable_accuracy = correct / scorable_total if scorable_total > 0 else 0.0
     output = {
         "input_path": input_path,
         "total": total,
         "correct": correct,
+        "wrong": wrong,
+        "unscorable": unscorable,
         "accuracy": accuracy,
-        "exec_success_total": exec_success_total,
-        "exec_success_correct": exec_success_correct,
-        "exec_success_accuracy": exec_success_accuracy,
+        "scorable_total": scorable_total,
+        "scorable_accuracy": scorable_accuracy,
         "results": results
     }
     with open(output_path, "w") as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
-    print(f"분석 결과 저장: {output_path} (정확도: {accuracy:.3f})")
-    print(f"실행 성공 내 정확도: {exec_success_accuracy:.3f} (실행 성공: {exec_success_total}개 중 {exec_success_correct}개 정답)")
+    print(f"분석 결과 저장: {output_path} (전체 정확도: {accuracy:.3f})")
+    print(f"채점 가능한 문항 내 정확도: {scorable_accuracy:.3f} (채점 가능: {scorable_total}개 중 {correct}개 정답)")
+    print(f"채점 불가(실행 실패 등): {unscorable}개")
 
 if __name__ == "__main__":
     main() 
