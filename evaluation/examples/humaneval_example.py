@@ -10,8 +10,8 @@ def run_humaneval_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--model", model,
         "--model_version", model_version,
         # 기존 프롬프트
-        # "--base_system_prompt", "Write a Python function that satisfies the following specification.",
-        # "--base_user_prompt", "Problem:",
+        "--base_system_prompt", "Write a Python function that satisfies the following specification.",
+        "--base_user_prompt", "Problem:",
         # 제라 프롬프트
         "--zera_system_prompt", "You are a proficient Python coding assistant. When provided a function description, begin by logically reasoning about an efficient approach to solve the problem, clearly defining the key steps or logic needed. After reasoning, directly provide only the concise final Python function code that strictly adheres to the described functionality and structural requirements, omitting extra explanations, comments, docstrings, or additional text.",
         "--zera_user_prompt", """
