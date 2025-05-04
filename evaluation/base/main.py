@@ -42,14 +42,15 @@ def setup_environment():
 # Call setup at import time
 setup_environment()
 
-def run_single_evaluation(evaluator, dataset, system_prompt, user_prompt, num_samples, sample_indices=None, is_zera=None):
+def run_single_evaluation(evaluator, dataset, system_prompt, user_prompt, num_samples, sample_indices=None, is_zera=None, num_shots=None):
     results = evaluator.run_evaluation(
         dataset,
         system_prompt,
         user_prompt,
         num_samples,
         sample_indices=sample_indices,
-        is_zera=is_zera
+        is_zera=is_zera,
+        num_shots=num_shots
     )
     return results
 
@@ -91,6 +92,10 @@ def main(args=None):
                           help="모델의 temperature 값 (기본값: 0.7)")
         parser.add_argument("--top_p", type=float, default=0.9,
                           help="모델의 top_p 값 (기본값: 0.9)")
+        parser.add_argument("--base_num_shots", type=int, default=0,
+                          help="기존 프롬프트에 사용할 few-shot 예시 개수 (기본값: 0)")
+        parser.add_argument("--zera_num_shots", type=int, default=0,
+                          help="제라 프롬프트에 사용할 few-shot 예시 개수 (기본값: 0)")
         
         args = parser.parse_args()
     
@@ -124,7 +129,8 @@ def main(args=None):
             args.base_user_prompt,
             args.num_samples,
             sample_indices,
-            is_zera=False
+            is_zera=False,
+            num_shots=args.base_num_shots
         )
         base_accuracy = print_evaluation_results(base_results, "기존 프롬프트")
     
@@ -136,7 +142,8 @@ def main(args=None):
         args.zera_user_prompt,
         args.num_samples,
         sample_indices,
-        is_zera=True
+        is_zera=True,
+        num_shots=args.zera_num_shots
     )
     zera_accuracy = print_evaluation_results(zera_results, "제라 프롬프트")
     

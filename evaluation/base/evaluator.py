@@ -68,8 +68,9 @@ class BaseEvaluator(ABC):
                       user_prompt: Optional[str] = None,
                       num_samples: Optional[int] = None,
                       sample_indices: Optional[List[int]] = None,
-                      is_zera: bool = None) -> Dict[str, Any]:
-        """전체 평가를 실행하는 메서드. is_zera: 제라 프롬프트 여부 (슬랙 메시지용)"""
+                      is_zera: bool = None,
+                      num_shots: Optional[int] = None) -> Dict[str, Any]:
+        """전체 평가를 실행하는 메서드. is_zera: 제라 프롬프트 여부 (슬랙 메시지용), num_shots: few-shot 예시 개수"""
         dataset = self.load_dataset(dataset_name)
         if sample_indices is not None:
             dataset = [dataset[i] for i in sample_indices]
@@ -80,12 +81,35 @@ class BaseEvaluator(ABC):
             "correct": 0,
             "samples": [],
             "system_prompt": system_prompt,
-            "user_prompt": user_prompt
+            "user_prompt": user_prompt,
+            "num_shots": num_shots
         }
+        # few-shot 예시 생성
+        few_shot_examples = []
+        if num_shots is not None and num_shots > 0:
+            # 평가에 사용되는 샘플과 겹치지 않게 예시를 뽑음
+            available_indices = set(range(len(dataset)))
+            if len(dataset) > num_shots:
+                few_shot_indices = random.sample(list(available_indices), num_shots)
+            else:
+                few_shot_indices = list(available_indices)
+            for idx in few_shot_indices:
+                ex_item = dataset[idx]
+                ex_question = self.format_question(ex_item)
+                ex_answer = ex_item.get("answer", ex_item)
+                few_shot_examples.append(f"[예시 {len(few_shot_examples)+1}]\n문제: {ex_question}\n정답: {ex_answer}\n")
+            few_shot_prompt = "\n".join(few_shot_examples)
+        else:
+            few_shot_prompt = ""
         for idx, item in enumerate(dataset):
             try:
                 question = self.format_question(item)
-                response = self.model.ask(question, system_prompt, user_prompt)
+                # user_prompt는 그대로, question 위에만 few-shot 예시 추가
+                full_question = ""
+                if few_shot_prompt:
+                    full_question += few_shot_prompt + "\n"
+                full_question += question
+                response = self.model.ask(full_question, system_prompt, user_prompt)
                 is_correct = self.evaluate_response(response, item)
                 results["correct"] += 1 if is_correct else 0
                 sample_info = {
@@ -98,7 +122,7 @@ class BaseEvaluator(ABC):
                 print(f"\n샘플 {idx+1}/{len(dataset)}:")
                 print(f"시스템 프롬프트: {system_prompt}")
                 print(f"사용자 프롬프트: {user_prompt}")
-                print(f"문제: {question}")
+                print(f"문제: {full_question}")
                 print(f"모델 답변: {response}")
                 print(f"실제 답변: {sample_info['actual_answer']}")
                 print(f"정답 여부: {'정답' if is_correct else '오답'}")
