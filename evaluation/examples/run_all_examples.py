@@ -16,21 +16,20 @@ def main():
     model = "local"
     model_version = "/data/project/private/kyle/hf_models/Meta-Llama-3-70B-Instruct"
     
-    # webhook_url = "https://hooks.slack.com/services/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"
     print("\n===== mmlu_example.py 실행 =====")
-    run_mmlu_example(model, model_version)
+    # run_mmlu_example(model, model_version)
 
     print("\n===== mmlu_pro_example.py 실행 =====")
-    run_mmlu_pro_example(model, model_version)
+    # run_mmlu_pro_example(model, model_version)
 
     print("\n===== gsm8k_example.py 실행 =====")
-    run_gsm8k_example(model, model_version)
+    # run_gsm8k_example(model, model_version)
 
     print("\n===== cnn_dailymail_example.py 실행 =====")
-    run_cnn_dailymail_example(model, model_version)
+    # run_cnn_dailymail_example(model, model_version)
 
     print("\n===== mbpp_example.py 실행 =====")
-    run_mbpp_example(model, model_version)
+    # run_mbpp_example(model, model_version)
 
     print("\n===== humaneval_example.py 실행 =====")
     run_humaneval_example(model, model_version)
@@ -38,10 +37,10 @@ def main():
     print("\n===== truthfulqa_example.py 실행 =====")
     # run_truthfulqa_example(model, model_version)
     print("\n===== bbh_example.py 실행 =====")
-    run_bbh_example(model, model_version)
+    # run_bbh_example(model, model_version)
 
     print("\n===== xsum_example.py 실행 =====")
-    run_xsum_example(model, model_version)
+    # run_xsum_example(model, model_version)
     
     print("\n===== hellaswag_example.py 실행 =====")
     run_hellaswag_example(model, model_version)
