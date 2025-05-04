@@ -67,45 +67,34 @@ class BaseEvaluator(ABC):
                       system_prompt: Optional[str] = None,
                       user_prompt: Optional[str] = None,
                       num_samples: Optional[int] = None,
-                      sample_indices: Optional[List[int]] = None) -> Dict[str, Any]:
-        """전체 평가를 실행하는 메서드"""
+                      sample_indices: Optional[List[int]] = None,
+                      is_zera: bool = None) -> Dict[str, Any]:
+        """전체 평가를 실행하는 메서드. is_zera: 제라 프롬프트 여부 (슬랙 메시지용)"""
         dataset = self.load_dataset(dataset_name)
-        
-        # 샘플 인덱스가 제공된 경우 해당 샘플만 사용
         if sample_indices is not None:
             dataset = [dataset[i] for i in sample_indices]
-        # 샘플 수가 지정된 경우 랜덤 샘플링
         elif num_samples:
             dataset = random.sample(dataset, min(num_samples, len(dataset)))
-            
         results = {
             "total": len(dataset),
             "correct": 0,
-            "samples": [],  # 각 샘플의 상세 정보를 저장
+            "samples": [],
             "system_prompt": system_prompt,
             "user_prompt": user_prompt
         }
-        
         for idx, item in enumerate(dataset):
             try:
                 question = self.format_question(item)
-                
                 response = self.model.ask(question, system_prompt, user_prompt)
-                
                 is_correct = self.evaluate_response(response, item)
-                
                 results["correct"] += 1 if is_correct else 0
-                
-                # 각 샘플의 상세 정보 저장
                 sample_info = {
                     "question": question,
                     "model_response": response,
-                    "actual_answer": item.get("answer", item),  # answer 필드가 있으면 사용, 없으면 전체 item
+                    "actual_answer": item.get("answer", item),
                     "is_correct": is_correct
                 }
                 results["samples"].append(sample_info)
-                
-                # 상세 정보 출력
                 print(f"\n샘플 {idx+1}/{len(dataset)}:")
                 print(f"시스템 프롬프트: {system_prompt}")
                 print(f"사용자 프롬프트: {user_prompt}")
@@ -114,27 +103,20 @@ class BaseEvaluator(ABC):
                 print(f"실제 답변: {sample_info['actual_answer']}")
                 print(f"정답 여부: {'정답' if is_correct else '오답'}")
                 print("-" * 50)
-                
                 logger.info(f"Processed {idx+1}/{len(dataset)} samples")
-                time.sleep(1)  # API rate limit 방지
-                
+                time.sleep(1)
             except Exception as e:
                 logger.error(f"Error processing sample {idx}: {str(e)}")
                 continue
-                
         accuracy = results["correct"] / results["total"] if results["total"] > 0 else 0
         results["accuracy"] = accuracy
-        
-        # 결과 저장
         timestamp = time.strftime("%Y%m%d_%H%M%S")
-        # 모델 버전만 파일명에 포함
         model_version_safe = self.model_version.replace('/', '_')
         result_file = self.results_dir / f"{self.__class__.__name__}_{model_version_safe}_{timestamp}.json"
-        self.save_results(results, str(result_file))
-            
+        self.save_results(results, str(result_file), is_zera=is_zera)
         return results
 
-    def save_results(self, results: List[Dict[str, Any]], output_path: str, slack_file_upload: bool = True):
+    def save_results(self, results: List[Dict[str, Any]], output_path: str, slack_file_upload: bool = True, is_zera: bool = None):
         """결과를 저장합니다. slack_file_upload가 True면 슬랙 웹훅으로 간단한 메시지를 전송합니다."""
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w') as f:
@@ -160,7 +142,14 @@ class BaseEvaluator(ABC):
                     accuracy_str = f"{accuracy:.2%}"
                 else:
                     accuracy_str = str(accuracy)
-                msg = f"[평가 결과] 모델 버전: {model_version}\n정확도: {accuracy_str}\n결과 파일: {os.path.basename(output_path)}"
+                # 프롬프트 타입 이모티콘
+                if is_zera is True:
+                    prompt_type = "🧬 제라 프롬프트"
+                elif is_zera is False:
+                    prompt_type = "📝 베이스 프롬프트"
+                else:
+                    prompt_type = "🤖 프롬프트"
+                msg = f"{prompt_type} 평가 결과\n모델 버전: {model_version}\n정확도: {accuracy_str}\n결과 파일: {os.path.basename(output_path)}\n🎉 수고하셨습니다!"
                 notify_slack(msg, webhook_url)
             else:
                 print("슬랙 웹훅 알림을 위해 SLACK_WEBHOOK_URL 환경변수가 필요합니다.") 

@@ -42,13 +42,14 @@ def setup_environment():
 # Call setup at import time
 setup_environment()
 
-def run_single_evaluation(evaluator, dataset, system_prompt, user_prompt, num_samples, sample_indices=None):
+def run_single_evaluation(evaluator, dataset, system_prompt, user_prompt, num_samples, sample_indices=None, is_zera=None):
     results = evaluator.run_evaluation(
         dataset,
         system_prompt,
         user_prompt,
         num_samples,
-        sample_indices=sample_indices
+        sample_indices=sample_indices,
+        is_zera=is_zera
     )
     return results
 
@@ -122,7 +123,8 @@ def main(args=None):
             args.base_system_prompt,
             args.base_user_prompt,
             args.num_samples,
-            sample_indices
+            sample_indices,
+            is_zera=False
         )
         base_accuracy = print_evaluation_results(base_results, "기존 프롬프트")
     
@@ -133,7 +135,8 @@ def main(args=None):
         args.zera_system_prompt,
         args.zera_user_prompt,
         args.num_samples,
-        sample_indices
+        sample_indices,
+        is_zera=True
     )
     zera_accuracy = print_evaluation_results(zera_results, "제라 프롬프트")
     
