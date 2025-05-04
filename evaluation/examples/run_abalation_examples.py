@@ -1,0 +1,80 @@
+import sys
+from evaluation.base.main import main
+
+def run_gsm8k_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
+    sys.argv = [
+        "gsm8k_ablation.py",
+        "--dataset", "gsm8k",
+        "--model", model,
+        "--model_version", model_version,
+        "--base_system_prompt", "Provide the final answer prefixed with '####'.",
+        "--base_user_prompt", "Question:\n",
+        "--zera_system_prompt", "You are a logical reasoning assistant. First reason through the problem naturally and clearly—ignoring formatting. Only at the final stage, concisely summarize critical numeric calculations using the designated \"<<calculation=result>>\" notation, and clearly report your final numeric answer.",
+        "--zera_user_prompt", "Solve the following problem step-by-step with clear, logical reasoning. Afterward, briefly present each critical calculation step explicitly using the \"<<calculation=result>>\" notation, concluding with your final numeric answer clearly marked after \"####\".\n\nExample:\nQuestion: Sara buys 4 bouquets of roses, each bouquet has 12 roses. She gives away 9 roses. How many roses does Sara have left?\n\nReasoning:\nSara first buys a total of 4 bouquets * 12 roses each = 48 roses. Then she gives away 9 roses, leaving her with 48 roses - 9 roses = 39 roses.\n\nCalculations:\nTotal roses bought: 4 * 12 = <<4*12=48>>  \nRoses remaining: 48 - 9 = <<48-9=39>>\n\n#### 39\n\nNow solve this problem:\n",
+        "--num_samples", "1319",
+    ]
+    main()
+
+def run_bbh_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
+    sys.argv = [
+        "bbh_ablation.py",
+        "--dataset", "bbh",
+        "--model", model,
+        "--model_version", model_version,
+        "--base_system_prompt", "Answer the following question.",
+        "--base_user_prompt", "Question:",
+        "--zera_system_prompt", "You are a logical reasoning expert. Clearly reason each question step-by-step in natural, explicit language. Upon completing your analysis, distinctly separate it from your final concise answer, which must strictly follow the provided formatting instructions.",
+        "--zera_user_prompt", """Solve these logical reasoning problems by explicitly thinking through them step-by-step before providing your final answer.\n\nExamples:\n\nQuestion: Sort alphabetically: horse dolphin cat bird\nbird cat dolphin horse\n\nQuestion: Jim scored higher than Sam. Sam scored higher than Eve. Who scored lowest?\nOptions:\n(A) Jim\n(B) Sam\n(C) Eve\n(C)\n\nQuestion: Check validity:\n\"No cars can fly. All Toyotas are cars. Therefore, no Toyotas can fly.\"\nOptions:\n(A) valid\n(B) invalid\n(A)\n\nNow, begin solving.\n""",
+        "--num_samples", "1000"
+    ]
+    main()
+
+def run_cnn_dailymail_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
+    sys.argv = [
+        "cnn_dailymail_ablation.py",
+        "--dataset", "cnn_dailymail",
+        "--model", model,
+        "--model_version", model_version,
+        "--base_system_prompt", "You are a summarization assistant. Summarize the following article in 2–3 sentences, focusing on the main idea.",
+        "--base_user_prompt", "Article:",
+        "--zera_system_prompt", "Read thoroughly and reason clearly about the provided text to first identify key explicit details. After logically extracting and determining these facts, present your summary strictly as concise, factual bullet points.",
+        "--zera_user_prompt", "Summarize the provided text into concise bullet points. Include only key explicit details: names, ages, numbers, dates, specific locations, and clearly mentioned events. Omit any interpretations, assumptions, or generalizations.\n\nExample:\n\nText:\n\"England and Wales Cricket Board managing director Paul Downton insists he retains 'every faith' in coach Peter Moores despite England's humiliating exit at the World Cup on Monday. A 15-run defeat to Bangladesh saw England crash out in the group stages of the one-day tournament after a dismal campaign that included four defeats in five matches. Moores' tactics and team selection have come under heavy scrutiny since he was appointed head coach 11 months ago but Downton insists the former Lancashire coach remains the right man for the job.\"\n\nExpected Summary:\n- England exited World Cup at group stage after 15-run defeat to Bangladesh.\n- England lost four out of five matches in the tournament.\n- Coach Peter Moores appointed England head coach 11 months ago.\n- ECB managing director Paul Downton expresses 'every faith' in Moores despite criticism.\n\nArticle:",
+        "--num_samples", "1000",
+    ]
+    main()
+
+def run_mbpp_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
+    sys.argv = [
+        "mbpp_ablation.py",
+        "--dataset", "mbpp",
+        "--model", model,
+        "--model_version", model_version,
+        "--base_system_prompt", "Write a Python function that satisfies the following specification.",
+        "--base_user_prompt", "Problem:",
+        "--zera_system_prompt", "You are an expert Python assistant, clearly reasoning through programming tasks before succinctly providing the final solution. Your answers must include clean, accurate Python code, with brief optional explanations or tests afterward only if they enhance clarity.",
+        "--zera_user_prompt", """Answer the following Python programming question clearly and concisely. Provide your complete solution as Python code. If helpful for clarity, you may briefly add an explanation or practical test cases after your code.\n\nExample:\n\nQuestion: Write a Python function to check whether all list elements are unique.\n\n```python\ndef all_unique(test_list):\n    return len(test_list) == len(set(test_list))\n```\n\n(Return value is True if elements are unique, otherwise False.)""",
+        "--num_samples", "2",
+    ]
+    main()
+
+def main():
+    model = "local"
+    model_version = "/data/project/private/kyle/hf_models/Meta-Llama-3-70B-Instruct"
+
+    print("\n===== gsm8k ablation 평가 실행 =====")
+    run_gsm8k_ablation(model, model_version)
+
+    print("\n===== bbh ablation 평가 실행 =====")
+    run_bbh_ablation(model, model_version)
+
+    print("\n===== cnn_dailymail ablation 평가 실행 =====")
+    run_cnn_dailymail_ablation(model, model_version)
+
+    print("\n===== mbpp ablation 평가 실행 =====")
+    run_mbpp_ablation(model, model_version)
+
+    # 모든 평가 완료 후 슬랙 알림 전송 (필요시 주석 해제)
+    # notify_slack(f"[모델 버전: {model_version}] ablation 평가가 완료되었습니다.", webhook_url)
+
+if __name__ == "__main__":
+    main() 
