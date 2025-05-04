@@ -14,7 +14,7 @@ def main():
     # model_version = "gpt-3.5-turbo"
 
     model = "local"
-    model_version = "/data/project/private/kyle/hf_models/Meta-Llama-3-70B-Instruct"
+    model_version = "/data/project/private/kyle/hf_models/Qwen2.5-72B-Instruct"
     
     print("\n===== mmlu_example.py 실행 =====")
     run_mmlu_example(model, model_version)
@@ -36,7 +36,7 @@ def main():
 
     print("\n===== truthfulqa_example.py 실행 =====")
     # run_truthfulqa_example(model, model_version)
-    
+
     print("\n===== bbh_example.py 실행 =====")
     run_bbh_example(model, model_version)
 
