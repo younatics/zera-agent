@@ -146,7 +146,7 @@ class BaseEvaluator(ABC):
                 analysis_path = output_path.replace('.json', '_analysis.json')
                 # analyze_mbpp_json_eval.py 실행
                 subprocess.run([
-                    sys.executable, 'evaluation/demotest/analyze_mbpp_json_eval.py', output_path
+                    sys.executable, 'evaluation/code_analysis/analyze_mbpp_json_eval.py', output_path
                 ], check=True)
                 print(f"MBPP 추가 분석 파일 생성: {analysis_path}")
             except Exception as e:
