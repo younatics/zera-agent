@@ -21,27 +21,19 @@ def run_mbpp_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--base_system_prompt", "Write a Python function that satisfies the following specification.",
         "--base_user_prompt", "Problem:",
         # 제라 프롬프트
-        "--zera_system_prompt", "You are a highly skilled coding assistant. For each problem, reason step-by-step and then output the final code solution in a single code block, with no extra explanation.",
-        "--zera_user_prompt", """Solve the following Python programming problem. 
-
-Provide your final answer as a concise, executable Python function definition only. You may add short inline comments or minimal essential test cases afterward, if needed.
+        "--zera_system_prompt", "You are an expert Python assistant, clearly reasoning through programming tasks before succinctly providing the final solution. Your answers must include clean, accurate Python code, with brief optional explanations or tests afterward only if they enhance clarity.",
+        "--zera_user_prompt", """Answer the following Python programming question clearly and concisely. Provide your complete solution as Python code. If helpful for clarity, you may briefly add an explanation or practical test cases after your code.
 
 Example:
 
-Question: Write a Python function to determine if a number is prime.
+Question: Write a Python function to check whether all list elements are unique.
 
 ```python
-def is_prime(n):
-    if n <= 1:
-        return False
-    for i in range(2, int(n**0.5)+1):
-        if n % i == 0:
-            return False
-    return True
+def all_unique(test_list):
+    return len(test_list) == len(set(test_list))
+```
 
-# is_prime(7) ➞ True
-# is_prime(10) ➞ False
-```""",
+(Return value is True if elements are unique, otherwise False.)""",
         "--num_samples", "1000",
     ]
     
