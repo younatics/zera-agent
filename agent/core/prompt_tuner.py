@@ -524,6 +524,7 @@ Average Score: {best_prompt['avg_score']:.2f}
                         row[f"{category}_Score"] = details['score']
                         row[f"{category}_State"] = details['current_state']
                         row[f"{category}_Action"] = details['improvement_action']
+                        row[f"{category}_Weight"] = details['weight']
                 
                 data.append(row)
         
