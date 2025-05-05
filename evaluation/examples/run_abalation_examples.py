@@ -1,5 +1,5 @@
 import sys
-from evaluation.base.main import main
+from evaluation.base.main import main as eval_main
 
 def run_gsm8k_fewshot_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
     sys.argv = [
@@ -16,7 +16,7 @@ def run_gsm8k_fewshot_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--num_samples", "1319",
         
     ]
-    main()
+    eval_main()
 
 def run_gsm8k_prompt_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
     ## 위에 예시만 뺸 것, 밑에 추론만 뺸것
@@ -31,7 +31,7 @@ def run_gsm8k_prompt_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--zera_user_prompt", "Solve the following problem. Use the same format as shown in the example below.\n\nExample:\nQuestion: Sara buys 4 bouquets of roses, each bouquet has 12 roses. She gives away 9 roses. How many roses does Sara have left?\n\nCalculations:\nTotal roses bought: 4 * 12 = <<4*12=48>>\nRoses remaining: 48 - 9 = <<48-9=39>>\n\n#### 39\n\nNow solve this problem:\n",        
         "--num_samples", "1319"
     ]
-    main()
+    eval_main()
 
 
 def run_bbh_fewshot_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
@@ -48,7 +48,7 @@ def run_bbh_fewshot_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--zera_num_shots", "5",
         "--num_samples", "1000"
     ]
-    main()
+    eval_main()
 
 def run_bbh_prompt_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
     ## 위에 예시만 뺸 것, 밑에 추론만 뺸것
@@ -90,7 +90,7 @@ Options:
 Now, begin solving.""",
         "--num_samples", "1000"
     ]
-    main()
+    eval_main()
 
 def run_cnn_fewshot_dailymail_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
     sys.argv = [
@@ -106,7 +106,7 @@ def run_cnn_fewshot_dailymail_ablation(model="gpt4o", model_version="gpt-3.5-tur
         "--zera_num_shots", "5",
         "--num_samples", "1000",
     ]
-    main()
+    eval_main()
 
 def run_cnn_prompt_dailymail_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
     ## 위에 예시만 뺸 것, 밑에 추론만 뺸것
@@ -134,7 +134,7 @@ Expected Summary:
         """,
         "--num_samples", "1000",
     ]
-    main()
+    eval_main()
 
 
 def run_mbpp_fewshot_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
@@ -151,7 +151,7 @@ def run_mbpp_fewshot_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--zera_num_shots", "5",
         "--num_samples", "1000",
     ]
-    main()
+    eval_main()
 
 def run_mbpp_prompt_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
     ## 위에 예시만 뺸 것, 밑에 추론만 뺸것
@@ -177,7 +177,7 @@ Question: Write a Python function to check whether all list elements are unique.
         """,
         "--num_samples", "1000",
     ]
-    main()
+    eval_main()
 
 def run_mmlu_pro_fewshot_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
     sys.argv = [
@@ -193,7 +193,7 @@ def run_mmlu_pro_fewshot_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--zera_num_shots", "5",
         "--num_samples", "1000"
     ]
-    main()
+    eval_main()
 
 def run_mmlu_pro_prompt_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
         ## 위에 예시만 뺸 것, 밑에 추론만 뺸것
@@ -208,7 +208,7 @@ def run_mmlu_pro_prompt_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--zera_user_prompt", "Solve the following multiple-choice questions by reasoning concisely and logically. Conclude by stating your final answer strictly as one letter in parentheses, e.g., \"(D)\".\n\nExample 1:\n\nQuestion: A microwave oven operates at 120 volts and draws a current of 2 amperes. How many watts of electrical power does it use?\n\nChoices:\nA. 120 W\nB. 240 W\nC. 480 W\n\nThe correct answer is (B).\n\nExample 2:\n\nQuestion: According to Moore's \"ideal utilitarianism\", the right action is the one producing the greatest amount of:\n\nChoices:\nA. wealth\nB. virtue\nC. fairness\nD. pleasure\nE. peace\nF. justice\nG. happiness\nH. power\nI. good\nJ. knowledge\n\nThe correct answer is (I).\n\nQuestion:",
         "--num_samples", "1000"
     ]
-    main()
+    eval_main()
 
 
 def run_fewshot_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
@@ -239,6 +239,8 @@ def run_prompt_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
 def main():
     model = "local"
     model_version = "/data/project/private/kyle/hf_models/Meta-Llama-3-70B-Instruct"
+    # model = "gpt4o"
+    # model_version = "gpt-3.5-turbo"
 
     run_fewshot_ablation(model, model_version)
     run_prompt_ablation(model, model_version)

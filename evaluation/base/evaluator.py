@@ -114,7 +114,7 @@ class BaseEvaluator(ABC):
                 ex_item = dataset[idx]
                 ex_question = self.format_question(ex_item)
                 ex_answer = ex_item.get("answer", ex_item)
-                few_shot_examples.append(f"[예시 {len(few_shot_examples)+1}]\n문제: {ex_question}\n정답: {ex_answer}\n")
+                few_shot_examples.append(f"[Example {len(few_shot_examples)+1}]\nQuestion: {ex_question}\nAnswer: {ex_answer}\n")
             few_shot_prompt = "\n".join(few_shot_examples)
         else:
             few_shot_prompt = ""
@@ -130,7 +130,7 @@ class BaseEvaluator(ABC):
                 is_correct = self.evaluate_response(response, item)
                 results["correct"] += 1 if is_correct else 0
                 sample_info = {
-                    "question": question,
+                    "question": full_question,
                     "model_response": response,
                     "actual_answer": item.get("answer", item),
                     "is_correct": is_correct
