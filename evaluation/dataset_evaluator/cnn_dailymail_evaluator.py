@@ -104,7 +104,9 @@ class CNNDailyMailEvaluator(BaseEvaluator):
                       system_prompt: Optional[str] = None,
                       user_prompt: Optional[str] = None,
                       num_samples: Optional[int] = None,
-                      sample_indices: Optional[List[int]] = None) -> Dict[str, Any]:
+                      sample_indices: Optional[List[int]] = None,
+                      is_zera: Optional[bool] = None,
+                      num_shots: Optional[int] = None) -> Dict[str, Any]:
         """전체 평가를 실행하는 메서드"""
         dataset = self.load_dataset(dataset_name, num_samples)
         
