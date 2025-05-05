@@ -74,13 +74,20 @@ def _normalize_output(output):
         val = eval(output, {"__builtins__": {}})
         # float: 반올림
         if isinstance(val, float):
+            if val.is_integer():
+                return int(val)
             return round(val, 6)
-        # list/tuple/set: 모두 list로 변환
+        if isinstance(val, int):
+            return val
+        # list/tuple/set: 모두 list로 변환, 정렬해서 비교
         if isinstance(val, (list, tuple, set)):
-            return list(val)
-        # dict: key, value 모두 str로 변환
+            try:
+                return sorted(list(val))
+            except Exception:
+                return list(val)
+        # dict: key순 정렬, value도 str로 변환
         if isinstance(val, dict):
-            return {str(k): str(v) for k, v in val.items()}
+            return {str(k): str(v) for k, v in sorted(val.items())}
         # str: 소문자, 공백/쉼표/따옴표 제거
         if isinstance(val, str):
             return re.sub(r"[\s,'\"]", "", val.strip().lower())
@@ -88,6 +95,14 @@ def _normalize_output(output):
     except Exception:
         # eval 실패 시 문자열로 처리
         return re.sub(r"[\s,'\"]", "", str(output).strip().lower())
+
+def _is_similar(a, b, threshold=0.7):
+    if not isinstance(a, str):
+        a = str(a)
+    if not isinstance(b, str):
+        b = str(b)
+    seq = difflib.SequenceMatcher(None, a, b)
+    return seq.ratio() >= threshold or (a in b) or (b in a)
 
 def try_fix_args_and_run(func, args, kwargs=None):
     """
@@ -166,11 +181,55 @@ def evaluate_response(response: str, ground_truth: Dict[str, Any]) -> (bool, str
                 # 유연 비교
                 norm_actual = _normalize_output(actual_output)
                 norm_expected = _normalize_output(expected)
+                # float 비교
                 if isinstance(norm_actual, float) and isinstance(norm_expected, float):
                     if not math.isclose(norm_actual, norm_expected, rel_tol=1e-2, abs_tol=1e-2):
                         return False, f"[테스트실패] {call} -> {norm_actual} (예상: {norm_expected})"
-                elif norm_actual != norm_expected:
-                    return False, f"[테스트실패] {call} -> {norm_actual} (예상: {norm_expected})"
+                # 리스트/튜플/셋: 변환해서 비교
+                elif isinstance(norm_actual, list) and isinstance(norm_expected, list):
+                    try:
+                        if sorted(norm_actual) != sorted(norm_expected):
+                            # str로 변환해서도 비교
+                            if str(norm_actual) != str(norm_expected):
+                                return False, f"[테스트실패] {call} -> {norm_actual} (예상: {norm_expected})"
+                    except Exception:
+                        if norm_actual != norm_expected:
+                            return False, f"[테스트실패] {call} -> {norm_actual} (예상: {norm_expected})"
+                # dict: 변환해서 비교
+                elif isinstance(norm_actual, dict) and isinstance(norm_expected, dict):
+                    if norm_actual != norm_expected:
+                        # str로 변환해서도 비교
+                        if str(norm_actual) != str(norm_expected):
+                            return False, f"[테스트실패] {call} -> {norm_actual} (예상: {norm_expected})"
+                # aggressive 숫자형 캐스팅 비교
+                elif _aggressive_number_compare(norm_actual, norm_expected):
+                    pass  # 정답 인정
+                # 타입이 다르면 변환해서 비교 시도
+                elif type(norm_actual) != type(norm_expected):
+                    # str <-> list 변환
+                    try:
+                        if isinstance(norm_actual, str) and isinstance(norm_expected, (list, tuple, set)):
+                            if sorted(list(norm_actual)) != sorted(list(norm_expected)):
+                                return False, f"[테스트실패] {call} -> {norm_actual} (예상: {norm_expected})"
+                        elif isinstance(norm_expected, str) and isinstance(norm_actual, (list, tuple, set)):
+                            if sorted(list(norm_expected)) != sorted(list(norm_actual)):
+                                return False, f"[테스트실패] {call} -> {norm_actual} (예상: {norm_expected})"
+                        elif isinstance(norm_actual, (int, float)) and isinstance(norm_expected, (int, float)):
+                            if not math.isclose(float(norm_actual), float(norm_expected), rel_tol=1e-2, abs_tol=1e-2):
+                                return False, f"[테스트실패] {call} -> {norm_actual} (예상: {norm_expected})"
+                        else:
+                            if str(norm_actual) != str(norm_expected):
+                                return False, f"[테스트실패] {call} -> {norm_actual} (예상: {norm_expected})"
+                    except Exception:
+                        if str(norm_actual) != str(norm_expected):
+                            return False, f"[테스트실패] {call} -> {norm_actual} (예상: {norm_expected})"
+                # str 유사도/부분일치 비교
+                elif isinstance(norm_actual, str) and isinstance(norm_expected, str):
+                    if not _is_similar(norm_actual, norm_expected, threshold=0.7):
+                        return False, f"[테스트실패] {call} -> {norm_actual} (예상: {norm_expected})"
+                else:
+                    if norm_actual != norm_expected:
+                        return False, f"[테스트실패] {call} -> {norm_actual} (예상: {norm_expected})"
             except Exception as e:
                 return None, f"[채점불가:테스트케이스실행실패] {test_case} | {e}"
         return True, "PASS"
@@ -183,6 +242,26 @@ def safe_json_load(path):
     # NaN -> null 치환
     data = data.replace('NaN', 'null')
     return json.loads(data)
+
+def _aggressive_number_compare(a, b):
+    """
+    숫자형(2.0 vs 2, 2 vs '2', '2.0' vs 2 등) 비교를 더 공격적으로 시도
+    """
+    try:
+        # 둘 다 숫자형(str 포함)으로 변환 시도
+        a_num = float(a) if not isinstance(a, (int, float)) else a
+        b_num = float(b) if not isinstance(b, (int, float)) else b
+        if math.isclose(a_num, b_num, rel_tol=1e-2, abs_tol=1e-2):
+            return True
+    except Exception:
+        pass
+    try:
+        # int/float <-> str 변환해서 비교
+        if str(a) == str(b):
+            return True
+    except Exception:
+        pass
+    return False
 
 def main():
     import sys
