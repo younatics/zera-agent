@@ -62,6 +62,13 @@ class BaseEvaluator(ABC):
         """모델의 응답을 평가하는 메서드"""
         pass
         
+    def send_slack_notification(self, message: str):
+        webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
+        if webhook_url:
+            notify_slack(message, webhook_url)
+        else:
+            print("슬랙 웹훅 알림을 위해 SLACK_WEBHOOK_URL 환경변수가 필요합니다.")
+
     def run_evaluation(self, 
                       dataset_name: str, 
                       system_prompt: Optional[str] = None,
@@ -71,6 +78,16 @@ class BaseEvaluator(ABC):
                       is_zera: Optional[bool] = None,
                       num_shots: Optional[int] = None) -> Dict[str, Any]:
         """전체 평가를 실행하는 메서드"""
+        # --- 평가 시작 슬랙 알림 ---
+        model_version = getattr(self, 'model_version', 'unknown')
+        if is_zera is True:
+            prompt_type = "🧬 제라 프롬프트"
+        elif is_zera is False:
+            prompt_type = "📝 베이스 프롬프트"
+        else:
+            prompt_type = "🤖 프롬프트"
+        start_msg = f"{prompt_type} 평가 시작!\n모델 버전: {model_version}\n데이터셋: {dataset_name}"
+        self.send_slack_notification(start_msg)
         dataset = self.load_dataset(dataset_name)
         if sample_indices is not None:
             dataset = [dataset[i] for i in sample_indices]
@@ -158,22 +175,17 @@ class BaseEvaluator(ABC):
             except Exception as e:
                 print(f"MBPP 분석 파일 생성 실패: {e}")
         if slack_file_upload:
-            webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
             model_version = getattr(self, 'model_version', 'unknown')
             accuracy = results.get("accuracy", 'N/A')
-            if webhook_url:
-                if isinstance(accuracy, float):
-                    accuracy_str = f"{accuracy:.2%}"
-                else:
-                    accuracy_str = str(accuracy)
-                # 프롬프트 타입 이모티콘
-                if is_zera is True:
-                    prompt_type = "🧬 제라 프롬프트"
-                elif is_zera is False:
-                    prompt_type = "📝 베이스 프롬프트"
-                else:
-                    prompt_type = "🤖 프롬프트"
-                msg = f"{prompt_type} 평가 결과\n모델 버전: {model_version}\n정확도: {accuracy_str}\n결과 파일: {os.path.basename(output_path)}\n🎉 수고하셨습니다!"
-                notify_slack(msg, webhook_url)
+            if isinstance(accuracy, float):
+                accuracy_str = f"{accuracy:.2%}"
             else:
-                print("슬랙 웹훅 알림을 위해 SLACK_WEBHOOK_URL 환경변수가 필요합니다.") 
+                accuracy_str = str(accuracy)
+            if is_zera is True:
+                prompt_type = "🧬 제라 프롬프트"
+            elif is_zera is False:
+                prompt_type = "📝 베이스 프롬프트"
+            else:
+                prompt_type = "🤖 프롬프트"
+            msg = f"{prompt_type} 평가 결과\n모델 버전: {model_version}\n정확도: {accuracy_str}\n결과 파일: {os.path.basename(output_path)}\n🎉 수고하셨습니다!"
+            self.send_slack_notification(msg) 
