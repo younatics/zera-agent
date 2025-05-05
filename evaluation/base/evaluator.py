@@ -68,9 +68,9 @@ class BaseEvaluator(ABC):
                       user_prompt: Optional[str] = None,
                       num_samples: Optional[int] = None,
                       sample_indices: Optional[List[int]] = None,
-                      is_zera: bool = None,
+                      is_zera: Optional[bool] = None,
                       num_shots: Optional[int] = None) -> Dict[str, Any]:
-        """전체 평가를 실행하는 메서드. is_zera: 제라 프롬프트 여부 (슬랙 메시지용), num_shots: few-shot 예시 개수"""
+        """전체 평가를 실행하는 메서드"""
         dataset = self.load_dataset(dataset_name)
         if sample_indices is not None:
             dataset = [dataset[i] for i in sample_indices]
