@@ -19,14 +19,14 @@ Implement the Python function according to the provided instructions or docstrin
 
 Example:
 
-"""
+\"\"\"
 Write a function 'digits(n)' that takes a positive integer n and returns the product of its odd digits. If all digits are even, return 0.
 
 Examples:  
 digits(1)  => 1  
 digits(4)  => 0  
 digits(235) => 15  
-"""
+\"\"\"
 
 Logical Reasoning:
 Let's approach this step by step:
