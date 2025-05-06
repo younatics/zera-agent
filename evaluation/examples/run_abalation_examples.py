@@ -224,14 +224,14 @@ def run_fewshot_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
     run_mmlu_pro_fewshot_ablation(model, model_version)
 
 def run_prompt_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
-    print("\n===== gsm8k prompt ablation 평가 실행 =====")
-    run_gsm8k_prompt_ablation(model, model_version)
-    print("\n===== bbh prompt ablation 평가 실행 =====")
-    run_bbh_prompt_ablation(model, model_version)
-    print("\n===== cnn_dailymail prompt ablation 평가 실행 =====")
-    run_cnn_prompt_dailymail_ablation(model, model_version)
-    print("\n===== mbpp prompt ablation 평가 실행 =====")
-    run_mbpp_prompt_ablation(model, model_version)
+    # print("\n===== gsm8k prompt ablation 평가 실행 =====")
+    # run_gsm8k_prompt_ablation(model, model_version)
+    # print("\n===== bbh prompt ablation 평가 실행 =====")
+    # run_bbh_prompt_ablation(model, model_version)
+    # print("\n===== cnn_dailymail prompt ablation 평가 실행 =====")
+    # run_cnn_prompt_dailymail_ablation(model, model_version)
+    # print("\n===== mbpp prompt ablation 평가 실행 =====")
+    # run_mbpp_prompt_ablation(model, model_version)
     print("\n===== mmlu_pro prompt ablation 평가 실행 =====")
     run_mmlu_pro_prompt_ablation(model, model_version)
 
@@ -242,8 +242,8 @@ def main():
     # model = "gpt4o"
     # model_version = "gpt-3.5-turbo"
 
-    run_fewshot_ablation(model, model_version)
-    # run_prompt_ablation(model, model_version)
+    # run_fewshot_ablation(model, model_version)
+    run_prompt_ablation(model, model_version)
 
 
 if __name__ == "__main__":

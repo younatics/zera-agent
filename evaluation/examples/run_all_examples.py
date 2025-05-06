@@ -14,13 +14,13 @@ def main():
     # model_version = "gpt-3.5-turbo"
 
     model = "local"
-    model_version = "/data/project/private/kyle/hf_models/Qwen2.5-72B-Instruct"
+    model_version = "/data/project/private/kyle/hf_models/Llama-3.1-8B-Instruct"
     
     # print("\n===== mmlu_example.py 실행 =====")
     # run_mmlu_example(model, model_version)
 
-    # print("\n===== mmlu_pro_example.py 실행 =====")
-    # run_mmlu_pro_example(model, model_version)
+    print("\n===== mmlu_pro_example.py 실행 =====")
+    run_mmlu_pro_example(model, model_version)
 
     # print("\n===== gsm8k_example.py 실행 =====")
     # run_gsm8k_example(model, model_version)
@@ -28,8 +28,8 @@ def main():
     # print("\n===== cnn_dailymail_example.py 실행 =====")
     # run_cnn_dailymail_example(model, model_version)
 
-    # print("\n===== mbpp_example.py 실행 =====")
-    # run_mbpp_example(model, model_version)
+    print("\n===== mbpp_example.py 실행 =====")
+    run_mbpp_example(model, model_version)
 
     # print("\n===== humaneval_example.py 실행 =====")
     # run_humaneval_example(model, model_version)
@@ -43,8 +43,8 @@ def main():
     # print("\n===== xsum_example.py 실행 =====")
     # run_xsum_example(model, model_version)
     
-    print("\n===== hellaswag_example.py 실행 =====")
-    run_hellaswag_example(model, model_version)
+    # print("\n===== hellaswag_example.py 실행 =====")
+    # run_hellaswag_example(model, model_version)
 
     # 모든 평가 완료 후 슬랙 알림 전송
     # notify_slack(f"[모델 버전: {model_version}] 모든 평가가 완료되었습니다.", webhook_url)
