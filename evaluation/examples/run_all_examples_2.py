@@ -14,7 +14,7 @@ def main():
     # model_version = "gpt-3.5-turbo"
 
     model = "local"
-    model_version = "/data/project/private/kyle/hf_models/Mistral-7B-Instruct-v0.3"
+    model_version = "/data/project/private/kyle/hf_models/gemma-7b-it"
     
     print("\n===== mmlu_example.py 실행 =====")
     run_mmlu_example(model, model_version)
