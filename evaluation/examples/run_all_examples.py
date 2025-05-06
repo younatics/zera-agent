@@ -14,34 +14,34 @@ def main():
     # model_version = "gpt-3.5-turbo"
 
     model = "local"
-    model_version = "/data/project/private/kyle/hf_models/Mistral-7B-Instruct-v0.3"
+    model_version = "/data/project/private/kyle/hf_models/Qwen2.5-72B-Instruct"
     
-    print("\n===== mmlu_example.py 실행 =====")
-    run_mmlu_example(model, model_version)
+    # print("\n===== mmlu_example.py 실행 =====")
+    # run_mmlu_example(model, model_version)
 
-    print("\n===== mmlu_pro_example.py 실행 =====")
-    run_mmlu_pro_example(model, model_version)
+    # print("\n===== mmlu_pro_example.py 실행 =====")
+    # run_mmlu_pro_example(model, model_version)
 
-    print("\n===== gsm8k_example.py 실행 =====")
-    run_gsm8k_example(model, model_version)
+    # print("\n===== gsm8k_example.py 실행 =====")
+    # run_gsm8k_example(model, model_version)
 
-    print("\n===== cnn_dailymail_example.py 실행 =====")
-    run_cnn_dailymail_example(model, model_version)
+    # print("\n===== cnn_dailymail_example.py 실행 =====")
+    # run_cnn_dailymail_example(model, model_version)
 
-    print("\n===== mbpp_example.py 실행 =====")
-    run_mbpp_example(model, model_version)
+    # print("\n===== mbpp_example.py 실행 =====")
+    # run_mbpp_example(model, model_version)
 
-    print("\n===== humaneval_example.py 실행 =====")
-    run_humaneval_example(model, model_version)
+    # print("\n===== humaneval_example.py 실행 =====")
+    # run_humaneval_example(model, model_version)
 
-    print("\n===== truthfulqa_example.py 실행 =====")
-    # run_truthfulqa_example(model, model_version)
+    # print("\n===== truthfulqa_example.py 실행 =====")
+    # # run_truthfulqa_example(model, model_version)
 
-    print("\n===== bbh_example.py 실행 =====")
-    run_bbh_example(model, model_version)
+    # print("\n===== bbh_example.py 실행 =====")
+    # run_bbh_example(model, model_version)
 
-    print("\n===== xsum_example.py 실행 =====")
-    run_xsum_example(model, model_version)
+    # print("\n===== xsum_example.py 실행 =====")
+    # run_xsum_example(model, model_version)
     
     print("\n===== hellaswag_example.py 실행 =====")
     run_hellaswag_example(model, model_version)
