@@ -124,7 +124,7 @@ class BaseEvaluator(ABC):
                 # user_prompt는 그대로, question 위에만 few-shot 예시 추가
                 full_question = ""
                 if few_shot_prompt:
-                    full_question += few_shot_prompt + "\n"
+                    full_question += few_shot_prompt + "---\n"  # 예시와 질문 사이에 구분자 추가
                 full_question += question
                 response = self.model.ask(full_question, system_prompt, user_prompt)
                 is_correct = self.evaluate_response(response, item)

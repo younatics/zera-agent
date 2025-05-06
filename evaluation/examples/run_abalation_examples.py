@@ -242,8 +242,8 @@ def main():
     # model = "gpt4o"
     # model_version = "gpt-3.5-turbo"
 
-    # run_fewshot_ablation(model, model_version)
-    run_prompt_ablation(model, model_version)
+    run_fewshot_ablation(model, model_version)
+    # run_prompt_ablation(model, model_version)
 
 
 if __name__ == "__main__":
