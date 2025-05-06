@@ -7,14 +7,13 @@ from typing import Optional, Dict, Any
 
 
 def create_messages(question, system_prompt, user_prompt):
+    # 시스템 프롬프트가 있는 경우 유저 프롬프트 앞에 추가
+    full_user_prompt = f"{system_prompt}\n\n{user_prompt}" if system_prompt else user_prompt
+    
     messages = [
         {
-            "role": "system",
-            "content": system_prompt
-        },
-        {
             "role": "user",
-            "content": f"{user_prompt}\n\n{question}"
+            "content": f"{full_user_prompt}\n\n{question}"
         }
     ]
     
@@ -116,8 +115,7 @@ class Model:
                     response = self.client.messages.create(
                         model=self.model_id,
                         max_tokens=8192,
-                        system=messages[0]["content"],
-                        messages=[messages[1]]
+                        messages=messages
                     )
                     return response.content[0].text
                 else:
