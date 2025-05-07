@@ -1151,7 +1151,8 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
     required_keys = {
         "solar": "SOLAR_API_KEY",
         "gpt4o": "OPENAI_API_KEY",
-        "claude": "ANTHROPIC_API_KEY"
+        "claude": "ANTHROPIC_API_KEY",
+        "local": None  # local 모델은 API 키가 필요하지 않음
     }
     
     # 사용되는 모델들의 API 키 확인
@@ -1160,7 +1161,7 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
     
     for model in used_models:
         key = required_keys[model]
-        if not os.getenv(key):
+        if key and not os.getenv(key):  # key가 None이 아닌 경우에만 API 키 확인
             missing_keys.append(f"{MODEL_INFO[model]['name']} ({key})")
     
     if missing_keys:
