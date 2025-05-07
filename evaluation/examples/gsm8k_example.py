@@ -16,11 +16,23 @@ def run_gsm8k_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--model", model,
         "--model_version", model_version,
         # 기존 프롬프트
-        "--base_system_prompt", "Provide the final answer prefixed with '####'.",
-        "--base_user_prompt", "Question:\n",
+        # "--base_system_prompt", "Provide the final answer prefixed with '####'.",
+        # "--base_user_prompt", "Question:\n",
         # 제라 프롬프트
-        "--zera_system_prompt", "You are a logical reasoning assistant. First reason through the problem naturally and clearly—ignoring formatting. Only at the final stage, concisely summarize critical numeric calculations using the designated \"<<calculation=result>>\" notation, and clearly report your final numeric answer.",
-        "--zera_user_prompt", "Solve the following problem step-by-step with clear, logical reasoning. Afterward, briefly present each critical calculation step explicitly using the \"<<calculation=result>>\" notation, concluding with your final numeric answer clearly marked after \"####\".\n\nExample:\nQuestion: Sara buys 4 bouquets of roses, each bouquet has 12 roses. She gives away 9 roses. How many roses does Sara have left?\n\nReasoning:\nSara first buys a total of 4 bouquets * 12 roses each = 48 roses. Then she gives away 9 roses, leaving her with 48 roses - 9 roses = 39 roses.\n\nCalculations:\nTotal roses bought: 4 * 12 = <<4*12=48>>  \nRoses remaining: 48 - 9 = <<48-9=39>>\n\n#### 39\n\nNow solve this problem:\n",
+        "--zera_system_prompt", "You are a precise and logical AI assistant. Always reason step-by-step clearly and transparently, keeping your explanations concise. Present only your final answer on a separate line, formatted as '#### [answer]', after completing all required calculations.",
+        "--zera_user_prompt", """Solve the given problem step-by-step with explicit inline calculations. Present your final answer clearly as indicated.
+
+Example:
+Question: Borgnine wants to see 1100 legs at the zoo. He has already seen 12 chimps, 8 lions, and 5 lizards. He is next headed to see the tarantulas. How many tarantulas does he need to see to meet his goal?
+
+Answer:
+He has seen 48 chimp legs because 12 x 4 = <<12*4=48>>48
+He has seen 32 lion legs because 8 x 4 = <<8*4=32>>32
+He has seen 20 lizard legs because 5 x 4 = <<5*4=20>>20
+He has seen 100 total legs because 48 + 32 + 20 = <<48+32+20=100>>100
+He must see 1000 more legs because 1100 - 100 = <<1100-100=1000>>1000
+He needs to see 125 tarantulas because each has 8 legs and 1000 / 8 = <<1000/8=125>>125
+#### 125""",
         "--num_samples", "1319",
         # 모델 파라미터
         # "--temperature", "0.2",  # 더 결정적인 응답을 위해 낮은 temperature 사용

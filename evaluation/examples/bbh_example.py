@@ -16,33 +16,38 @@ def run_bbh_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--model", model,
         "--model_version", model_version,
         # 기존 프롬프트
-        "--base_system_prompt", "Answer the following question.",
-        "--base_user_prompt", "Question:",
+        # "--base_system_prompt", "Answer the following question.",
+        # "--base_user_prompt", "Question:",
         # 제라 프롬프트
-        "--zera_system_prompt", "You are a logical reasoning expert. Clearly reason each question step-by-step in natural, explicit language. Upon completing your analysis, distinctly separate it from your final concise answer, which must strictly follow the provided formatting instructions.",
-        "--zera_user_prompt", """Solve these logical reasoning problems by explicitly thinking through them step-by-step before providing your final answer.
+        "--zera_system_prompt", "You are an expert AI specialized in precise, structured logical reasoning. Freely think step-by-step through each reasoning question, carefully and explicitly stating each logical inference in clear, natural language. Only after fully completing your structured reasoning, separately provide your concise final answer strictly in the minimal format specified by the question, without further commentary.",
+        "--zera_user_prompt", """Solve the following structured reasoning question. First, explicitly present each step of your reasoning clearly.
 
-Examples:
+After finishing your reasoning, separately provide your final concise answer in exactly the required minimal format indicated by the question.
 
-Question: Sort alphabetically: horse dolphin cat bird
-bird cat dolphin horse
-
-Question: Jim scored higher than Sam. Sam scored higher than Eve. Who scored lowest?
+Example:
+Question:
+At a fruit-eating competition, Alice eats more fruits than Ben, but fewer than Cara. Dave eats the most fruits. Who eats the second-most fruits?
 Options:
-(A) Jim
-(B) Sam
-(C) Eve
+(A) Alice 
+(B) Ben  
+(C) Cara  
+(D) Dave  
+
+Expected Output:  
 (C)
 
-Question: Check validity:
-"No cars can fly. All Toyotas are cars. Therefore, no Toyotas can fly."
-Options:
-(A) valid
-(B) invalid
-(A)
+Your Response:
+Reasoning:
+1. Alice eats more fruits than Ben but fewer than Cara, so we have Cara > Alice > Ben.
+2. Dave eats the most fruits, meaning he is ahead of everyone else. Dave > Cara > Alice > Ben.
+3. Therefore, the second-most fruits eater is Cara.
 
-Now, begin solving.
-""",
+Final Answer:  
+(C)
+
+Now solve the following:
+
+\{Question\}""",
         "--num_samples", "1000"
     ]
     # 평가 실행
