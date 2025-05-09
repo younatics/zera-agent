@@ -77,6 +77,7 @@ from agent.dataset.truthfulqa_dataset import TruthfulQADataset
 from agent.dataset.hellaswag_dataset import HellaSwagDataset
 from agent.dataset.humaneval_dataset import HumanEvalDataset
 from agent.dataset.samsum_dataset import SamsumDataset
+from agent.dataset.meetingbank_dataset import MeetingBankDataset
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -355,7 +356,29 @@ def process_dataset(data, dataset_type):
     test_cases = []
     display_data = []
     
-    if dataset_type == "BBH":
+    if dataset_type == "Samsum":
+        for item in data:
+            test_cases.append({
+                'question': item['dialogue'],
+                'expected': item['summary']
+            })
+            if len(display_data) < 2000:
+                display_data.append({
+                    'question': item['dialogue'],
+                    'expected_answer': item['summary']
+                })
+    elif dataset_type == "MeetingBank":
+        for item in data:
+            test_cases.append({
+                'question': item['transcript'],
+                'expected': item['summary']
+            })
+            if len(display_data) < 2000:
+                display_data.append({
+                    'question': item['transcript'],
+                    'expected_answer': item['summary']
+                })
+    elif dataset_type == "BBH":
         for item in data:
             test_cases.append({
                 'question': item['input'],
@@ -499,17 +522,6 @@ def process_dataset(data, dataset_type):
                     'question': item['prompt'],
                     'expected_answer': item['canonical_solution']
                 })
-    elif dataset_type == "Samsum":
-        for item in data:
-            test_cases.append({
-                'question': item['dialogue'],
-                'expected': item['summary']
-            })
-            if len(display_data) < 2000:
-                display_data.append({
-                    'question': item['dialogue'],
-                    'expected_answer': item['summary']
-                })
     elif dataset_type in ["MMLU", "MMLU Pro"]:
         # 선택된 데이터셋에 따라 적절한 데이터셋 인스턴스와 과목 리스트 선택
         if dataset_type == "MMLU":
@@ -548,7 +560,7 @@ def process_dataset(data, dataset_type):
         except Exception as e:
             st.error(f"{dataset_name} 데이터셋 로드 중 오류 발생: {str(e)}")
             st.stop()
-    
+
     # 전체 데이터 표시
     st.write("데이터셋 내용:")
     st.dataframe(pd.DataFrame(display_data))
@@ -559,7 +571,7 @@ def process_dataset(data, dataset_type):
 st.header("Dataset Selection")
 dataset_type = st.radio(
     "Select Dataset Type",
-    ["CSV", "MMLU", "MMLU Pro", "CNN", "GSM8K", "MBPP", "XSum", "BBH", "TruthfulQA", "HellaSwag", "HumanEval", "Samsum"],
+    ["CSV", "MMLU", "MMLU Pro", "CNN", "GSM8K", "MBPP", "BBH", "TruthfulQA", "HellaSwag", "HumanEval", "Samsum", "MeetingBank"],
     horizontal=True
 )
 
@@ -682,25 +694,6 @@ elif dataset_type == "MBPP":
     except Exception as e:
         st.error(f"MBPP 데이터셋 로드 중 오류 발생: {str(e)}")
         st.stop()
-elif dataset_type == "XSum":
-    # 이미 생성된 XSumDataset 인스턴스를 사용
-    try:
-        # 데이터셋 선택 (train 제외)
-        split = st.selectbox(
-            "데이터셋 선택",
-            ["test", "validation"],  # train 제외
-            index=0
-        )
-        
-        # 데이터 로드
-        data = xsum_dataset.get_split_data(split)
-        test_cases, num_samples = process_dataset(data, "XSum")
-        
-        # 데이터셋 정보 표시
-        st.info(f"XSum {split} 데이터셋: {len(data):,}개 예제")
-    except Exception as e:
-        st.error(f"XSum 데이터셋 로드 중 오류 발생: {str(e)}")
-        st.stop()
 elif dataset_type == "BBH":
     # 이미 생성된 BBHDataset 인스턴스를 사용
     try:
@@ -767,6 +760,20 @@ elif dataset_type == "Samsum":
         st.info(f"Samsum {split} 데이터셋: {len(data):,}개 예제")
     except Exception as e:
         st.error(f"Samsum 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.stop()
+elif dataset_type == "MeetingBank":
+    meetingbank_dataset = MeetingBankDataset()
+    split = st.selectbox(
+        "데이터셋 선택",
+        ["train", "validation", "test"],
+        index=0
+    )
+    try:
+        data = meetingbank_dataset.get_split_data(split)
+        test_cases, num_samples = process_dataset(data, "MeetingBank")
+        st.info(f"MeetingBank {split} 데이터셋: {len(data):,}개 예제")
+    except Exception as e:
+        st.error(f"MeetingBank 데이터셋 로드 중 오류 발생: {str(e)}")
         st.stop()
 elif dataset_type in ["MMLU", "MMLU Pro"]:
     # 선택된 데이터셋에 따라 적절한 데이터셋 인스턴스와 과목 리스트 선택
