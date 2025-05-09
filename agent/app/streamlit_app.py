@@ -182,7 +182,7 @@ with st.sidebar:
             "모델 선택",
             options=list(MODEL_INFO.keys()),
             format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
-            index=list(MODEL_INFO.keys()).index("gpt4o"),  # GPT-4를 기본값으로 설정
+            index=list(MODEL_INFO.keys()).index("local1"),  # local1을 기본값으로 설정
             help="프롬프트 튜닝에 사용할 모델을 선택하세요."
         )
         st.caption(MODEL_INFO[model_name]['description'])
@@ -210,7 +210,7 @@ with st.sidebar:
             "모델 선택",
             options=list(MODEL_INFO.keys()),
             format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
-            index=list(MODEL_INFO.keys()).index("gpt4o"),  # GPT-4를 기본값으로 설정
+            index=list(MODEL_INFO.keys()).index("local1"),  # local1을 기본값으로 설정
             help="메타 프롬프트 생성에 사용할 모델을 선택하세요."
         )
         st.caption(MODEL_INFO[meta_prompt_model]['description'])
@@ -238,7 +238,7 @@ with st.sidebar:
             "모델 선택",
             options=list(MODEL_INFO.keys()),
             format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
-            index=list(MODEL_INFO.keys()).index("claude"),  # Claude를 기본값으로 설정
+            index=list(MODEL_INFO.keys()).index("local2"),  # local2를 기본값으로 설정
             help="출력 평가에 사용할 모델을 선택하세요."
         )
         st.caption(MODEL_INFO[evaluator_model]['description'])

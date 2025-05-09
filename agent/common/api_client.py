@@ -41,11 +41,17 @@ class Model:
             "default_version": "claude-3-5-sonnet-20240620",
             "base_url": None
         },
-        "local": {
-            "name": "Local Model",
-            "description": "로컬 서버에서 실행되는 모델",
-            "default_version": "/data/project/private/kyle/hf_models/Meta-Llama-3-70B-Instruct",
+        "local1": {
+            "name": "Local Model 1",
+            "description": "로컬 서버에서 실행되는 첫 번째 미스트랄 모델",
+            "default_version": "/data/project/private/kyle/hf_models/Mistral-7B-Instruct-v0.3",
             "base_url": "http://localhost:8001/v1"
+        },
+        "local2": {
+            "name": "Local Model 2",
+            "description": "로컬 서버에서 실행되는 두 번째 미스트랄 모델",
+            "default_version": "/data/project/private/kyle/hf_models/Mistral-7B-Instruct-v0.3",
+            "base_url": "http://localhost:8002/v1"
         }
     }
 
@@ -77,7 +83,7 @@ class Model:
                 api_key=os.getenv("SOLAR_API_KEY"),
                 base_url=self.model_info[model_name]["base_url"]
             )
-        elif model_name == "local":
+        elif model_name in ["local1", "local2"]:
             self.client = OpenAI(
                 api_key="EMPTY",
                 base_url=self.model_info[model_name]["base_url"]
