@@ -765,7 +765,7 @@ elif dataset_type == "MeetingBank":
     meetingbank_dataset = MeetingBankDataset()
     split = st.selectbox(
         "데이터셋 선택",
-        ["train", "validation", "test"],
+        ["validation", "test"],
         index=0
     )
     try:

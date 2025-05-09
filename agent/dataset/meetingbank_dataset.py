@@ -20,7 +20,7 @@ class MeetingBankDataset:
         print(f"Ensured data directory exists at: {self.data_dir}")
 
     def _check_dataset_exists(self) -> bool:
-        splits = ['train', 'validation', 'test']
+        splits = ['validation', 'test']
         for split in splits:
             file_path = os.path.join(self.data_dir, f"{split}.csv")
             print(f"Checking file: {file_path}")
@@ -36,7 +36,7 @@ class MeetingBankDataset:
     def _download_and_process_dataset(self) -> None:
         try:
             dataset = load_dataset("huuuyeah/meetingbank")
-            split_map = {"train": "train", "validation": "validation", "test": "test"}
+            split_map = {"validation": "validation", "test": "test"}
             for split, split_name in split_map.items():
                 data = []
                 for item in dataset[split_name]:
@@ -53,7 +53,7 @@ class MeetingBankDataset:
             print(f"Error processing MeetingBank dataset: {str(e)}")
 
     def get_split_data(self, split: str) -> List[Dict]:
-        if split not in ['train', 'test', 'validation']:
+        if split not in ['validation', 'test']:
             raise ValueError(f"Invalid split name: {split}")
         csv_path = os.path.join(self.data_dir, f"{split}.csv")
         if not os.path.exists(csv_path):
@@ -76,7 +76,7 @@ class MeetingBankDataset:
 
     def get_all_data(self) -> Dict[str, List[Dict]]:
         all_data = {}
-        for split in ['train', 'test', 'validation']:
+        for split in ['validation', 'test']:
             try:
                 split_data = self.get_split_data(split)
                 all_data[split] = split_data
