@@ -42,7 +42,7 @@ class Model:
             "base_url": None
         },
         "local": {
-            "name": "Local Model",
+            "name": "Meta-Llama-3-8B",
             "description": "로컬 서버에서 실행되는 첫 번째 미스트랄 모델",
             "default_version": "Meta-Llama-3-8B",
             "base_url": "http://localhost:8001/v1"
