@@ -76,6 +76,7 @@ from agent.dataset.bbh_dataset import BBHDataset
 from agent.dataset.truthfulqa_dataset import TruthfulQADataset
 from agent.dataset.hellaswag_dataset import HellaSwagDataset
 from agent.dataset.humaneval_dataset import HumanEvalDataset
+from agent.dataset.samsum_dataset import SamsumDataset
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -498,6 +499,55 @@ def process_dataset(data, dataset_type):
                     'question': item['prompt'],
                     'expected_answer': item['canonical_solution']
                 })
+    elif dataset_type == "Samsum":
+        for item in data:
+            test_cases.append({
+                'question': item['dialogue'],
+                'expected': item['summary']
+            })
+            if len(display_data) < 2000:
+                display_data.append({
+                    'question': item['dialogue'],
+                    'expected_answer': item['summary']
+                })
+    elif dataset_type in ["MMLU", "MMLU Pro"]:
+        # 선택된 데이터셋에 따라 적절한 데이터셋 인스턴스와 과목 리스트 선택
+        if dataset_type == "MMLU":
+            dataset = mmlu_dataset
+            dataset_name = "MMLU"
+        else:  # MMLU Pro
+            dataset = mmlu_pro_dataset
+            dataset_name = "MMLU Pro"
+        
+        # 데이터셋 선택에 '모든 과목' 옵션 추가
+        subject_options = ["모든 과목"] + dataset.subjects
+        subject = st.selectbox(
+            f"Select {dataset_name} Subject",
+            subject_options,
+            index=0
+        )
+        split = st.selectbox(
+            "Select Data Split",
+            ["validation", "test"],
+            index=0
+        )
+        try:
+            if subject == "모든 과목":
+                # 모든 과목의 데이터 로드
+                all_subjects_data = dataset.get_all_subjects_data()
+                # 모든 과목의 데이터를 하나의 리스트로 합치기
+                data = []
+                for subject_data in all_subjects_data.values():
+                    data.extend(subject_data[split])
+            else:
+                # 특정 과목의 데이터 로드
+                subject_data = dataset.get_subject_data(subject)
+                data = subject_data[split]
+            
+            test_cases, num_samples = process_dataset(data, dataset_type)
+        except Exception as e:
+            st.error(f"{dataset_name} 데이터셋 로드 중 오류 발생: {str(e)}")
+            st.stop()
     
     # 전체 데이터 표시
     st.write("데이터셋 내용:")
@@ -509,7 +559,7 @@ def process_dataset(data, dataset_type):
 st.header("Dataset Selection")
 dataset_type = st.radio(
     "Select Dataset Type",
-    ["CSV", "MMLU", "MMLU Pro", "CNN", "GSM8K", "MBPP", "XSum", "BBH", "TruthfulQA", "HellaSwag", "HumanEval"],
+    ["CSV", "MMLU", "MMLU Pro", "CNN", "GSM8K", "MBPP", "XSum", "BBH", "TruthfulQA", "HellaSwag", "HumanEval", "Samsum"],
     horizontal=True
 )
 
@@ -704,7 +754,21 @@ elif dataset_type == "HumanEval":
     except Exception as e:
         st.error(f"HumanEval 데이터셋 로드 중 오류 발생: {str(e)}")
         st.stop()
-elif dataset_type in ["MMLU", "MMLU Pro"]:  # MMLU or MMLU Pro
+elif dataset_type == "Samsum":
+    samsum_dataset = SamsumDataset()
+    split = st.selectbox(
+        "데이터셋 선택",
+        ["train", "validation", "test"],
+        index=0
+    )
+    try:
+        data = samsum_dataset.get_split_data(split)
+        test_cases, num_samples = process_dataset(data, "Samsum")
+        st.info(f"Samsum {split} 데이터셋: {len(data):,}개 예제")
+    except Exception as e:
+        st.error(f"Samsum 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.stop()
+elif dataset_type in ["MMLU", "MMLU Pro"]:
     # 선택된 데이터셋에 따라 적절한 데이터셋 인스턴스와 과목 리스트 선택
     if dataset_type == "MMLU":
         dataset = mmlu_dataset
@@ -712,7 +776,6 @@ elif dataset_type in ["MMLU", "MMLU Pro"]:  # MMLU or MMLU Pro
     else:  # MMLU Pro
         dataset = mmlu_pro_dataset
         dataset_name = "MMLU Pro"
-    
     # 데이터셋 선택에 '모든 과목' 옵션 추가
     subject_options = ["모든 과목"] + dataset.subjects
     subject = st.selectbox(
@@ -737,7 +800,6 @@ elif dataset_type in ["MMLU", "MMLU Pro"]:  # MMLU or MMLU Pro
             # 특정 과목의 데이터 로드
             subject_data = dataset.get_subject_data(subject)
             data = subject_data[split]
-        
         test_cases, num_samples = process_dataset(data, dataset_type)
     except Exception as e:
         st.error(f"{dataset_name} 데이터셋 로드 중 오류 발생: {str(e)}")
