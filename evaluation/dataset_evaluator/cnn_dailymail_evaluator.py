@@ -181,5 +181,15 @@ class CNNDailyMailEvaluator(BaseEvaluator):
         timestamp = time.strftime("%Y%m%d_%H%M%S")
         result_file = self.results_dir / f"{self.__class__.__name__}_{timestamp}.json"
         self.save_results(results, str(result_file))
+        
+        # 슬랙 알림 메시지에 ROUGE 점수 추가
+        rouge_scores = results["rouge_scores"]
+        rouge_msg = "\nROUGE 점수:"
+        for metric, scores in rouge_scores.items():
+            rouge_msg += f"\n{metric}: F1={scores['f']:.3f}"
+        
+        # 슬랙 알림 전송
+        msg = f"CNN/DailyMail 평가 완료!\n정확도: {results['accuracy']:.2%}{rouge_msg}"
+        self.send_slack_notification(msg)
             
         return results 
