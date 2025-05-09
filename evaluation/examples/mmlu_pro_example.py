@@ -16,8 +16,8 @@ def run_mmlu_pro_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--model", model,
         "--model_version", model_version,
         # 기존 프롬프트
-        # "--base_system_prompt", "Answer with only the letter of the correct choice.",
-        # "--base_user_prompt", "Question:",
+        "--base_system_prompt", "Answer with only the letter of the correct choice.",
+        "--base_user_prompt", "Question:",
         # 제라 프롬프트
         "--zera_system_prompt", "You are an AI assistant skilled at clear and concise step-by-step reasoning. Provide logical explanations freely, and precisely identify the correct final answer by stating its associated letter choice.",
         "--zera_user_prompt", """Solve the following questions by logically reasoning step-by-step. Clearly state your final answer at the end as "The answer is (Letter)."

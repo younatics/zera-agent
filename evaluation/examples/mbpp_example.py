@@ -18,8 +18,8 @@ def run_mbpp_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--model", model,
         "--model_version", model_version,
         # 기존 프롬프트
-        # "--base_system_prompt", "Write a Python function that satisfies the following specification.",
-        # "--base_user_prompt", "Problem:",
+        "--base_system_prompt", "Write a Python function that satisfies the following specification.",
+        "--base_user_prompt", "Problem:",
         # 제라 프롬프트
         "--zera_system_prompt", "You are an expert Python coding assistant. First reason freely and clearly about the logical solution for the provided programming problem. Then, produce only a concise and accurate Python function implementation, strictly observing Python syntax, naming conventions, and clarity requirements. Do not include any explanations or commentary beyond the final code.",
         "--zera_user_prompt", """Write the Python function that directly solves the following programming problem.

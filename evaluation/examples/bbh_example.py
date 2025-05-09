@@ -16,8 +16,8 @@ def run_bbh_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--model", model,
         "--model_version", model_version,
         # 기존 프롬프트
-        # "--base_system_prompt", "Answer the following question.",
-        # "--base_user_prompt", "Question:",
+        "--base_system_prompt", "Answer the following question.",
+        "--base_user_prompt", "Question:",
         # 제라 프롬프트
         "--zera_system_prompt", "You are an expert AI specialized in precise, structured logical reasoning. Freely think step-by-step through each reasoning question, carefully and explicitly stating each logical inference in clear, natural language. Only after fully completing your structured reasoning, separately provide your concise final answer strictly in the minimal format specified by the question, without further commentary.",
         "--zera_user_prompt", """Solve the following structured reasoning question. First, explicitly present each step of your reasoning clearly.

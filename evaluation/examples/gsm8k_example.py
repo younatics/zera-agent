@@ -16,8 +16,8 @@ def run_gsm8k_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--model", model,
         "--model_version", model_version,
         # 기존 프롬프트
-        # "--base_system_prompt", "Provide the final answer prefixed with '####'.",
-        # "--base_user_prompt", "Question:\n",
+        "--base_system_prompt", "Provide the final answer prefixed with '####'.",
+        "--base_user_prompt", "Question:\n",
         # 제라 프롬프트
         "--zera_system_prompt", "You are a precise and logical AI assistant. Always reason step-by-step clearly and transparently, keeping your explanations concise. Present only your final answer on a separate line, formatted as '#### [answer]', after completing all required calculations.",
         "--zera_user_prompt", """Solve the given problem step-by-step with explicit inline calculations. Present your final answer clearly as indicated.
