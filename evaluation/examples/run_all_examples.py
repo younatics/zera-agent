@@ -13,7 +13,7 @@ def main():
     # model = "gpt4o"
     # model_version = "gpt-3.5-turbo"
 
-    model = "local"
+    model = "local1"
     model_version = "Meta-Llama-3-8B"
     
     print("\n===== mmlu_example.py 실행 =====")
