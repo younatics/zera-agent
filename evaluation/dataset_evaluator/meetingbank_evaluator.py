@@ -110,6 +110,14 @@ class MeetingBankEvaluator(BaseEvaluator):
             try:
                 question = self.format_question(item)
                 response = self.model.ask(question, system_prompt, user_prompt)
+                # 응답이 에러(예: Exception 객체이거나, 'Error:'로 시작하거나, 'error' 포함)인 경우 평가에서 제외
+                if isinstance(response, Exception) or (
+                    isinstance(response, str) and (
+                        response.strip().lower().startswith('error:') or 'error' in response.strip().lower()
+                    )
+                ):
+                    print(f"[SKIP] 샘플 {idx+1}: 모델 응답이 에러로 평가에서 제외합니다. 응답: {response}")
+                    continue
                 eval_result = self.evaluate_response(response, item)
                 is_correct = eval_result['is_passed']
                 results["correct"] += 1 if is_correct else 0
