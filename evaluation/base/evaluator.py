@@ -70,13 +70,14 @@ class BaseEvaluator(ABC):
             print("슬랙 웹훅 알림을 위해 SLACK_WEBHOOK_URL 환경변수가 필요합니다.")
 
     def run_evaluation(self, 
-                      dataset_name: str, 
+                      dataset_name, 
                       system_prompt: Optional[str] = None,
                       user_prompt: Optional[str] = None,
                       num_samples: Optional[int] = None,
                       sample_indices: Optional[List[int]] = None,
                       is_zera: Optional[bool] = None,
-                      num_shots: Optional[int] = None) -> Dict[str, Any]:
+                      num_shots: Optional[int] = None,
+                      dataset_display_name: Optional[str] = None) -> Dict[str, Any]:
         """전체 평가를 실행하는 메서드"""
         # --- 평가 시작 슬랙 알림 ---
         model_version = getattr(self, 'model_version', 'unknown')
@@ -86,9 +87,19 @@ class BaseEvaluator(ABC):
             prompt_type = "📝 베이스 프롬프트"
         else:
             prompt_type = "🤖 프롬프트"
-        start_msg = f"{prompt_type} 평가 시작!\n모델 버전: {model_version}\n데이터셋: {dataset_name}"
+        if dataset_display_name:
+            dataset_desc = dataset_display_name
+        elif isinstance(dataset_name, list):
+            dataset_desc = f"Loaded dataset (size={len(dataset_name)})"
+        else:
+            dataset_desc = str(dataset_name)
+        start_msg = f"{prompt_type} 평가 시작!\n모델 버전: {model_version}\n데이터셋: {dataset_desc}"
         self.send_slack_notification(start_msg)
-        dataset = self.load_dataset(dataset_name)
+        # dataset_name이 이미 list면 그대로 사용, 아니면 load_dataset 호출
+        if isinstance(dataset_name, list):
+            dataset = dataset_name
+        else:
+            dataset = self.load_dataset(dataset_name)
         if sample_indices is not None:
             dataset = [dataset[i] for i in sample_indices]
         elif num_samples:

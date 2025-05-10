@@ -13,6 +13,7 @@ from evaluation.dataset_evaluator.truthfulqa_evaluator import TruthfulQAEvaluato
 from evaluation.dataset_evaluator.humaneval_evaluator import HumanEvalEvaluator
 from evaluation.dataset_evaluator.xsum_evaluator import XSUMEvaluator
 from evaluation.dataset_evaluator.hellaswag_evaluator import HellaSwagEvaluator
+import random
 
 def setup_environment():
     # Try to load from different possible locations
@@ -42,7 +43,7 @@ def setup_environment():
 # Call setup at import time
 setup_environment()
 
-def run_single_evaluation(evaluator, dataset, system_prompt, user_prompt, num_samples, sample_indices=None, is_zera=None, num_shots=None):
+def run_single_evaluation(evaluator, dataset, system_prompt, user_prompt, num_samples, sample_indices=None, is_zera=None, num_shots=None, dataset_display_name=None):
     results = evaluator.run_evaluation(
         dataset,
         system_prompt,
@@ -50,7 +51,8 @@ def run_single_evaluation(evaluator, dataset, system_prompt, user_prompt, num_sa
         num_samples,
         sample_indices=sample_indices,
         is_zera=is_zera,
-        num_shots=num_shots
+        num_shots=num_shots,
+        dataset_display_name=dataset_display_name
     )
     return results
 
@@ -96,6 +98,8 @@ def main(args=None):
                           help="기존 프롬프트에 사용할 few-shot 예시 개수 (기본값: 0)")
         parser.add_argument("--zera_num_shots", type=int, default=0,
                           help="제라 프롬프트에 사용할 few-shot 예시 개수 (기본값: 0)")
+        parser.add_argument("--bbh_category", type=str, default=None,
+                          help="BBH 평가 시 사용할 카테고리 이름 (예: Penguins, Geometry 등)")
         
         args = parser.parse_args()
     
@@ -116,34 +120,44 @@ def main(args=None):
     evaluator_class = evaluators[args.dataset]
     evaluator = evaluator_class(args.model, args.model_version, args.temperature, args.top_p)
     
-    # 첫 번째 평가에서 사용할 샘플 인덱스 생성
-    sample_indices = evaluator.get_sample_indices(args.num_samples)
-    
+    # BBH 카테고리 지정 시 데이터셋 경로 변경
+    dataset_arg = args.dataset
+    if args.dataset == "bbh" and getattr(args, "bbh_category", None):
+        dataset_arg = f"agent/dataset/bbh_data/{args.bbh_category}.csv"
+
+    # 실제 사용할 데이터셋 로드
+    dataset_loaded = evaluator.load_dataset(dataset_arg)
+    # 샘플 인덱스 생성 (실제 데이터셋 크기 기준)
+    sample_indices = random.sample(range(len(dataset_loaded)), min(args.num_samples, len(dataset_loaded)))
+
     # 기존 프롬프트가 있는 경우에만 평가 실행
     base_accuracy = None
+    dataset_display_name = args.bbh_category if getattr(args, "bbh_category", None) else args.dataset
     if args.base_system_prompt is not None and args.base_user_prompt is not None:
         base_results = run_single_evaluation(
             evaluator,
-            args.dataset,
+            dataset_loaded,
             args.base_system_prompt,
             args.base_user_prompt,
             args.num_samples,
             sample_indices,
             is_zera=False,
-            num_shots=args.base_num_shots
+            num_shots=args.base_num_shots,
+            dataset_display_name=dataset_display_name
         )
         base_accuracy = print_evaluation_results(base_results, "기존 프롬프트")
     
     # 제라 프롬프트로 평가 실행
     zera_results = run_single_evaluation(
         evaluator,
-        args.dataset,
+        dataset_loaded,
         args.zera_system_prompt,
         args.zera_user_prompt,
         args.num_samples,
         sample_indices,
         is_zera=True,
-        num_shots=args.zera_num_shots
+        num_shots=args.zera_num_shots,
+        dataset_display_name=dataset_display_name
     )
     zera_accuracy = print_evaluation_results(zera_results, "제라 프롬프트")
     

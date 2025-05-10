@@ -1,0 +1,251 @@
+task,input,target
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ [",] ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < [ [",] ] >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { < { { [ ] } } { < [ { { < > } } [ ( ) ( ) ] [ [ [ [ ( { < ( < ( [ ] ) > ) > } ) ] ] ] ] ] ( ) ( [ ] { } ) > } > [ { ( ( ) ) } ]",}
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < [ ] { < ( ) > } [ ] ( { }",) >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < ( ( ( < > ) ) ( { { } [ { } ] [ ] < ( ) > } ) )",>
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( [ [ [ { } ] ] { < [ < [ { } ] > ] > }",] )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( { { } }",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < ( ( ( [ { } ] )",) ) >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < > ] [ [ < > ]",]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ ] ( [ [ { < { { ( < > [ ] ) } } < > > } ] ] { }",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < [ ] ( ) ( ( { { } } ) ) < { < > } > [ ] > ] < ( ) > ( ( ( ) ) ) ( < >",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ { < ( ) > }",]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < [ ( ( ) < ( ) > ( { { } } [ [ [ < ( [ ] ) ( ) > ] ] ] { { { { { } } } { { } { < [ [ ] ] > } } { } } } ) ) ] >",]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < ( ( [ < > { [ { ( ) } ] < { < { } > [ ( < > ) ] } > } [ < > ] ] ) { { ( { ( ( [ ( [ ] ) ] < { } > ) ) { { ( [ [ ] ] ) } [ ( ) ] { { [ ] } } } } ) } ( { } ) }",) >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ ] { ( ( < { ( ( ( { < > ( ) } ) ) [ { } ] { { ( ) } } ) } < > >",) ) }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < { < > } { (",) } >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ [ < < { } >",> ] ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < ( ( )",) >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( ( ) ) [ { ( < > ) }",]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < < > > < ( < < < [ [ [ [ ] ] ] ] > > > ) [ < < [ ] > > ] { [ < > ] < > [ ( ) ] } { [ ]",} > ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { ( < [ < > ]",> ) }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { ( [ ] )",}
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { ( < > ) } ( ( [ ] ) < [ ( [ [ ] ] [ { } ] { } [ < { [ ] } > ] ( ) ) ]",> )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < { < [ [ ( { } ) ] ]",> } >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { ( [ [ ] ( ) ]",) }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < { [ ] } >",]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( ( < >",) )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < < { ( < ( ) > ) }",> >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ [ < [ [ ] ] > ] ] { } { ( { ( ( ) ) ( ) { { [ [ ( { < { [ { [ ( < ( ( < < < [ ( ) ] [ ] > > > ) ) > < [ < { < ( ) > } > ] > ) ] } ] } > ( ( ) ) } ) [ ( ) ] ] ( < > ) ] } } } ) } [",]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { { } ( ( ) )",}
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < [ { { < ( ) > { < { } > ( < ( ) > { < [ ( { { ( < [ ] > ) } } { ( ( [ [ { } [ ] ] ] ) ) } ) ] > } ) } }",} ] >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( < [ ( )",] > )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < [ ( [ < > ] { < > } [ [ ] ] ) ]",> ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < ( ( [ ( [ ] ) ] ) )",>
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < [ ]",>
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ { ( { } ) } < < ( ) { { < [ { [ ( ) ] } ] > } } > >",]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( ( { }",) )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ [ [ [ < { ( ) } ( ) > { ( ) } ] { ( ) }",] ] ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { } < { } < > (",) >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( ( [ < < > [ < { } > ] { < [ ] > ( ( ( [ [ { < > } ] ] ) ) ) ( < < > > ) } > ]",) )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { < { } > { (",) } }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( [ [ { < > { } { } < < < < { } > > ( < ( ( ) ) [ ( [ ] ) ] > ) > > { } } [ < < > > ] < ( ) > ] ]",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { < <",> > }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { { { } }",}
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < { } [ [ ( ( < { < { [ ] } > } > ) )",] ] >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < { ( ( )",) } >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ ( < { [ ( ) ] } >",) ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( ( { < { < { < > } > } > } ) ( ) ( { [ ( < ( < < { ( { < > } ) } > > ) > ) { ( { < ( { [ ] } ( ) ) > } < { < { { ( ) } } > { < [ { ( ) } ] > } } > ) } [ [ ( ) ] ] ]",} ) )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ ] < { < { [ ( ) ] } > }",>
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < [ ] > ] [ { [ ] }",]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( < > ( [ ( )",] ) )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( < { ( ) { } } ( < > ) >",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < < ( < >",) > >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { { } ( ( < > )",) }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( < { < { } > { { ( [ ( { } ) ( ( [ ( [ ( { [ { } ] } ) ] ) ] ) ) [ < [ [ [ [ [ < > ] [ { [ [ { ( ( < [ ] > ) [ ( [ ] ) ] < { [ ] } > ) } ] ] } ] { < ( < > ) > } ] ] ] ] > ] ] ) } } } >",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( < < < >",> > )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < < [ ( ) ] >",>
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < > {",}
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < ( [ [ [ [ ( ) ] ] { } ] ] )",>
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < [ < > ]",>
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { [ [ [ [ ( ) ] ] ] ]",}
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { < { ( { [ ] } ) } > { } ( [ { { { ( [ < > ] ) } } } ] ) { { ( { } ) } }",}
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( ( < [ { { } } ] > { } ) ( < > ) [ ( < > ) ] <",> )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < < { } > < > > ( )",]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < ( < < > [ ] ( ) >",) > ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { [ < [ { < ( ) > } ] >",] }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ { < > < [ ] > [ < { } > ] [ ( { } ) ] [ ] [ ( ) ] ( ) < { { < { { { { { ( { } ) } ( { < > } ) } } } } > } }",> } ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ [ < [ ( [ < [ ] > ] ) ] > ] ( { }",) ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( [ ( )",] )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { ( { { < { < > } > } < { } > < < < [ < [ ] > ] > > >",} ) }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { [ < [ < { < { } > } > ( ( < { [ ] } > { { } } ) { } ) ] > ]",}
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( ( < { [ [ { [ [ ( [ < < > > ( ( [ ( ) ( { ( < [ ] > ) } ) ] ) ) ] ) ] ( ) ] } { [ [ ] ] } ] ] } > [ { < > } ]",) )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { { [ { < { } > } ( ) ]",} }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < [ ] > ( ( ( { { { { ( ( { { } } ) ) } ( { } ) } } { { { [ { ( ) } ( ) ( ( { [ < < > > ] < < > > } ) ) ] ( { } { } ) } } } } )",) )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { < [ < ( < [ ] > ) < > < { } > { < > { } { { < [ < < { } [ { } ] < > > > ] < > > } < [ [ ] ] > } } > ] [ ( ) ] > } [ { ( < ( ( ( [ { } ] ) ) ) > ) } ] [ < ( ) ( ( { ( ) [ { { ( { } ) } } ] } ) ) >",]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( < [ < ( ) > [ { [ { ( ) } ] } ] ] > [ { } ] ( < { < [ { } ] > } > ) ) ( ( < ( ) > [ ] [ < { ( ) } > ] [ { } ] [",] ) )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( { } < > { < { ( < > ) } >",} )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < < [ ] > ( < > ) <",> >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < [ { { [ { [ { ( ( ) ) } ] } ( < < ( < > ) > { } [ [ [ ( < { } > ) ] ] ] { } > ) ( { } ) { } ] }",} ] >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < [ ( [ ( ) [ < [ < > ] < > [ ] > ] < < ( ) ( ) > < { } > > [ < > ] ]",) ] >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < [ { { < > [ ( ) ] ( ( ) ) } } ] > ] { { { ( < > )",} } }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( < < > ( [ < { { } } ( ) > ] ) [ ( ) ] [ ] [ { } ] >",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < { ( { } ) < > }",>
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { < [ ]",> }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( { } ) < { < { } >",} >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < ( ( { < > } )",) >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( ( ( ) )",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ [ < < { [ ] ( [ [ ( [ [ { [ ] } ] ] ) ( ) ] ] ) ( ) [ ] < [ ( ( ( ) ) ) ] < < < > [ ( ) ] > [ ] > > [ < > ] } > >",] ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { { { < { } < ( ( < > ) ) > > } } { [ [ { } ] ] [ ] < < { } > [ ( ) { ( { } ) } ] > ( [ < [ ( ( { } ( ) < > < [ < < { { ( [ { } ] ) } } { } { } > > ] > ( ) ) ) < > ] > ] )",} }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ [ { { < ( ) > } } ]",]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { < ( [ ( ( [ < { ( { } ) } < < > > > ] ) ) ] ) >",}
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { { ( { [ [ { < [ ] > } ] ] } ) [ ( < { < > } > ) ]",} }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ [ < [ ] > ] ] <",>
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < > [ [ < [ ] > ]",] ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( ( { < > ( ) [ { < ( < > < ( ( ) ( [ { } ] ) ) > { { } { ( ) } } ) [ ] > } ] { { } } }",) )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( ( ( [ < [ < [ ( [ { < ( < ( ( ) ) { } [ ] > ) > } ] ) { < > } ] [ < [ { ( < < { { [ < { [ [ < > [ ] ] ] } > ] { { } } } } > > ) } ] > { < > { } } ] > ( [ ] ) ] > ] ) ( )",) )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < < { } >",>
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( < >",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( { ( )",} )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( ( ( ( [ [ < [ { { [ ] } } ] > ] ] ( ) ) )",) )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < < ( ( [ ] )",) > >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < ( { } )",>
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < < < { < < > > } > < < { < ( < > ) < > [ [ [ < ( ( ) ) > [ ] [ ] ] ] ] < ( ) > ( ) [ ( [ [ ] ] ) ] > } { } { < [ < { ( { } ) } > ] > } { { } } > >",> >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < { [ ] }",>
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( [ { < ( [ ] < > ) > } ]",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( { < [ < > ] > }",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ ( [ ( [ < ( ) > [ < { } { [ ] } [ ] [ ] > { ( < { < > } > ) } ] ] ) ] )",]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { < ( [ ] ) >",}
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < { < ( )",> } >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( < ( ) ( < [ ] > ( ) < [ [ { } { < > } < > ] ] > ) [ ] > [ ( < { [ ] } [ ] ( { [ < > ] < < > > ( ( < { } > ) ) } ) [ [ [ < < < ( ( ) ) > > > ] < < { [ ] } > > ( [ < > ] ) ] ] > ) ] < >",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( ( [ [ ] ]",) )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { ( ( ) ) { < > { ( [ [ { } ] [ ( ) ] ] ) } [ { { { ( < [ ] > ) } { < > } } }",] } }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < ( < > ) { < < { ( ( ) { { { < > { } } [ < > ] ( ) } } ( ( ) ) ) < [ { { ( ( < > ) ) } } [ { < { } > } ] ( ) ] > } { [ ] } > > [ ] } > ( [ ] ) [ < { ( ( ( ) ( ) ) ) ( ) } > ] [ < ( )",> ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ ( { } )",]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( { < { ( ) } > } { ( { [ ] } ) }",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { [ [ ] [ ]",] }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( < [ < ( [ ( ) ] < > < ( { } ) > ) < [ ] > > ] ( ) < [ < > ] >",> )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( < < > > [ [ [ { { < { } ( { } ) > } } < { { { } } } < > > ] ] ( )",] )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( { ( ( { } ) ) } ( ) ) < { (",) } >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < ( { [ { } ] } [ ] [ ] )",>
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { { [ ( [ { ( { ( [ ( [ ] ) { ( < < [ ] > [ [ ] ] > ) } ] ) [ ] } ) } ] ) ] } { < [ ] > } (",) }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { [ < [ ] > ] } { ( ) [ < > ] [ [ [ ] ]",] }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < [ { ( < ( ( [ < < { } > < < [ ( { < < > > } ) ] > > > ] { } ) ) > ) } ] [ < < { } > ( < < ( ) < ( [ ] ) > > ( ( ) ) > ) > ] > ] < < {",} > >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < [ ]",> ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { { [ < > ] } < [ ( [ { } ] ) ] > < [ < > { } ] < ( [ ] ) > <",> > }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { ( { [ ( ) ] } { { [ ] } } { } < > ) } [ < [ ( ) ]",> ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { ( < { < ( ) > } >",) }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( { < { ( ( { } ) ( ) ) } { } < { } > < > > } { } ( { ( { { } } ) [ ( ) ] } ) ) [ ( [ ]",) ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < ( )",>
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ { < ( )",> } ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( ( [ < [ ] > { { [ [ ] ] } } ]",) )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { < ( ) > { < > } ( < > ) < ( ) > [ ] < < < < ( ( ) ) < ( ) > > > > > {",} }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < < > ( [ ]",) >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < ( < > ) > { } < { [ < > ]",} >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < [ ] > [",] ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( < { < ( ( < { } { < < { { { } } } > < < < > [ ] > { } ( < { { ( [ ( ) ] ) } } > ) > > } > ) ) > } >",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( ( ( [ { } ] )",) )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ { { } } ] ( < { < [ ( ( ) ) ] > } >",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { < ( < < < [ < [ [ ] ( ( ) ) ] > < > ] > > > )",> }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { ( [ ] ) } [ ] ( { < > } ( { } ( { { } } ) ) ( [ ] ) ( ) ( < ( { { ( < { [ ( ) ] } > ) } } [ < [ ( [ { } ] [ < > < < > > ] ) ] > ] { < { } > } < > ) > )",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( [ < < > [ [ < > ] ] > ] ( < < < ( [ [ ] ] ) [ ( ( [ { { } } ] ) ) ] > >",> ) )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( ) ( (",) )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { < [ ] > ( { [ ] } <",> ) }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( < ( ) >",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { ( ( ) ( { ( < ( ) > ) }",) ) }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < [ [ < > ] ] < ( ) > [ { } ] < [ [ ] ] > ( ) < { < [ ] < < [ [ { [ ] } ] ] > > ( [ ( ( ) ) ] ) > } > [ { { < > } } ] > < ( < { } { [ { [ ] } ] } >",) > ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( < < < ( < < > > ) > > >",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < < >",>
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( { ( ) { [ ] { ( ( { < > } ) ) ( < < > < > > < ( ( ) ) > ) } < ( < < < { } > > > ) > } }",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( ) ( < < { }",> > )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( < ( [ ] ) > {",} )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( < { } [ ] >",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { < > } ( ) [ ] {",}
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < [ { { [ [ [ < ( < [ ] { [ ( [ ] ) ] [ ] < > } > ) > ] ( [ ] ) ] ] } }",] >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < { [ ] } > ( ) < [ [ { [ [ ] ] } ] ] ( ) [ < ( [ { } ] ) > ( ( ) ) ]",>
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < { < { [ < { ( [ ] ) } > { ( { } ) } ( ) ] } > } [ < < > > ] { } [ ] < { }",> >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( { [ [ { } ] ] }",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( ( < { [ { } ] } > ) ) < {",} >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < < < [ ( ) ] >",> >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < [ ] { { } { < ( { } ) > } } > ] ( {",} )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { < < > ( [ [ { ( ( [ ] < > ) ) } ] { [ [ ] { } { [ { < > } ] } ( { { { { } } } } ) ] } ] ) (",) > }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { ( (",) ) }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ ( ( { < ( { } ) > } )",) ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( [ < < { } > > ]",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( ) { <",> }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { ( [ { ( < [ { ( ) { } } ] > ) < > } ]",) }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { < < { ( < > ) }",> > }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { { [ [ ] { { < > [ ( ) ( [ ] ) [ ] { < > } ] } } [ { [ ] } ] { ( ) }",] } }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { {",} }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < ( [ { ( < > ) } ] ) > { ( [",] ) }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ { [ { ( < < < < > { } > { [ { } ] } > > ) } ] [ ] } ] [ < { { } } [ [ ( ( ) ) ] ] > ] [ ( ( [ ] )",) ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < { < ( ) ( ( < > < ( ( < < > > ) ) { ( ) } > ) ) { { } }",> } >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ { [ < [ < { } > ] [ ] >",] } ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < < [ ( < [ ( { [ ( ) ] [ ( ( { [ ] } ) ) ] } ) ] > ) ] <",> > >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < { { } } ( < [ ] [ { } ] > ) ( { { } { { ( ) } } } ) { < { { [ ] } [ ( ) ] } ( < { [ < > ] } > ) < ( [ ] { ( < < [ ] > > ) [ { [ [ ( ( ) ) ] ] } ] } { } ) > ( { { [ [ ( ) ] ] } } )",> } >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ ( ) { [ ] } [ ] [ ] { < { ( ( { } ) ) { [ { } ] } } > [ ] }",]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < ( { ( < < > > )",} ) >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < ( < >",) >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ ] { ( { < > } ) } [ ( ) ] { } [ { { ( < > ) } <",> } ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ { { ( ) }",} ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { [ { [ ] } ] } [ [ { { } } [ < >",] ] ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ { ( < [ [ ] ] > )",} ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { ( ( [ ] ) )",}
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( < < > > < > [ ] [",] )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < [ ( { { ( ( ) ) } } ) [ ( [ { } ] ) ] < { { < < < > [ < [ < ( [ ( { ( ( < < < < > > > { ( { { < ( ) > ( ) } } ) } > { } ) ) } ) ] ) > ] > ] > < { } > > } ( ) < { ( ) } > } > ] [ < ( ) > ]",>
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { [ { { { } } }",] }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ [ ( { { ( { } ) } < < ( [ [ { } < [ { < [ { ( ) ( [ { } ] ) } ] < > > } ] ( < { ( [ ] ) } > ) > ] ( [ < ( ) > ] ) ] ) > > }",) ] ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ (",) ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( {",} )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ ( < [ [ { [ < [ < ( [ ] ) > ] < > > ( < [ < [ < ( [ ( [ ] ) < ( ) > ] [ ( { ( ) } [ < { { { ( [ ] ) } } } > ] ) ] ) > ] > ] > ) ] } ] ] > ) ( { { { } } }",) ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { [ [ < > ] (",) ] }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < ( ) ( { { [ ] } }",) >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < < ( [ ] ) > < >",>
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( [",] )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < [ [ ( ) ( ( { < { < { { } } > } > } ) ) ] ] > ( ) { ( ) }",]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( < > [ { [ [ ( [ ] ) [ < ( < > ) { [ ( { ( [ ( ( < ( ( < [ ] { < > } > [ ] ) ) > ) [ { } ] ) ] ) } ) ] } > ] ] ] } [ ] ] ) < [",] >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < ( {",} ) >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ ( [",] ) ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { { < { < > } > } [ ( < < > > ) [ { < ( ) > } ] ] [ ] } < ( { [ < [ { [ ( ) ] } ] > < { ( [ [ [ { } < > { ( < { [ ] } > ( ) ) } ] ] ] ) } > ] } )",>
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( [ [ [ ( { ( ( < [ { < > } ] > { { [ ] } } ) ) } ( [ [ < > ] ] ) ) ] ] ] ) ( < > < [ ( ) ] > (",) )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( ) ( [ [ ] ] ) ( { [ { < { ( ) < [ [ < > { [ ( < ( < [ { < < ( [ ( ) ] [ ( < ( { [ ] } ) > ) ] [ < > ] ) > [ { ( < > ) } ] > } ] > ) > ) ] } ] ] > { } [ [ ] ] { } } > ( ( < > ) ) } ] }",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( ( { ( ( { } ) ) ( ( [ ] ) ) } )",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < < > >",]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < [ [ { } ] ]",>
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( ) [ ( [ < { { ( { } ) } } >",] ) ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < > ] [ { < { } > { [ ( [ ( ) ] ) ]",} } ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( < ( [ < < [ ] > > ] )",> )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ ] { [ [ < { { { } } } > ] ] < [ { }",] > }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( [ ( { } ) { < ( ( [ ] ) ) >",} ] )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( { { { { { < < ( { ( { { < < [ < [ [ ] ] > ] [ ] > [ [ ] ] > ( < [ { < > < [ ] > } ] > ) } } ) } ) > > } } }",} } )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < ( [ ] ) > ] { [ { }",] }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( { [ { }",] } )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( { [ { [ ] { [ [ ] ] } { ( ) } } { [ [ ( [ ] ) ] ] } ] } { < ( ) { [ [ ( ) { [ { { } } ] < > { < ( < { ( < ( [ ] ) > ) } > ) { [ ( < ( ) > ) ] } [ ] { } > } ( ) } ] [ ( ( { < > } ) ) ] ] } >",} )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < ( ( ( < > < [ [ ] ] > ) { } )",) >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { [ { { { < > } }",} ] }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { { { < > } } < > < { { ( ) } } > { } } { < ( { [ < > ] [ ( ) < ( ) > { < ( ( ( ) ) ) > [ ] } ] < > ( < { } > ) }",) > }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < > { < [ ] >",} ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ [ <",> ] ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( { }",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { [ [ < ( < { } > ) > ] ] [ [ ] ]",}
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < {",} >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { < > } [ ( { ( { [ < > ] } ) ( ) } ) ] { [ < > ] } [ [ ( [ ]",) ] ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < < { { { < [ ( < > { ( ) } ) ] > } } }",> >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { < < ( )",> > }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ ( ) <",> ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ { ( { [ < ( < [ ( ) ] > ) > ] } ) } ] [ ] [ ( { ( ) } ) ] < { ( ( ( ( ( < > ) ) ) ) ) [ < [ ( < > ) ] > [ [ ] ( ( { } { [ { < [ ] > } ] } < { } > < [ < > ] > [ ] ) ) ] ] } > { [ { ( )",} ] }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < { < [ ( < > ) ( ( [ [ ] ] ) ) ( ( { } ) ) { [ ] } < ( < > ) > ] > }",> ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( { < { { [ ] } < > [ ] } [ [ [ < [ [ ] ] > ] ] ] > } [ ] { { { { [ { } ] } ( < [ [ [ ] ] ] > ) < < ( { ( [ ] ) [ { { } } ] { [ ] } } ) [ [ { [ [ { ( { } ) [ ( ) { } ] { } } ] ] < > } ] ] > > }",} } )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < (",) >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { [ < { < ( ( ) ) > } >",] }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ ] [ ( [ [ ( ) ] ] ) < < [ ] > > < < >",> ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( { } ) { ( [ { ( ) } ] ( [ ] ) )",}
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < > { { { } } { } } ] < { } [ { [ ] }",] >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { < > { { ( { } ) } { { ( ( ) ) } } }",}
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { { ( [ ] ) { ( )",} } }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < ( < { [ { } < ( { ( < < < { [ ( [ ( [ { { < [ { } < ( ) > ] > } } ] ) ] ) ] } > < > > ( ( < { } > ) ) > ) } ) > ] } > )",>
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < { [ < > ] ( ( ( ( { { } } ) ) )",) } >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < < [ [ ] ( ) { < > ( [ { } { < > } { } ] ) } [ [ [ ( [ ( ) [ [ { < [ { { } } < { { < ( ) > } } > ] > } ] ] ] ) ] < < [ [ ( < < ( ) > > ) ] ] > > [ ] ] ] ] < ( [ ] ) > { ( ( < { } > ) ) } > >",]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < { [ < > ]",} >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < [ { ( ( < ( ( ) ) > ) ) } ]",>
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < ( ) < > > { < > } { ( ) ( < ( ) > ) } < < { [ ] }",> >
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ ] [ { } ] ( ( )",)
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ ] < { < > } > { (",) }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < > < { { { [ ( ) ] } } } > ( { [ { ( [ ] { } ) } ]",} )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { ( <",> ) }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { ( { { { < ( < ( [ < < > > ] < > ) > ) > } [ ] }",} ) }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: { < { { } } > } < { } > { < { { [ < [ [ ] ] > ] } } > } ( ) { { [ { [ { } ] } ] ( [ { } ] )",} }
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: ( ( < < < ( ( ) ) ( [ ] ) > > { [ ] }",> ) )
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: [ < { { } }",> ]
+dyck_languages,"Complete the rest of the sequence, making sure that the parentheses are closed properly. Input: < < < > >",>
