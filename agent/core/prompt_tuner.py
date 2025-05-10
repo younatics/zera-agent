@@ -445,7 +445,7 @@ class PromptTuner:
             f"Actual Output: {case.actual_output}\n"
             f"Score: {case.score:.2f}\n"
             f"Evaluation Details: {case.evaluation_details}"
-            for i, case in enumerate(reversed(sorted_cases[-3:]))  # 상위 3개를 역순으로
+            for i, case in enumerate(reversed(sorted_cases[-1:]))  # 상위 3개를 역순으로
         ])
         
         # 하위 3개 케이스 포맷팅
@@ -483,7 +483,8 @@ Average Score: {best_prompt['avg_score']:.2f}
         improvement_prompt = self.meta_user_prompt_template.format(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            random_cases=formatted_top3_cases + "\n\n" + formatted_bottom2_cases,  # 상위/하위 케이스 결합
+            # random_cases=formatted_top3_cases + "\n\n" + formatted_bottom2_cases,  # 상위/하위 케이스 결합
+            random_cases=formatted_top3_cases,  # 상위/하위 케이스 결합
             recent_prompts=formatted_recent_prompts,
             formatted_best_prompt=formatted_best_prompt,
             task_type=task_type,
