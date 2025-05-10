@@ -16,8 +16,8 @@ def run_cnn_dailymail_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--model", model,
         "--model_version", model_version,
         # 기존 프롬프트
-        "--base_system_prompt", "You are a summarization assistant. Summarize the following article in 2–3 sentences, focusing on the main idea.",
-        "--base_user_prompt", "Article:",
+        # "--base_system_prompt", "You are a summarization assistant. Summarize the following article in 2–3 sentences, focusing on the main idea.",
+        # "--base_user_prompt", "Article:",
         # 제라 프롬프트
         "--zera_system_prompt", "Read thoroughly and reason clearly about the provided text to first identify key explicit details. After logically extracting and determining these facts, present your summary strictly as concise, factual bullet points.",
         "--zera_user_prompt", "Summarize the provided text into concise bullet points. Include only key explicit details: names, ages, numbers, dates, specific locations, and clearly mentioned events. Omit any interpretations, assumptions, or generalizations.\n\nExample:\n\nText:\n\"England and Wales Cricket Board managing director Paul Downton insists he retains 'every faith' in coach Peter Moores despite England's humiliating exit at the World Cup on Monday. A 15-run defeat to Bangladesh saw England crash out in the group stages of the one-day tournament after a dismal campaign that included four defeats in five matches. Moores' tactics and team selection have come under heavy scrutiny since he was appointed head coach 11 months ago but Downton insists the former Lancashire coach remains the right man for the job.\"\n\nExpected Summary:\n- England exited World Cup at group stage after 15-run defeat to Bangladesh.\n- England lost four out of five matches in the tournament.\n- Coach Peter Moores appointed England head coach 11 months ago.\n- ECB managing director Paul Downton expresses 'every faith' in Moores despite criticism.\n\nArticle:",

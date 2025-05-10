@@ -42,9 +42,9 @@ class Model:
             "base_url": None
         },
         "local1": {
-            "name": "Meta-Llama-3-8B",
+            "name": "Local Model 1",
             "description": "로컬 서버에서 실행되는 첫 번째 미스트랄 모델",
-            "default_version": "Meta-Llama-3-8B",
+            "default_version": "/data/project/private/kyle/hf_models/Mistral-7B-Instruct-v0.3",
             "base_url": "http://localhost:8001/v1"
         },
         "local2": {
