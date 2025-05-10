@@ -14,31 +14,32 @@ def main():
     # model_version = "gpt-3.5-turbo"
 
     model = "local1"
-    model_version = "Meta-Llama-3-8B"
+    model_version = "Mistral-7B-Instruct-v0.3"
     
-    print("\n===== mmlu_example.py 실행 =====")
-    run_mmlu_example(model, model_version)
+    # print("\n===== mmlu_example.py 실행 =====")
+    # run_mmlu_example(model, model_version)
 
-    print("\n===== mmlu_pro_example.py 실행 =====")
-    run_mmlu_pro_example(model, model_version)
+    # print("\n===== mmlu_pro_example.py 실행 =====")
+    # run_mmlu_pro_example(model, model_version)
 
-    print("\n===== gsm8k_example.py 실행 =====")
-    run_gsm8k_example(model, model_version)
+    # print("\n===== gsm8k_example.py 실행 =====")
+    # run_gsm8k_example(model, model_version)
 
     print("\n===== cnn_dailymail_example.py 실행 =====")
     run_cnn_dailymail_example(model, model_version)
+    run_cnn_dailymail_example(model, model_version)
 
-    print("\n===== mbpp_example.py 실행 =====")
-    run_mbpp_example(model, model_version)
+    # print("\n===== mbpp_example.py 실행 =====")
+    # run_mbpp_example(model, model_version)
 
-    print("\n===== humaneval_example.py 실행 =====")
-    run_humaneval_example(model, model_version)
+    # print("\n===== humaneval_example.py 실행 =====")
+    # run_humaneval_example(model, model_version)
 
-    print("\n===== bbh_example.py 실행 =====")
-    run_bbh_example(model, model_version)
+    # print("\n===== bbh_example.py 실행 =====")
+    # run_bbh_example(model, model_version)
     
-    print("\n===== hellaswag_example.py 실행 =====")
-    run_hellaswag_example(model, model_version)
+    # print("\n===== hellaswag_example.py 실행 =====")
+    # run_hellaswag_example(model, model_version)
 
     # 모든 평가 완료 후 슬랙 알림 전송
     # notify_slack(f"[모델 버전: {model_version}] 모든 평가가 완료되었습니다.", webhook_url)
