@@ -3,7 +3,7 @@ from evaluation.base.evaluator import BaseEvaluator
 from rouge import Rouge
 import pandas as pd
 import random
-from agent.dataset.samsum_dataset import SamSumDataset
+from agent.dataset.samsum_dataset import SamsumDataset
 import json
 import os
 from pathlib import Path
@@ -25,7 +25,7 @@ class SamSumEvaluator(BaseEvaluator):
                     return json.load(f)
             # 샘플 파일이 없으면 새로 생성
             print(f"[INFO] Creating new samples file: {sample_file}")
-            samsum_dataset = SamSumDataset()
+            samsum_dataset = SamsumDataset()
             all_data = samsum_dataset.get_split_data("test")
             sampled_data = random.sample(all_data, min(num_samples, len(all_data)))
             with open(sample_file, 'w', encoding='utf-8') as f:
@@ -33,7 +33,7 @@ class SamSumEvaluator(BaseEvaluator):
             return sampled_data
         else:
             # 전체 데이터셋 로드
-            samsum_dataset = SamSumDataset()
+            samsum_dataset = SamsumDataset()
             return samsum_dataset.get_split_data("test")
 
     def get_sample_indices(self, num_samples: int) -> List[int]:
