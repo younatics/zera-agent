@@ -1152,7 +1152,8 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
         "solar": "SOLAR_API_KEY",
         "gpt4o": "OPENAI_API_KEY",
         "claude": "ANTHROPIC_API_KEY",
-        "local": None  # local 모델은 API 키가 필요하지 않음
+        "local1": None,  # local1 모델은 API 키가 필요하지 않음
+        "local2": None   # local2 모델은 API 키가 필요하지 않음
     }
     
     # 사용되는 모델들의 API 키 확인
