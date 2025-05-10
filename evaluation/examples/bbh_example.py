@@ -8,7 +8,7 @@ BBH (Big-Bench Hard) 데이터셋 평가 예제
 import sys
 from evaluation.base.main import main
 
-def run_bbh_example(model="gpt4o", model_version="gpt-3.5-turbo"):
+def run_bbh_example(model="gpt4o", model_version="gpt-3.5-turbo", bbh_category=None):
     # 명령행 인자 설정
     sys.argv = [
         "bbh_example.py",
@@ -16,37 +16,17 @@ def run_bbh_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--model", model,
         "--model_version", model_version,
         # 기존 프롬프트
-        "--base_system_prompt", "Answer the following question.",
-        "--base_user_prompt", "Question:",
+        # "--base_system_prompt", "Answer the following question.",
+        # "--base_user_prompt", "Question:",
         # 제라 프롬프트
-        "--zera_system_prompt", "You are a logical reasoning expert. Clearly reason each question step-by-step in natural, explicit language. Upon completing your analysis, distinctly separate it from your final concise answer, which must strictly follow the provided formatting instructions.",
-        "--zera_user_prompt", """Solve these logical reasoning problems by explicitly thinking through them step-by-step before providing your final answer.
-
-Examples:
-
-Question: Sort alphabetically: horse dolphin cat bird
-bird cat dolphin horse
-
-Question: Jim scored higher than Sam. Sam scored higher than Eve. Who scored lowest?
-Options:
-(A) Jim
-(B) Sam
-(C) Eve
-(C)
-
-Question: Check validity:
-"No cars can fly. All Toyotas are cars. Therefore, no Toyotas can fly."
-Options:
-(A) valid
-(B) invalid
-(A)
-
-Now, begin solving.
-""",
-        "--num_samples", "1000"
+        "--zera_system_prompt", "You are an AI assistant ready to help.",
+        "--zera_user_prompt", """Please determine the geometric shape drawn by the provided SVG path element. Encourage logical reasoning to identify the shape accurately.""",
+        "--num_samples", "100"
     ]
+    if bbh_category:
+        sys.argv += ["--bbh_category", bbh_category]
     # 평가 실행
     main()
 
 if __name__ == "__main__":
-    run_bbh_example() 
+    run_bbh_example(bbh_category="Geometry")

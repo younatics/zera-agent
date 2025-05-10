@@ -697,12 +697,17 @@ elif dataset_type == "MBPP":
 elif dataset_type == "BBH":
     # 이미 생성된 BBHDataset 인스턴스를 사용
     try:
-        # 데이터 로드
-        data = bbh_dataset.get_split_data("test")
+        # 카테고리 선택 UI 추가
+        bbh_categories = bbh_dataset.get_all_categories()
+        selected_category = st.selectbox(
+            "BBH 카테고리 선택",
+            bbh_categories,
+            index=0
+        )
+        # 카테고리별 데이터 로드
+        data = bbh_dataset.get_category_data(selected_category)
         test_cases, num_samples = process_dataset(data, "BBH")
-        
-        # 데이터셋 정보 표시
-        st.info(f"BBH 테스트 데이터셋: {len(data):,}개 예제")
+        st.info(f"BBH {selected_category} 카테고리 데이터셋: {len(data):,}개 예제")
     except Exception as e:
         st.error(f"BBH 데이터셋 로드 중 오류 발생: {str(e)}")
         st.stop()
