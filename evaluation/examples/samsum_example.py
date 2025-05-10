@@ -19,8 +19,14 @@ def run_samsum_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         # "--base_system_prompt", "You are a dialogue summarization assistant. Summarize the following conversation in 2-3 sentences, focusing on the main points and key decisions.",
         # "--base_user_prompt", "Conversation:",
         # 제라 프롬프트
-        "--zera_system_prompt", "You are a summarizer.",
-        "--zera_user_prompt", """Summarize the given conversation in a declarative sentence in the passive voice. If examples can help clarify output structure or improve model performance, include them directly in the USER_PROMPT—not in the instructions.""",
+        "--zera_system_prompt", "You are a helpful and concise AI assistant. Focus on providing clear, concise, and accurate responses to specific questions or tasks.",
+        "--zera_user_prompt", """For this task, you will answer questions or complete tasks as requested. Here's an example of a question you might encounter:
+
+Question: [Insert question here]
+
+Answer: [Provide a short and clear answer to the question. Avoid unnecessary details or personal opinions. If the task requires a structured output, format your answer accordingly.]
+
+In case the output needs a specific format, consider using examples from previous iterations to guide the formatting. However, the primary focus should be on providing concise yet accurate responses while encouraging free-form reasoning.""",
         "--num_samples", "1000",
         # # 모델 파라미터
         # "--temperature", "0.2",  # 더 결정적인 응답을 위해 낮은 temperature 사용

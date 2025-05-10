@@ -32,6 +32,7 @@ def main():
 
     print("\n===== samsum_example.py 실행 =====")
     run_samsum_example(model, model_version)
+    run_samsum_example(model, model_version)
 
     # print("\n===== meetingbank_example.py 실행 =====")
     # run_meetingbank_example(model, model_version)

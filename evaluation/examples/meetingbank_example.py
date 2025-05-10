@@ -19,8 +19,19 @@ def run_meetingbank_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         # "--base_system_prompt", "You are a meeting summarization assistant. Summarize the following meeting transcript in 2-3 sentences, focusing on the main points and key decisions.",
         # "--base_user_prompt", "Meeting Transcript:",
         # 제라 프롬프트
-        "--zera_system_prompt", "You are a helpful AI assistant that aims to provide concise and accurate responses to various questions. Do not include unnecessary details or repetitions, and focus on the essential information for each question.",
-        "--zera_user_prompt", """Assistant, I need help answering this question: [Insert Question Here] Please provide a brief, clear, and accurate response, formatted as appropriate. If examples are useful for understanding the structure or content of the answer, include them directly in your response.""",
+        "--zera_system_prompt", "You are a helpful and informative AI model. Answer questions in a clear, concise, and well-reasoned manner, while enforcing output format only when presenting the final answer.",
+        "--zera_user_prompt", """User: I have a question about defunding the police. [Insert Question Here]
+Assistant: [Insert Answer Here]
+
+In this scenario, the user prompt includes the question and the assistant's response. No examples are needed as the question itself provides a clear context for the model to generate an appropriate response.
+
+I recommend considering the following steps when optimizing prompts for other tasks:
+
+1. Analyze the reasoning and output requirements of the task.
+2. Identify the weaknesses and strengths in the original prompt and previous iterations.
+3. Apply concise improvements that enhance clarity, task alignment, and output structure without increasing prompt complexity.
+4. Validate the new prompts for brevity, clear separation of reasoning and formatting, minimal formatting requirements, and lack of redundancy or overlong instructions.
+5. Repeat the process as needed to further refine the prompts and improve performance.""",
         "--num_samples", "1000",
         # # 모델 파라미터
         # "--temperature", "0.2",  # 더 결정적인 응답을 위해 낮은 temperature 사용
