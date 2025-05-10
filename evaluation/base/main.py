@@ -14,6 +14,7 @@ from evaluation.dataset_evaluator.humaneval_evaluator import HumanEvalEvaluator
 from evaluation.dataset_evaluator.xsum_evaluator import XSUMEvaluator
 from evaluation.dataset_evaluator.hellaswag_evaluator import HellaSwagEvaluator
 from evaluation.dataset_evaluator.samsum_evaluator import SamSumEvaluator
+from evaluation.dataset_evaluator.meetingbank_evaluator import MeetingBankEvaluator
 import random
 
 def setup_environment():
@@ -75,7 +76,7 @@ def main(args=None):
     if args is None:
         parser = argparse.ArgumentParser(description="LLM 평가 스크립트")
         parser.add_argument("--dataset", type=str, required=True, 
-                          choices=["gsm8k", "mmlu", "mmlu_pro", "bbh", "cnn_dailymail", "mbpp", "truthfulqa", "humaneval", "xsum", "hellaswag", "samsum"],
+                          choices=["gsm8k", "mmlu", "mmlu_pro", "bbh", "cnn_dailymail", "mbpp", "truthfulqa", "humaneval", "xsum", "hellaswag", "samsum", "meetingbank"],
                           help="평가할 데이터셋")
         parser.add_argument("--model", type=str, default="gpt4o",
                           help="사용할 모델 (기본값: gpt4o)")
@@ -116,7 +117,8 @@ def main(args=None):
         "humaneval": HumanEvalEvaluator,
         "xsum": XSUMEvaluator,
         "hellaswag": HellaSwagEvaluator,
-        "samsum": SamSumEvaluator
+        "samsum": SamSumEvaluator,
+        "meetingbank": MeetingBankEvaluator
     }
     
     evaluator_class = evaluators[args.dataset]
