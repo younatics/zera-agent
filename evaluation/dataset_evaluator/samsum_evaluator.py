@@ -72,7 +72,8 @@ class SamSumEvaluator(BaseEvaluator):
                       num_samples: Optional[int] = None,
                       sample_indices: Optional[List[int]] = None,
                       is_zera: Optional[bool] = None,
-                      num_shots: Optional[int] = None) -> Dict[str, Any]:
+                      num_shots: Optional[int] = None,
+                      dataset_display_name: Optional[str] = None) -> Dict[str, Any]:
         """전체 평가를 실행하는 메서드"""
         dataset = self.load_dataset(dataset_name, num_samples)
         if sample_indices is not None:
