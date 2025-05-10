@@ -130,7 +130,7 @@ with st.sidebar:
         iterations = st.slider(
             "반복 횟수", 
             min_value=1, 
-            max_value=40, 
+            max_value=100, 
             value=3,
             help="프롬프트 튜닝을 수행할 반복 횟수를 설정합니다."
         )
