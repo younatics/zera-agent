@@ -121,7 +121,7 @@ class Model:
                 if "claude" in self.model_id:
                     response = self.client.messages.create(
                         model=self.model_id,
-                        max_tokens=8192,
+                        max_tokens=4096,
                         system=messages[0]["content"],
                         messages=[messages[1]]
                     )

@@ -8,7 +8,7 @@ MeetingBank 데이터셋 평가 예제
 from evaluation.base.main import main
 import sys
 
-def run_meetingbank_example(model="gpt4o", model_version="gpt-3.5-turbo"):
+def run_meetingbank_example(model="claude", model_version="claude-3-sonnet-20240229"):
     # 명령줄 인자 설정
     sys.argv = [
         "example.py",
