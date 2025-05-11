@@ -76,7 +76,7 @@ SYSTEM_PROMPT:
 [Optimized system prompt]
 
 USER_PROMPT:
-[Optimized user prompt that clearly guides the model’s behavior, with examples or format cues if appropriate. Style and structure should reflect the task’s reasoning depth, format sensitivity, and output clarity needs. Guide the model to reason naturally first, then present the final answer clearly at the end. The prompt should never include a new question; only include format guidance and optional few-shot examples.]
+[Optimized user prompt that clearly guides the model’s behavior, with examples or format cues if appropriate. Style and structure should reflect the task’s reasoning depth, format sensitivity, and output clarity needs. If the task benefits from reasoning, guide the model to write out its reasoning visibly first—step-by-step—before presenting the final answer clearly at the end. Ensure the final answer is presented in the required format and appears on a separate line if specified by the task. The prompt should never include a new question; only include format guidance and optional few-shot examples.]
 
 - TASK_HINTS:
   - [Insert bullet-pointed hints derived from prior errors]

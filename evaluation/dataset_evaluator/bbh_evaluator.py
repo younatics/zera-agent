@@ -51,15 +51,25 @@ class BBHEvaluator(BaseEvaluator):
             return [w for w in re.findall(r'[A-Z0-9-]+', ans.upper()) if w]
         response_clean = response.strip().upper()
         model_answer = ""
+        # 디버깅용: 정규식 매칭 상태 출력
+        print("[DEBUG] response_clean:", response_clean)
+        print("[DEBUG] 괄호 매치:", re.findall(r'\(([A-Z0-9\.]+)\)', response_clean))
         # 1. 'Final Answer:' 이후에 괄호/숫자/문자/문장 추출
-        final_answer_match = re.search(r'FINAL ANSWER[:\-\s]*([\(\[]?([A-Z0-9\.]+)[\)\]]?)', response_clean)
+        final_answer_match = re.search(r'FINAL ANSWER[:\-\s]*(IS)?[\s]*([\(\[]?([A-Z0-9\.]+)[\)\]]?)', response_clean)
         if final_answer_match:
-            model_answer = final_answer_match.group(2)
+            # 'FINAL ANSWER IS (J)'와 같이 IS가 있으면, 괄호 안 알파벳 우선 추출
+            if final_answer_match.group(2) and re.match(r'[\(\[]?[A-Z0-9\.]+[\)\]]?', final_answer_match.group(2)):
+                # 괄호가 있으면 괄호 제거
+                model_answer = re.sub(r'^[\(\[]|[\)\]]$', '', final_answer_match.group(2))
+            else:
+                model_answer = final_answer_match.group(3) or final_answer_match.group(2)
+            print("[DEBUG] model_answer (final_answer_match):", model_answer)
         else:
-            # 2. 맨 마지막 괄호 안에 있는 알파벳/숫자/문자열 (우선순위 가장 높음)
+            # 2. 맨 마지막 괄호 안에 있는 알파벳/숫자/문자열 (항상 최우선)
             matches = re.findall(r'\(([A-Z0-9\.]+)\)', response_clean)
             if matches:
                 model_answer = matches[-1]
+                print("[DEBUG] model_answer (괄호 매치):", model_answer)
             else:
                 # 3. '**J. ...**' 또는 '**J**' 또는 'J. ...' 또는 'J ...' 등 다양한 패턴
                 match = re.search(r'\*\*?([A-Z0-9\.]+)\*\*?[\s\.]', response_clean)
@@ -76,6 +86,7 @@ class BBHEvaluator(BaseEvaluator):
                     matches = re.findall(r'([A-Z0-9\.]+)', response_clean)
                     if matches:
                         model_answer = matches[-1]
+                        print("[DEBUG] model_answer (마지막 등장):", model_answer)
                     else:
                         # 5. 마지막 줄의 단답형(숫자, True/False 등)
                         lines = response_clean.splitlines()
@@ -83,14 +94,20 @@ class BBHEvaluator(BaseEvaluator):
                             line = line.strip()
                             if line and not line.startswith('FINAL ANSWER'):
                                 model_answer = line
+                                print("[DEBUG] model_answer (마지막 줄):", model_answer)
                                 break
                         else:
+                            print("[DEBUG] model_answer (실패):", model_answer)
                             return False
                 else:
                     model_answer = match.group(1)
+                    print("[DEBUG] model_answer (패턴 매치):", model_answer)
+                print("[DEBUG] model_answer (else 블록 마지막):", model_answer)
         # 마지막에라도 model_answer가 비어있으면 전체 response_clean 사용
         if not model_answer:
             model_answer = response_clean.strip()
+            print("[DEBUG] model_answer (비어있을 때):", model_answer)
+        print("[DEBUG] model_answer (정답 비교 직전):", model_answer)
         correct_answer = ground_truth['answer']
         # 디버깅용 로그
         print(f"모델 답변: {model_answer} / 실제 답변: {correct_answer}")

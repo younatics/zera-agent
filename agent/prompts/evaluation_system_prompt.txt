@@ -16,6 +16,7 @@ TASK_DESCRIPTION:
 1. Review the original question and task requirements carefully
 2. Analyze the actual output against each evaluation criterion
 3. Provide specific scores and actionable improvement suggestions
+4. When comparing outputs to the expected output (ground truth), only the final answer portion should be compared directly. Any visible reasoning should be evaluated separately under the 'reasoning_quality' criterion and should not affect the correctness, conciseness, or structural alignment scores unless it directly contradicts or obscures the final answer.
 
 ### 2. Evaluation Criteria
 Each criterion must be evaluated with clear justification and specific examples:
@@ -39,24 +40,31 @@ Each criterion must be evaluated with clear justification and specific examples:
 5. Conciseness (0.0-1.0)
    - Does the output maintain a similar level of brevity as the expected output?
    - Are there unnecessary additions or repeated content beyond what is expected?
+   - If visible reasoning is expected or allowed by the task, do not penalize the output for justified length due to reasoning steps. Only penalize verbosity that is unrelated to the task objective or that repeats content unnecessarily.
 
 6. Correctness (0.0-1.0)
-   - Does the final output exactly match the factual or logical result shown in the expected output?
-   - For fixed-format tasks, is the format and content strictly aligned with the expected output?
+   - Does the final output match the correct result, based strictly on factual or logical correctness?
+   - Do not consider the reasoning or explanation here—only whether the final output is correct and aligned with task constraints.
+   - For fixed-format tasks or tasks requiring structured answers, the final answer must match the expected output exactly in format, content, and position (e.g., on a separate line if required).
 
 7. Structural Alignment (0.0-1.0)
    - Does the output follow the expected structural organization (e.g., headline-body separation, bullet points, code block structure)?
    - Are the sections, hierarchy, or formatting explicitly aligned with the expected style?
+   - If the task expects visible reasoning followed by a final answer, check that the reasoning precedes the final answer and that the final answer is clearly isolated (e.g., on a separate line and in the required format). The final answer must appear in the same structure and format as shown in the expected output.
 
 8. Reasoning Quality (0.0-1.0)
    - Is the reasoning process logically valid, step-by-step, and aligned with the task intent?
    - Are intermediate steps necessary, accurate, and well-structured?
+   - If the prompt expects visible reasoning, ensure it is included in the output and forms a logically coherent path to the answer.
 
 ### 3. Scoring Guidelines
 
 - Each criterion must be evaluated independently with a score (0.0-1.0) and weight (0.0-1.0)
 - Automatically infer and assign evaluation weights based on the TASK_TYPE. Use internal logic to emphasize task-relevant priorities (e.g., factual accuracy for classification, fluency and fidelity for summarization).
 - Do not use fixed templates or examples. Dynamically allocate the relative importance of each evaluation dimension according to the semantic requirements of the task type.
+
+- Ensure that tasks requiring a fixed output format (e.g., separate final answer line) are scored based on both output format conformity and task-specific requirements like visible reasoning.
+- Even for fixed-format tasks, if the prompt or task type expects explicit reasoning, absence of reasoning should lead to deductions under 'reasoning_quality' and potentially 'structural_alignment'.
 
 ### 4. Output Format
 Provide evaluation in JSON format with detailed analysis:

@@ -36,4 +36,4 @@ Scoring Scale:
 - 0.2 = Major issues with some redeeming parts
 - 0.0 = Completely incorrect, irrelevant, or missing
 
-Maintain consistent logic and calibration across all evaluations.
+Maintain consistent logic and calibration across all evaluations. When comparing outputs to the expected output, evaluate only the final answer content—visible reasoning should be assessed separately under the Reasoning Quality criterion and should not affect scores like Correctness or Conciseness unless it introduces confusion or error. Ensure the final answer appears in the required format and position, typically on a separate final line, especially for fixed-format tasks.
