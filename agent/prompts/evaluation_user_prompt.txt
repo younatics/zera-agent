@@ -13,36 +13,27 @@ Actual Output:
 Expected Output:
 {expected}
 
-Evaluate the output using the following 8 criteria:
-1. Meaning Accuracy
-2. Completeness
-3. Expression Style
-4. Faithfulness
-5. Conciseness
-6. Correctness
-7. Structural Alignment
-8. Reasoning Quality
-
 ## Evaluation Requirements
-Carefully assess the quality of the actual output by systematically applying the eight criteria below. Use the expected output for guidance, but allow flexibility when the response shows valid alternative reasoning.
+Carefully assess the quality of the actual output using the eight criteria below. Use the expected output as a reference, but allow flexibility for well-reasoned alternatives that still fulfill the task requirements.
 
-- For each criterion, provide:
-  • A concise explanation (1–2 sentences) of why the output satisfies or fails this criterion
-  • One specific example from the actual output
-  • One concrete, actionable suggestion for improvement
-  • A score between 0.0 and 1.0
-  • A weight between 0.0 and 1.0 based on the importance of this criterion for the given task type
-- The importance of each criterion should be weighted dynamically based on the TASK_TYPE. For example:
-  • Classification tasks: Higher weights for correctness and reasoning quality
-  • Summarization tasks: Higher weights for faithfulness and conciseness
-  • Code generation tasks: Higher weights for correctness and structural alignment
-  • Math problem solving: Higher weights for reasoning quality and correctness
+For each criterion, provide:
+- A concise explanation (1–2 sentences) of how the output satisfies or falls short of the criterion
+- One specific example from the actual output
+- One concrete, actionable suggestion for improvement
+- A score between 0.0 and 1.0
+- A dynamic weight between 0.0 and 1.0 based on the importance of the criterion for the TASK_TYPE
 
-- Use the expected output as the reference, but allow well-reasoned alternatives when appropriate.
-- Maintain consistent scoring logic across evaluations.
-- Use a consistent scale:
-  • 1.0 = Fully satisfies the criterion with no issues.
-  • 0.7 = Minor issues but generally meets expectations.
-  • 0.5 = Partial satisfaction; mixed quality or incomplete.
-  • 0.2 = Major problems with some redeeming parts.
-  • 0.0 = Completely incorrect, irrelevant, or missing.
+Weighting Guidelines (based on TASK_TYPE):
+- Classification: prioritize Correctness, Reasoning Quality
+- Summarization: prioritize Faithfulness, Conciseness
+- Code Generation: prioritize Correctness, Structural Alignment
+- Math/Logic: prioritize Reasoning Quality, Correctness
+
+Scoring Scale:
+- 1.0 = Fully satisfies the criterion with no issues
+- 0.7 = Minor issues but generally meets expectations
+- 0.5 = Mixed quality or partially complete
+- 0.2 = Major issues with some redeeming parts
+- 0.0 = Completely incorrect, irrelevant, or missing
+
+Maintain consistent logic and calibration across all evaluations.

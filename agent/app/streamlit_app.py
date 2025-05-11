@@ -184,7 +184,7 @@ with st.sidebar:
             "모델 선택",
             options=list(MODEL_INFO.keys()),
             format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
-            index=list(MODEL_INFO.keys()).index("local1"),  # local1을 기본값으로 설정
+            index=list(MODEL_INFO.keys()).index("gpt4o"), 
             help="프롬프트 튜닝에 사용할 모델을 선택하세요."
         )
         st.caption(MODEL_INFO[model_name]['description'])
@@ -192,14 +192,14 @@ with st.sidebar:
         # 튜닝 모델 버전 선택
         use_custom_tuning_version = st.toggle(
             "커스텀 버전 사용",
-            value=False,  # 기본값을 False로 변경
+            value=True,  # 기본값을 True로 변경
             help="튜닝 모델의 기본 버전 대신 커스텀 버전을 사용합니다."
         )
         
         if use_custom_tuning_version:
             tuning_model_version = st.text_input(
                 "모델 버전",
-                value=MODEL_INFO[model_name]['default_version'],
+                value="gpt-3.5-turbo",
                 help="튜닝에 사용할 모델 버전을 입력하세요."
             )
         else:
@@ -212,7 +212,7 @@ with st.sidebar:
             "모델 선택",
             options=list(MODEL_INFO.keys()),
             format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
-            index=list(MODEL_INFO.keys()).index("local1"),  # local1을 기본값으로 설정
+            index=list(MODEL_INFO.keys()).index("gpt4o"), 
             help="메타 프롬프트 생성에 사용할 모델을 선택하세요."
         )
         st.caption(MODEL_INFO[meta_prompt_model]['description'])
@@ -220,14 +220,14 @@ with st.sidebar:
         # 메타 프롬프트 모델 버전 선택
         use_custom_meta_version = st.toggle(
             "커스텀 버전 사용",
-            value=False,  # 기본값을 False로 변경
+            value=True,  # 기본값을 True로 변경
             help="메타 프롬프트 모델의 기본 버전 대신 커스텀 버전을 사용합니다."
         )
         
         if use_custom_meta_version:
             meta_model_version = st.text_input(
                 "모델 버전",
-                value=MODEL_INFO[meta_prompt_model]['default_version'],
+                value="gpt-4.5-preview",
                 help="메타 프롬프트 생성에 사용할 모델 버전을 입력하세요."
             )
         else:
@@ -240,7 +240,7 @@ with st.sidebar:
             "모델 선택",
             options=list(MODEL_INFO.keys()),
             format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
-            index=list(MODEL_INFO.keys()).index("local1"),  # local1를 기본값으로 설정
+            index=list(MODEL_INFO.keys()).index("claude"), 
             help="출력 평가에 사용할 모델을 선택하세요."
         )
         st.caption(MODEL_INFO[evaluator_model]['description'])

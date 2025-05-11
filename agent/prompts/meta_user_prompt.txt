@@ -1,46 +1,71 @@
 # PROMPT OPTIMIZATION TASK
 
 ## 1. TASK CONTEXT
-Task Type: 
-{task_type}
+Task Type:  
+{task_type}  
 
-Task Description:
+Task Description:  
 {task_description}
 
-## 2. PERFORMANCE ANALYSIS
-Review these cases carefully:
+Note: Some tasks require strict output format (e.g., classification label in parentheses); others reward clear reasoning more than structure.
+
+## 2. PERFORMANCE SNAPSHOT
+- Examine the following prompt cases and outputs:
 {random_cases}
 
-- Check whether the prompts allow free-form reasoning without early formatting constraints.
-- Check if formatting is enforced only at the final answer presentation.
-- Identify if the prompts are unnecessarily verbose or over-constrained.
-- Study the Expected Output cases to infer the necessary structural patterns.
-- Extract generalizable rules for brevity, clarity, and minimal instruction sets.
+Evaluate:
+- Are prompts enabling free-form reasoning before enforcing format?
+- Is output formatting only constrained at the final answer?
+- Are instructions concise and focused on structure-critical aspects?
+- Do expected outputs imply any format or reasoning patterns worth learning?
+- What structural elements consistently correlate with higher performance?
+- Do prompts overfit to formatting prematurely, stifling natural reasoning?
 
 ## 3. PROMPT REVIEW
-Recent Prompt History:
+Recent Prompt History:  
 {recent_prompts}
 
-Best Performing Prompt:
+Best Performing Prompt:  
 {formatted_best_prompt}
 
-Current System Prompt:
+Current System Prompt:  
 {system_prompt}
 
-Current User Prompt:
+Current User Prompt:  
 {user_prompt}
 
-## 4. IMPROVEMENT TASK
-- Your goal is to generate a new system prompt and user prompt that:
-    - Encourage free, logical reasoning during the main solution phase
-    - Consider and apply the required output structure only at the final improvement
-    - Keep the prompt short, clear, and non-burdensome
-    - Based on the task type and recent performance, determine whether the USER_PROMPT should emphasize free-form reasoning, output formatting, or a balance of both. If examples can help clarify output structure or improve model performance, insert them directly into the USER_PROMPT—not in the instructions. Let the model decide how many examples are appropriate based on the task characteristics and observed performance patterns. Avoid imposing rigid heuristics—adapt dynamically to the context.
+## 4. TASK IMPROVEMENT STRATEGY (4 Steps)
 
-- If evaluation scores stagnate, prioritize simplifying prompts and reinforcing the separation between reasoning and formatting.
-- Instead of mimicking the expected output, extract its intent by applying our core evaluation criteria and use these insights to guide prompt improvement.
+1. **Analyze Prompt Failures**  
+   - Review evaluation logs to identify specific weaknesses in reasoning, formatting, or clarity.
+2. **Identify Task Demands**  
+   - Understand whether the task emphasizes reasoning depth, structural formatting, or both.  
+   - Determine whether shallow reasoning is a persistent issue; if so, explicitly reinforce multi-step logical analysis, encourage interpretation of latent relationships, and introduce hints for abstraction or pattern discovery.
+3. **Select Prioritized Improvements**  
+   - Choose 1–2 focus areas (e.g., scaffolding, brevity, example inclusion) based on failure mode.
+4. **Draft Hypothesis for Next Iteration**  
+   - Define what the improved prompt should do better and how it addresses prior weaknesses.
 
-## 5. OUTPUT FORMAT
+## 5. PROMPT GENERATION STRATEGY
+
+Your objective is to generate improved prompts that:
+- Prioritize natural reasoning before enforcing output structure
+- Apply formatting only when necessary—typically at final answer stage
+- Stay short, direct, and focused on the task’s outcome
+- Include few-shot examples in the USER_PROMPT only when essential for structure or reliability
+
+Additional Consideration:
+- Analyze whether current task formulations encourage superficial reasoning. If tasks are too templated or overly predictable, prompts should challenge the model to perform deeper semantic analysis, consider dependencies, and verify logic step-by-step before formatting the final answer.
+- If the task permits, design prompts to elicit mental simulation, abstract reasoning, or transformation—beyond surface-level cues.
+- When aiming for deep reasoning, incorporate scaffolding language such as 'examine step-by-step', 'evaluate alternatives', or 'infer latent intent' to guide model behavior beyond shallow parsing.
+- Consider surfacing key "reasoning hints" learned from prior errors. These may include examples of misinterpretations, overlooked structural rules, or common semantic traps. Rather than solely training the model to answer a given question, equip it to handle future variations of the task—especially if input phrasings change or require abstraction. Incorporate such hints directly into the USER_PROMPT in a concise, interpretable form. If appropriate, support with example question-answer pairs that demonstrate correct reasoning and output structure.
+- If stagnation is observed, simplify, and separate reasoning from structure more explicitly
+- If necessary, you may rewrite or revise the question itself to better elicit reasoning depth while maintaining the output intent and format.
+
+## 6. FINAL PROMPT CONSTRUCTION TEMPLATE
+
+### FINAL PROMPT OUTPUT
+
 TASK_TYPE:
 [Main task type] ([Sub-task type])
 
@@ -51,4 +76,12 @@ SYSTEM_PROMPT:
 [Optimized system prompt]
 
 USER_PROMPT:
-[Optimized user prompt that clearly guides the model’s behavior, with examples or format cues if appropriate. Style and structure should reflect the task’s reasoning depth, format sensitivity, and output clarity needs.]
+[Optimized user prompt that clearly guides the model’s behavior, with examples or format cues if appropriate. Style and structure should reflect the task’s reasoning depth, format sensitivity, and output clarity needs. Guide the model to reason naturally first, then present the final answer clearly at the end. The prompt should never include a new question; only include format guidance and optional few-shot examples.]
+
+- TASK_HINTS:
+  - [Insert bullet-pointed hints derived from prior errors]
+
+- FEW_SHOT_EXAMPLES:
+  Example:
+  Question: [Insert example question]  
+  Answer: [Insert correct answer]
