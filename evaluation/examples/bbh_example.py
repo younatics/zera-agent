@@ -9,37 +9,31 @@ import sys
 from evaluation.base.main import main
 
 def run_bbh_example(model="gpt4o", model_version="gpt-3.5-turbo", bbh_category=None):
-    # 명령행 인자 설정
+    # 프롬프트 파일 경로 지정
+    base_system_prompt_path = "evaluation/examples/bbh_base_system_prompt.txt"
+    base_user_prompt_path = "evaluation/examples/bbh_base_user_prompt.txt"
+    zera_system_prompt_path = "evaluation/examples/bbh_zera_system_prompt.txt"
+    zera_user_prompt_path = "evaluation/examples/bbh_zera_user_prompt.txt"
+
+    # 파일에서 프롬프트 읽기
+    with open(base_system_prompt_path, "r", encoding="utf-8") as f:
+        base_system_prompt = f.read()
+    with open(base_user_prompt_path, "r", encoding="utf-8") as f:
+        base_user_prompt = f.read()
+    with open(zera_system_prompt_path, "r", encoding="utf-8") as f:
+        zera_system_prompt = f.read()
+    with open(zera_user_prompt_path, "r", encoding="utf-8") as f:
+        zera_user_prompt = f.read()
+
     sys.argv = [
         "bbh_example.py",
         "--dataset", "bbh",
         "--model", model,
         "--model_version", model_version,
-        # 기존 프롬프트
-        "--base_system_prompt", "Answer the following question.",
-        "--base_user_prompt", "Question:",
-        # 제라 프롬프트
-        "--zera_system_prompt", "You are an AI assistant skilled at logical and step-by-step reasoning. For each question, carefully explain your reasoning process clearly and sequentially. Conclude with the exact final answer requested, formatted clearly on a separate line.",
-        "--zera_user_prompt", """Carefully evaluate the instructions provided step-by-step to determine whether, after following them exactly, you return to your original starting position. Clearly present each logical step involved in your reasoning. At the very end, output your final conclusion as either "Yes" or "No" on its own separate line.
-
-TASK_HINTS:  
-- First interpret carefully the exact meaning and implication of each instruction step.  
-- Consider explicitly all given steps in your reasoning—even if some appear to offset each other.  
-- Always summarize the net effect of forward/backward or directional moves explicitly.  
-- Conclude clearly and separately with a single-word answer formatted on its own line.
-
-FEW_SHOT_EXAMPLES:  
-Example:  
-Question: If you follow these instructions, do you return to the starting point? Always face forward. Move 4 steps forward. Move 6 steps backward. Then move 2 steps forward.  
-Answer:  
-Step-by-step Reasoning:  
-- Start at the initial point.  
-- Move 4 steps forward: position is at +4.  
-- Move 6 steps backward: position is at -2 from initial point.  
-- Move 2 steps forward: position returns exactly to the initial point (position 0).  
-
-Final Answer:  
-Yes""",
+        "--base_system_prompt", base_system_prompt,
+        "--base_user_prompt", base_user_prompt,
+        "--zera_system_prompt", zera_system_prompt,
+        "--zera_user_prompt", zera_user_prompt,
         "--num_samples", "500"
     ]
     if bbh_category:

@@ -1,0 +1,39 @@
+Select the most appropriate ending to the given context for the described activity. First, consider each option logically and briefly reason about why it might or might not be appropriate. After reasoning, clearly state the letter of the correct option in parentheses as your final answer.
+
+Example:
+Question: Activity: Shaving  
+Context: He gives a list of things you will need to take care of a bald head. He places the items on the sink. He  
+A. puts garnishes on the hair.  
+B. grabs a razor and shaves his eyebrow.  
+C. then lathers and shaves the skin on his head.  
+D. looks in the mirror to make sure his hair is down.
+
+Reasoning:  
+- Option A makes no logical sense; garnishes aren't relevant to hair care or shaving.  
+- Option B could be a shaving activity but shaving eyebrows is uncommon and not indicated in context.  
+- Option C is logical and explicitly matches the described activity (taking care of a bald head through shaving).  
+- Option D references "hair," which contradicts the baldness indicated in the scenario.
+
+Final Answer: (C)
+
+TASK_HINTS:
+  - Provide only the letter of the correct option enclosed in parentheses as the final answer.
+  - Clearly separate your reasoning from your final answer.
+  - Avoid repeating the full text of the selected option in the final answer.
+
+FEW_SHOT_EXAMPLES:
+Example:
+Question: Activity: Cooking soup  
+Context: She chopped carrots and onions and put them into the pot. She stirred the ingredients gently and then  
+A. set the pot on fire to burn off excess vegetables.  
+B. sprinkled sugar on the broth for sweetness.  
+C. covered the pot to simmer gently.  
+D. placed the pot in the refrigerator immediately.
+
+Reasoning:  
+- Option A is unrealistic; burning off vegetables is not a common cooking practice.  
+- Option B involves sugar, which doesn't typically go in savory soup with vegetables.  
+- Option C is a sensible next step for soup preparation, allowing it to cook slowly.  
+- Option D disrupts cooking and wouldn't allow flavors to blend or cook properly.
+
+Final Answer: (C) 

@@ -1,0 +1,26 @@
+Carefully evaluate each statement provided in the question. Determine clearly and step-by-step if the statements are True or False, briefly defining any key concepts necessary for clarity. Avoid repeating the given answer choices in your reasoning. After finishing your detailed reasoning, explicitly state only the correct choice letter (A, B, C, or D) separately on the final line.
+
+Example:
+
+Question:
+According to philosopher Cohen, if I promise to give you a dollar, then:
+
+Choices:  
+A. you have a right to my dollar.  
+B. I am obligated to give you my dollar.  
+C. both A and B  
+D. neither A nor B  
+
+Answer:  
+Firstly, a "promise" is a voluntary commitment to perform an action. A "right" means a justified entitlement to receive something from another party, typically enforceable morally or legally, whereas an "obligation" is a moral or legal duty to act. According to Cohen, when someone promises to give another something, that promise creates both a moral entitlement in the promisee—meaning you have a right to expect the promised item—and a corresponding moral obligation binding the promisor to fulfill that promise. Therefore, both statements A and B hold true under Cohen's viewpoint.
+
+C
+
+TASK_HINTS:
+- Separate your step-by-step reasoning distinctly from your final answer.
+- Clearly and briefly define relevant concepts crucial to your reasoning.
+- Do not restate or repeat the provided multiple-choice answers within your reasoning.
+- Ensure your final choice is explicitly provided as a single letter on a separate final line.
+
+FEW_SHOT_EXAMPLES:
+Included above in the example. 
