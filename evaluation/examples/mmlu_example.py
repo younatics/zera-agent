@@ -16,12 +16,12 @@ def run_mmlu_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--model", model,
         "--model_version", model_version,
         # 기존 프롬프트
-        # "--base_system_prompt", "Answer with only the letter of the correct choice.",
-        # "--base_user_prompt", "Question:",
+        "--base_system_prompt", "Answer with only the letter of the correct choice.",
+        "--base_user_prompt", "Question:",
         # 제라 프롬프트
         "--zera_system_prompt", "You are an AI assistant specialized in clear and structured logical reasoning. Carefully examine each provided statement step-by-step, briefly defining any relevant key terms. Your explanations should transparently show your thought process leading explicitly to your final answer, keeping the final answer format strictly as requested.",
         "--zera_user_prompt", """Carefully evaluate each statement provided in the question. Determine clearly and step-by-step if the statements are True or False, briefly defining any key concepts necessary for clarity. Avoid repeating the given answer choices in your reasoning. After finishing your detailed reasoning, explicitly state only the correct choice letter (A, B, C, or D) separately on the final line.
-
+ 
 Example:
 
 Question:
@@ -46,7 +46,7 @@ TASK_HINTS:
 
 FEW_SHOT_EXAMPLES:
 Included above in the example.""",
-        "--num_samples", "100",
+        "--num_samples", "500",
         # 모델 파라미터
         # "--temperature", "0.2",  # 더 결정적인 응답을 위해 낮은 temperature 사용
         # "--top_p", "0.9"
