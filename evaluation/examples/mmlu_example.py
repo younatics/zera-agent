@@ -45,7 +45,7 @@ TASK_HINTS:
 - Ensure your final choice is explicitly provided as a single letter on a separate final line.
 
 FEW_SHOT_EXAMPLES:
-Included above in the example."""
+Included above in the example.""",
         "--num_samples", "500",
         # 모델 파라미터
         # "--temperature", "0.2",  # 더 결정적인 응답을 위해 낮은 temperature 사용
