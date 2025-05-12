@@ -29,10 +29,10 @@ class MBPPEvaluator(BaseEvaluator):
         return f"{item['text']}\n\nFunction name: {func_name}"
     
     def extract_code(self, response: str) -> str:
-        # 코드블록이 있으면 내부만 추출
-        code_match = re.search(r"```(?:python)?(.*?)```", response, re.DOTALL)
-        if code_match:
-            return code_match.group(1).strip()
+        # 코드블록이 있으면 내부만 추출 (맨 마지막 코드블록만)
+        code_blocks = re.findall(r"```(?:python)?(.*?)```", response, re.DOTALL)
+        if code_blocks:
+            return code_blocks[-1].strip()
         # 코드블록이 없으면 함수 정의부터 끝까지 추출 (fallback)
         func_def_match = re.search(r'(def [a-zA-Z_][a-zA-Z0-9_]*\s*\(.*)', response, re.DOTALL)
         if func_def_match:

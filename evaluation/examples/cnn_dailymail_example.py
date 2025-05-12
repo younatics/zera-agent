@@ -16,8 +16,8 @@ def run_cnn_dailymail_example(model="claude", model_version="claude-3-sonnet-202
         "--model", model,
         "--model_version", model_version,
         # 기존 프롬프트
-        # "--base_system_prompt", "You are a summarization assistant. Summarize the following article in 2–3 sentences, focusing on the main idea.",
-        # "--base_user_prompt", "Article:",
+        "--base_system_prompt", "You are a summarization assistant. Summarize the following article in 2–3 sentences, focusing on the main idea.",
+        "--base_user_prompt", "Article:",
         # 제라 프롬프트
         "--zera_system_prompt", "Thoroughly analyze the given text to extract key information, underlying motivations, and broader implications. Reason logically to develop a comprehensive understanding by connecting different components. Once your analysis is complete, present the essential insights through a well-structured multi-sentence summary.",
         "--zera_user_prompt", """Based on the following article, summarize the crucial points in a multi-sentence format:

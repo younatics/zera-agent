@@ -19,21 +19,28 @@ def run_gsm8k_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--base_system_prompt", "Provide the final answer prefixed with '####'.",
         "--base_user_prompt", "Question:\n",
         # 제라 프롬프트
-        "--zera_system_prompt", "You are a precise and logical AI assistant. Always reason step-by-step clearly and transparently, keeping your explanations concise. Present only your final answer on a separate line, formatted as '#### [answer]', after completing all required calculations.",
-        "--zera_user_prompt", """Solve the given problem step-by-step with explicit inline calculations. Present your final answer clearly as indicated.
+        "--zera_system_prompt", """You are an assistant skilled in step-by-step reasoning for arithmetic-based word problems. Carefully restate critical numerical values and explicitly include units. Transparently show your arithmetic calculations inline using "<<...>>" notation. Concisely clarify the reasoning connecting intermediate steps to achieve a logical flow. Clearly present your final numeric answer isolated on its own line, prefixed by "####"."""
+        "--zera_user_prompt", """Solve the following arithmetic word problem step-by-step.
 
-Example:
-Question: Borgnine wants to see 1100 legs at the zoo. He has already seen 12 chimps, 8 lions, and 5 lizards. He is next headed to see the tarantulas. How many tarantulas does he need to see to meet his goal?
+TASK_HINTS:  
+- Begin each step by briefly summarizing critical numeric details from the problem explicitly with appropriate units.  
+- Transparently show each arithmetic calculation explicitly using inline "<<...>>" notation.  
+- Clearly and concisely explain the reasoning linking each step, focusing particularly on intermediate logical connections.  
+- Avoid redundant phrasing; use concise language and logically combine simple calculations when appropriate.  
+- Explicitly isolate the final numeric answer clearly on its own line, prefixed by "####".
 
-Answer:
-He has seen 48 chimp legs because 12 x 4 = <<12*4=48>>48
-He has seen 32 lion legs because 8 x 4 = <<8*4=32>>32
-He has seen 20 lizard legs because 5 x 4 = <<5*4=20>>20
-He has seen 100 total legs because 48 + 32 + 20 = <<48+32+20=100>>100
-He must see 1000 more legs because 1100 - 100 = <<1100-100=1000>>1000
-He needs to see 125 tarantulas because each has 8 legs and 1000 / 8 = <<1000/8=125>>125
-#### 125""",
-        "--num_samples", "1319",
+FEW_SHOT_EXAMPLES:  
+Example:  
+Question:  
+There are 4 baskets of apples, each basket containing 30 apples. If John takes half of the apples from each basket and then donates 25 apples to the local shelter, how many apples does John have left?
+
+Answer:  
+There are 4 baskets with 30 apples each, giving a total of 4 × 30 = <<4 × 30 = 120>> 120 apples.  
+John takes half of each basket's apples, which totals 120 ÷ 2 = <<120 ÷ 2 = 60>> 60 apples.  
+John then donates 25 apples, leaving him with 60 − 25 = <<60 − 25 = 35>> 35 apples.  
+
+#### 35""",
+        "--num_samples", "500",
         # 모델 파라미터
         # "--temperature", "0.2",  # 더 결정적인 응답을 위해 낮은 temperature 사용
         # "--top_p", "0.9"

@@ -24,11 +24,11 @@ class HumanEvalEvaluator(BaseEvaluator):
         try:
             # 1. 모델 답변 전체에서 import문 추출
             import_lines = "\n".join([line for line in response.splitlines() if line.strip().startswith("import") or line.strip().startswith("from ")])
-            # 2. 코드블록 추출
+            # 2. 코드블록 추출 (맨 마지막 코드블록만)
             code_block = response
-            code_match = re.search(r"```python(.*?)```", response, re.DOTALL)
-            if code_match:
-                code_block = code_match.group(1)
+            code_blocks = re.findall(r"```python(.*?)```", response, re.DOTALL)
+            if code_blocks:
+                code_block = code_blocks[-1]
             # 함수명 추출
             func_def_match = re.search(r'def ([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', code_block)
             func_name = func_def_match.group(1) if func_def_match else "unknown_function"
