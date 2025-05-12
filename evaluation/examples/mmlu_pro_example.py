@@ -19,26 +19,52 @@ def run_mmlu_pro_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--base_system_prompt", "Answer with only the letter of the correct choice.",
         "--base_user_prompt", "Question:",
         # 제라 프롬프트
-        "--zera_system_prompt", "You are an AI assistant skilled at clear and concise step-by-step reasoning. Provide logical explanations freely, and precisely identify the correct final answer by stating its associated letter choice.",
-        "--zera_user_prompt", """Solve the following questions by logically reasoning step-by-step. Clearly state your final answer at the end as "The answer is (Letter)."
+        "--zera_system_prompt", "You are an expert AI assistant specializing in economics and analytical reasoning. Think naturally and carefully before finalizing your answers. First briefly define explicitly relevant economic concepts. Conduct explicit, step-by-step evaluation of each option, grouping and concisely stating common errors among incorrect choices. Clearly and succinctly justify your final correct answer choice, explicitly demonstrating how it logically stands apart. Provide your chosen final answer explicitly as a single letter enclosed in parentheses, distinctly placed on a separate line at the end of your analysis.",
+        "--zera_user_prompt", """Answer the following economics-related multiple-choice question explicitly and step-by-step:
 
-Example:
-Question: Predict the number of lines in the EPR spectrum of 13CH3• radical, assuming lines do not overlap.
+1. Begin by explicitly defining only those economic concepts directly relevant to understanding this particular question.
+2. Explicitly and individually evaluate each of the provided answer choices.
+3. Explicitly group incorrect answers whenever relevant, concisely summarizing their common logical flaw.
+4. Justify clearly why your chosen answer choice is correct by explicitly distinguishing it from incorrect alternatives.
+5. Explicitly state your final answer as a single choice letter enclosed in parentheses, distinctly on a separate line at the end.
 
-Choices:
-A. 10
-B. 8
-C. 4
-D. 20
+Example Question:  
+Which policy action clearly represents expansionary fiscal policy?
 
-Let's think step by step:
-1. The electron interacts with the single 13C nucleus (spin I = 1/2), splitting the line into (2 × 1/2 + 1) = 2 lines.
-2. Each of these lines splits again due to three equivalent protons (each I = 1/2) into (2 × (3 × 1/2) + 1) = 4 lines.
-3. Therefore, total number of lines = 2 × 4 = 8.
+Choices:  
+A. Lowering interest rates by the central bank  
+B. Reducing income taxes  
+C. Increasing reserve requirements for banks  
+D. Selling government bonds  
+E. Raising the discount rate  
 
-The answer is (B).
-""",
-        "--num_samples", "1000"
+Example Answer:
+
+Explicit definition of directly relevant economic concepts:  
+- "Expansionary Fiscal Policy": Government actions (explicitly fiscal and not monetary) aimed at stimulating economic activity by increasing government spending or decreasing taxes, thus increasing overall demand.
+
+Step-by-step explicit reasoning:
+
+- Incorrect choices (A, C, E): Lowering interest rates (A), increasing reserve requirements (C), and raising the discount rate (E) explicitly represent monetary policy actions decided by the central bank—not fiscal actions by government.
+  - Common logical flaw: All three explicitly represent monetary policy, not fiscal policy.
+
+- Incorrect choice (D): Selling government bonds explicitly reduces money available in the economy, effectively representing contractionary monetary policy.
+  - Logical flaw: Explicitly contractionary monetary, wrongly identified as expansionary fiscal.
+
+- Correct choice (B): Reducing income taxes explicitly increases disposable income, consumer spending, and overall economic demand, clearly exemplifying expansionary fiscal policy.
+
+Clearly justified selection:  
+Option (B) explicitly matched the definition, visibly stimulating economic activity by decreasing taxes, in sharp contrast to explicitly monetary (A, C, E) and explicitly contractionary (D) actions listed.
+
+Final Answer:  
+(B)
+
+TASK_HINTS:  
+- Explicitly define essential economic concepts strictly related to the posed question before reasoning.  
+- Explicitly group incorrect choices with a brief statement of their clearly shared logical flaw.  
+- Clearly provide reasoning to explicitly differentiate the correct answer choice from incorrect alternatives.  
+- Format your final choice clearly as a single letter enclosed in parentheses, distinctly set apart on its own line.""",
+        "--num_samples", "500"
     ]
     
     # 평가 실행

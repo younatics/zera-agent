@@ -19,65 +19,47 @@ def run_hellaswag_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--base_system_prompt", "Answer with only the letter of the correct choice.",
         "--base_user_prompt", "Question:",
         # 제라 프롬프트
-        "--zera_system_prompt", "You are an AI assistant skilled at logical reasoning through contextual scenarios. For each scenario, reason carefully and naturally to assess the logical flow. Clearly analyze the suitability of each continuation. Only after completing your reasoning, provide your final answer strictly as a single letter (A, B, C, or D), without further explanation.",
-        "--zera_user_prompt", """
-Below is a short incomplete scenario with four possible continuations labeled A, B, C, and D.
-
-Reason briefly and clearly about which option most naturally continues the scenario, mentioning explicitly why it fits the context best, and concisely explaining why each of the other options is comparatively less suitable.
-
-Conclude your response strictly as a single letter (A, B, C, or D).
+        "--zera_system_prompt", "You are an attentive and precise AI assistant. Consider the scenario carefully, reason logically through what makes sense given the described activity and context, then provide a clear and concise final answer in the format requested.",
+        "--zera_user_prompt", """Select the most appropriate ending to the given context for the described activity. First, consider each option logically and briefly reason about why it might or might not be appropriate. After reasoning, clearly state the letter of the correct option in parentheses as your final answer.
 
 Example:
+Question: Activity: Shaving  
+Context: He gives a list of things you will need to take care of a bald head. He places the items on the sink. He  
+A. puts garnishes on the hair.  
+B. grabs a razor and shaves his eyebrow.  
+C. then lathers and shaves the skin on his head.  
+D. looks in the mirror to make sure his hair is down.
 
-Context:
-[header] Safe Campfire Procedures
-[step] Choose a clear, flat site and remove flammable debris thoroughly.
+Reasoning:  
+- Option A makes no logical sense; garnishes aren't relevant to hair care or shaving.  
+- Option B could be a shaving activity but shaving eyebrows is uncommon and not indicated in context.  
+- Option C is logical and explicitly matches the described activity (taking care of a bald head through shaving).  
+- Option D references "hair," which contradicts the baldness indicated in the scenario.
 
-Continuations:
-A. Immediately cook with large flames.
-B. Spread your tools messily around the site.
-C. Build a small, controlled fire structure with kindling.
-D. Go swimming in a nearby lake.
+Final Answer: (C)
 
-Reasoning:
-Option C directly and safely follows the context, as it clearly continues a logical sequence of building a campfire.
-Option A introduces risk prematurely, option B creates hazards, and option D is irrelevant to the task.
+TASK_HINTS:
+  - Provide only the letter of the correct option enclosed in parentheses as the final answer.
+  - Clearly separate your reasoning from your final answer.
+  - Avoid repeating the full text of the selected option in the final answer.
 
-Answer:
-C
-
+FEW_SHOT_EXAMPLES:
 Example:
+Question: Activity: Cooking soup  
+Context: She chopped carrots and onions and put them into the pot. She stirred the ingredients gently and then  
+A. set the pot on fire to burn off excess vegetables.  
+B. sprinkled sugar on the broth for sweetness.  
+C. covered the pot to simmer gently.  
+D. placed the pot in the refrigerator immediately.
 
-Context:
-[header] Baking Bread Dough
-[step] Once the dough is well kneaded, shape it into a smooth ball on a lightly floured surface.
+Reasoning:  
+- Option A is unrealistic; burning off vegetables is not a common cooking practice.  
+- Option B involves sugar, which doesn't typically go in savory soup with vegetables.  
+- Option C is a sensible next step for soup preparation, allowing it to cook slowly.  
+- Option D disrupts cooking and wouldn't allow flavors to blend or cook properly.
 
-Continuations:
-A. Let the dough rise in a lightly greased bowl.
-B. Immediately put the dough into cold storage.
-C. Decorate the dough ball with frosting.
-D. Slice the dough thinly right away.
-
-Reasoning:
-Option A naturally follows bread-making steps, because dough typically needs to rise after kneading.
-Option B interrupts yeast activity, option C suggests decorating too early, and option D bypasses the important rising step.
-
-Answer:
-A
-
-Now, complete the following scenario:
-
-Context:
-[Insert new context here]
-
-Continuations:
-A. [Option A text]
-B. [Option B text]
-C. [Option C text]
-D. [Option D text]
-
-Reasoning:""",
-        "--num_samples", "1000",
+Final Answer: (C)""",
+        "--num_samples", "500",
         # 모델 파라미터
         # "--temperature", "0.2",  # 더 결정적인 응답을 위해 낮은 temperature 사용
         # "--top_p", "0.9"

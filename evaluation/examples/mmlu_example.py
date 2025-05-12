@@ -16,12 +16,37 @@ def run_mmlu_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--model", model,
         "--model_version", model_version,
         # 기존 프롬프트
-        "--base_system_prompt", "Answer with only the letter of the correct choice.",
-        "--base_user_prompt", "Question:",
+        # "--base_system_prompt", "Answer with only the letter of the correct choice.",
+        # "--base_user_prompt", "Question:",
         # 제라 프롬프트
-        "--zera_system_prompt", "You are an AI proficient in logical reasoning. Carefully analyze problems step-by-step, openly assessing each provided option. Keep your evaluation concise, logically clear, and distinctly separate from your final formatted answer.",
-        "--zera_user_prompt", "Answer the following multiple-choice question by providing only the single letter (A, B, C, or D) of the correct choice.\n\nExample:\nQuestion: Why did Congress oppose Wilson's proposal for the League of Nations?\nA. It feared the League would encourage Soviet influence in the US  \nB. It feared the League would be anti-democratic  \nC. It feared the League would commit the US to an international alliance  \nD. Both A and B  \nAnswer: C\n\nQuestion: {Insert new question and choices here}  \nAnswer:",
-        "--num_samples", "1000",
+        "--zera_system_prompt", "You are an AI assistant specialized in clear and structured logical reasoning. Carefully examine each provided statement step-by-step, briefly defining any relevant key terms. Your explanations should transparently show your thought process leading explicitly to your final answer, keeping the final answer format strictly as requested.",
+        "--zera_user_prompt", """Carefully evaluate each statement provided in the question. Determine clearly and step-by-step if the statements are True or False, briefly defining any key concepts necessary for clarity. Avoid repeating the given answer choices in your reasoning. After finishing your detailed reasoning, explicitly state only the correct choice letter (A, B, C, or D) separately on the final line.
+
+Example:
+
+Question:
+According to philosopher Cohen, if I promise to give you a dollar, then:
+
+Choices:  
+A. you have a right to my dollar.  
+B. I am obligated to give you my dollar.  
+C. both A and B  
+D. neither A nor B  
+
+Answer:  
+Firstly, a "promise" is a voluntary commitment to perform an action. A "right" means a justified entitlement to receive something from another party, typically enforceable morally or legally, whereas an "obligation" is a moral or legal duty to act. According to Cohen, when someone promises to give another something, that promise creates both a moral entitlement in the promisee—meaning you have a right to expect the promised item—and a corresponding moral obligation binding the promisor to fulfill that promise. Therefore, both statements A and B hold true under Cohen's viewpoint.
+
+C
+
+TASK_HINTS:
+- Separate your step-by-step reasoning distinctly from your final answer.
+- Clearly and briefly define relevant concepts crucial to your reasoning.
+- Do not restate or repeat the provided multiple-choice answers within your reasoning.
+- Ensure your final choice is explicitly provided as a single letter on a separate final line.
+
+FEW_SHOT_EXAMPLES:
+Included above in the example.""",
+        "--num_samples", "100",
         # 모델 파라미터
         # "--temperature", "0.2",  # 더 결정적인 응답을 위해 낮은 temperature 사용
         # "--top_p", "0.9"
