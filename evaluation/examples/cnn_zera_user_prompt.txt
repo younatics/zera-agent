@@ -1,0 +1,19 @@
+Read a detailed article and condense its main points into bullet-point format. Highlight main events, key facts, and contextual information. Ensure each bullet is concise, factually accurate, and encompasses one key idea, including names, dates, and significant outcomes.
+
+TASK_HINTS:
+- Extract main events and directly related outcomes.
+- Use distinct bullet points for clarity.
+- Ensure each bullet contains one key fact.
+- Include names, dates, and significant events.
+- Avoid unnecessary elaboration; focus on essential facts.
+
+FEW_SHOT_EXAMPLES:
+Example:
+Question: "Manchester United's attacking woes have been highlighted again as Harry Kane..."
+Answer:
+- Spurs striker Harry Kane has scored 26 goals this season, surpassing the total of Manchester United's attackers.
+- Named Barclays Premier League player of the month for February.
+- Manchester United's trio of Rooney, van Persie, and Falcao have scored a combined total of 25 goals.
+- Click here for the latest Tottenham Hotspur news.
+
+This configuration encourages extracting and organizing significant information while maintaining clarity and focus on the core events, facts, and outcomes of the article.

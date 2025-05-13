@@ -1,20 +1,17 @@
-Solve the following arithmetic word problem step-by-step.
+**
+For each math problem, walk through the solution process step-by-step, detailing each calculation and logical inference. Use inline explanations in angle brackets (e.g., `<<operation=result>>`) to clarify each operation and intermediate result. Conclude your solution with the final answer presented on a new line starting with '####' to highlight the answer distinctly. Maintain clarity and conciseness throughout the explanation.
 
-TASK_HINTS:  
-- Begin each step by briefly summarizing critical numeric details from the problem explicitly with appropriate units.  
-- Transparently show each arithmetic calculation explicitly using inline "<<...>>" notation.  
-- Clearly and concisely explain the reasoning linking each step, focusing particularly on intermediate logical connections.  
-- Avoid redundant phrasing; use concise language and logically combine simple calculations when appropriate.  
-- Explicitly isolate the final numeric answer clearly on its own line, prefixed by "####".
+- **TASK_HINTS:**
+  - Clarify each calculation step using angle brackets.
+  - Ensure consistency and correctness in every logical inference.
+  - Minimize redundancy while providing thorough reasoning.
 
-FEW_SHOT_EXAMPLES:  
-Example:  
-Question:  
-There are 4 baskets of apples, each basket containing 30 apples. If John takes half of the apples from each basket and then donates 25 apples to the local shelter, how many apples does John have left?
+- **FEW_SHOT_EXAMPLES:**
+  Example:
+  Question: Caprice is taking piano lessons. Her mother pays the teacher $10 for every half-hour of lessons. If Caprice takes one lesson per week, lasting 1 hour each, how much would the teacher earn over 5 weeks?  
+  Answer:
+  - A one-hour lesson costs 2 * $10 = <<10*2=20>>$20.
+  - Over 5 weeks, the teacher earns 5 * $20 = <<20*5=100>>$100.
+  #### 100
 
-Answer:  
-There are 4 baskets with 30 apples each, giving a total of 4 × 30 = <<4 × 30 = 120>> 120 apples.  
-John takes half of each basket's apples, which totals 120 ÷ 2 = <<120 ÷ 2 = 60>> 60 apples.  
-John then donates 25 apples, leaving him with 60 − 25 = <<60 − 25 = 35>> 35 apples.  
-
-#### 35 
+By following this guide, maintain natural reasoning while ensuring the final output aligns with the required structure. Focus on logical flow and seamless progression toward deriving the proper conclusion.

@@ -106,13 +106,15 @@ class CNNDailyMailEvaluator(BaseEvaluator):
                       num_samples: Optional[int] = None,
                       sample_indices: Optional[List[int]] = None,
                       is_zera: Optional[bool] = None,
-                      num_shots: Optional[int] = None) -> Dict[str, Any]:
+                      num_shots: Optional[int] = None,
+                      **kwargs) -> Dict[str, Any]:
         """전체 평가를 실행하는 메서드"""
-        dataset = self.load_dataset(dataset_name, num_samples)
-        
-        # If sample indices are provided, use only those samples
         if sample_indices is not None:
-            dataset = [dataset[i] for i in sample_indices]
+            # 전체 데이터셋에서 인덱싱
+            full_dataset = self.load_dataset(dataset_name)
+            dataset = [full_dataset[i] for i in sample_indices]
+        else:
+            dataset = self.load_dataset(dataset_name, num_samples)
         
         results = {
             "total": len(dataset),
