@@ -52,7 +52,13 @@ class Model:
             "description": "로컬 서버에서 실행되는 두 번째 미스트랄 모델",
             "default_version": "/data/project/private/kyle/hf_models/Mistral-7B-Instruct-v0.3",
             "base_url": "http://localhost:8002/v1"
-        }
+        },
+        "solar_strawberry": {
+            "name": "Solar-Strawberry",
+            "description": "Upstage의 Solar-Strawberry 모델",
+            "default_version": "Solar-Strawberry",
+            "base_url": "https://r-api.toy.x.upstage.ai/v1/"
+        },
     }
 
     @classmethod
@@ -86,6 +92,11 @@ class Model:
         elif model_name in ["local1", "local2"]:
             self.client = OpenAI(
                 api_key="EMPTY",
+                base_url=self.model_info[model_name]["base_url"]
+            )
+        elif model_name == "solar_strawberry":
+            self.client = OpenAI(
+                api_key=os.getenv("SOLAR_STRAWBERRY_API_KEY"),
                 base_url=self.model_info[model_name]["base_url"]
             )
         else:  # gpt4o

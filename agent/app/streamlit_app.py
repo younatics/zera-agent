@@ -184,8 +184,8 @@ with st.sidebar:
             "모델 선택",
             options=list(MODEL_INFO.keys()),
             format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
-            index=list(MODEL_INFO.keys()).index("local1"),  # local1을 기본값으로 설정
-            help="프롬프트 튜닝에 사용할 모델을 선택하세요."
+            index=list(MODEL_INFO.keys()).index("local1") if "local1" in MODEL_INFO else 0,  # local1이 있으면 기본값, 없으면 첫 번째
+            help="프롬프트 튜닝에 사용할 모델을 선택하세요. (solar_strawberry: Upstage Solar-Strawberry API)"
         )
         st.caption(MODEL_INFO[model_name]['description'])
         
@@ -212,8 +212,8 @@ with st.sidebar:
             "모델 선택",
             options=list(MODEL_INFO.keys()),
             format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
-            index=list(MODEL_INFO.keys()).index("local1"),  # local1을 기본값으로 설정
-            help="메타 프롬프트 생성에 사용할 모델을 선택하세요."
+            index=list(MODEL_INFO.keys()).index("local1") if "local1" in MODEL_INFO else 0,
+            help="메타 프롬프트 생성에 사용할 모델을 선택하세요. (solar_strawberry: Upstage Solar-Strawberry API)"
         )
         st.caption(MODEL_INFO[meta_prompt_model]['description'])
         
@@ -240,8 +240,8 @@ with st.sidebar:
             "모델 선택",
             options=list(MODEL_INFO.keys()),
             format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
-            index=list(MODEL_INFO.keys()).index("local1"),  # local1를 기본값으로 설정
-            help="출력 평가에 사용할 모델을 선택하세요."
+            index=list(MODEL_INFO.keys()).index("local1") if "local1" in MODEL_INFO else 0,
+            help="출력 평가에 사용할 모델을 선택하세요. (solar_strawberry: Upstage Solar-Strawberry API)"
         )
         st.caption(MODEL_INFO[evaluator_model]['description'])
         
@@ -1227,7 +1227,8 @@ if st.button("프롬프트 튜닝 시작", type="primary"):
         "gpt4o": "OPENAI_API_KEY",
         "claude": "ANTHROPIC_API_KEY",
         "local1": None,  # local1 모델은 API 키가 필요하지 않음
-        "local2": None   # local2 모델은 API 키가 필요하지 않음
+        "local2": None,   # local2 모델은 API 키가 필요하지 않음
+        "solar_strawberry": "SOLAR_STRAWBERRY_API_KEY",  # 추가
     }
     
     # 사용되는 모델들의 API 키 확인
