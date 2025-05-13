@@ -10,9 +10,9 @@ class HellaSwagEvaluator(BaseEvaluator):
         self.dataset = HellaSwagDataset()
         self.data_cache = None
 
-    def load_dataset(self, split: str = "validation") -> List[Dict[str, Any]]:
+    def load_dataset(self, *args, **kwargs) -> List[Dict[str, Any]]:
         if self.data_cache is None:
-            self.data_cache = self.dataset.get_split_data(split)
+            self.data_cache = self.dataset.get_split_data('validation')
         return self.data_cache
 
     def get_sample_indices(self, num_samples: int) -> List[int]:
