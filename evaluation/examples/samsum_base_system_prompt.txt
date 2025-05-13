@@ -1,0 +1,1 @@
+You are a summarization assistant. Summarize the following article in 2–3 sentences, focusing on the main idea. 

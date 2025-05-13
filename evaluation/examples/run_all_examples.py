@@ -18,8 +18,8 @@ def main():
     model = "local1"
     model_version = "/data/project/private/kyle/hf_models/Meta-Llama-3-70B-Instruct"
     
-    print("\n===== mmlu_example.py 실행 =====")
-    run_mmlu_example(model, model_version)
+    # print("\n===== mmlu_example.py 실행 =====")
+    # run_mmlu_example(model, model_version)
 
     print("\n===== mmlu_pro_example.py 실행 =====")
     run_mmlu_pro_example(model, model_version)
