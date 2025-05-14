@@ -1,5 +1,17 @@
-Read the problem carefully and understand what is being asked. Break down the problem into manageable parts, and show your work. Think step-by-step, and explain your reasoning as you go. What strategy will you use to solve the problem? How will you ensure your answer is accurate? 
+**
+For each math problem, walk through the solution process step-by-step, detailing each calculation and logical inference. Use inline explanations in angle brackets (e.g., `<<operation=result>>`) to clarify each operation and intermediate result. Conclude your solution with the final answer presented on a new line starting with '####' to highlight the answer distinctly. Maintain clarity and conciseness throughout the explanation.
 
-QUESTION_PLACEHOLDER
+- **TASK_HINTS:**
+  - Clarify each calculation step using angle brackets.
+  - Ensure consistency and correctness in every logical inference.
+  - Minimize redundancy while providing thorough reasoning.
 
-Remember to check your work and justify your answer. What is your final numerical answer? Write it within <answer> XML tags.
+- **FEW_SHOT_EXAMPLES:**
+  Example:
+  Question: Caprice is taking piano lessons. Her mother pays the teacher $10 for every half-hour of lessons. If Caprice takes one lesson per week, lasting 1 hour each, how much would the teacher earn over 5 weeks?  
+  Answer:
+  - A one-hour lesson costs 2 * $10 = <<10*2=20>>$20.
+  - Over 5 weeks, the teacher earns 5 * $20 = <<20*5=100>>$100.
+  #### 100
+
+By following this guide, maintain natural reasoning while ensuring the final output aligns with the required structure. Focus on logical flow and seamless progression toward deriving the proper conclusion.

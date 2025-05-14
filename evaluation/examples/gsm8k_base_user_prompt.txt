@@ -1,1 +1,5 @@
-Question: 
+Read the problem carefully and understand what is being asked. Break down the problem into manageable parts, and show your work. Think step-by-step, and explain your reasoning as you go. What strategy will you use to solve the problem? How will you ensure your answer is accurate? 
+
+QUESTION_PLACEHOLDER
+
+Remember to check your work and justify your answer. What is your final numerical answer? Write it within <answer> XML tags.
