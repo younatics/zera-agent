@@ -84,6 +84,9 @@ class CNNDailyMailEvaluator(BaseEvaluator):
         """CNN/DailyMail 요약을 평가합니다."""
         # 'article:' 또는 'points:' 이후의 텍스트만 추출
         response_lower = response.lower()
+        if 'article:' in response_lower:
+            response = response_lower.split('article:')[1].strip()
+            # article: 이후에 points:가 있는 경우 추가 처리
         rouge = Rouge()
         try:
             scores = rouge.get_scores(response, ground_truth['highlights'])
