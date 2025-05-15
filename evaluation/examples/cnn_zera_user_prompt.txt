@@ -1,20 +1,18 @@
-Read the provided narrative carefully and summarize it into succinct bullet points. Focus on clarity and brevity, highlighting key events, names, dates, and outcomes. Ensure each bullet point captures a distinct and essential piece of information, avoiding interpretations or excess detail.
+**  
+Read the provided news article carefully and extract the most crucial details, such as specific names, events, and numerical information. Present these details in a bullet-point format to ensure clarity and conciseness. Keep the style neutral and factual, focusing on three key bullet points that highlight the article's most significant aspects.
 
-Example:
-- Diane Reiners was arrested on March 13 for vehicular violations.
-- Officers located alcohol and medications in her vehicle.
-- Reiners faces charges of DWI and possession of controlled substances.
+- **TASK_HINTS:**
+  - Use bullet points to structure the output.
+  - Limit the number of bullet points to three for conciseness.
+  - Emphasize specific names, events, and relevant numerical details.
+  - Maintain a neutral, factual tone without extraneous context.
 
-**TASK_HINTS:**
-- Emphasize factual details: events, names, dates.
-- Each bullet point should encapsulate a single fact.
-- Avoid including opinions or unnecessary additions.
+- **FEW_SHOT_EXAMPLES:**  
+  Example:  
+  Question: *(Detailed article)*  
+  Expected Output:  
+  - Key Person involved in Event X reported on Date Y.  
+  - The incident led to Consequence Z, significantly affecting Location M.  
+  - Additional critical detail or outcome clearly stated.
 
-**FEW_SHOT_EXAMPLES:**  
-Example:
-Question: A young man on Lake St Clair was found walking during a freeze.
-Answer:
-- A 25-year-old man was rescued from Lake St Clair while attempting to walk on ice from Detroit to Toronto.
-- He was picked up by the Coast Guard two to three days into his journey.
-
-This prompt design encourages precise, factual summarization with clear guidance on the desired output structure, supported by examples to illustrate the task requirements effectively.
+This approach encourages natural reasoning while ensuring summaries are well-organized and emphasize the most critical facts. Each bullet point should highlight a singular main idea for clarity and accuracy.
