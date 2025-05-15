@@ -1,25 +1,20 @@
-Read the narrative carefully and summarize it into bullet points. Each bullet point should highlight key events, dates, figures, and statements from involved individuals. Focus on accuracy and clarity without adding interpretations.
+Read the provided narrative carefully and summarize it into succinct bullet points. Focus on clarity and brevity, highlighting key events, names, dates, and outcomes. Ensure each bullet point captures a distinct and essential piece of information, avoiding interpretations or excess detail.
 
-**Example:**
-- Diane Reiners, 53, was arrested on March 13 after witnesses reported her car striking a curb and stopping in the middle of the road.
-- A Port Authority officer observed her bloodshot eyes and the smell of alcohol.
-- An open bottle of Absolut vodka, a water bottle filled with vodka, 200 tramadol pills, and 31 anti-anxiety pills were found in the vehicle.
-- Reiners was charged with DWI, possession of a controlled substance, disobeying traffic regulations, and reckless driving.
+Example:
+- Diane Reiners was arrested on March 13 for vehicular violations.
+- Officers located alcohol and medications in her vehicle.
+- Reiners faces charges of DWI and possession of controlled substances.
 
 **TASK_HINTS:**
-- Focus on key events, outcomes, and statements.
-- Use specific names, dates, and numbers as provided.
-- Present each fact as a bullet point on a separate line.
-- Avoid personal opinions or unnecessary elaboration.
+- Emphasize factual details: events, names, dates.
+- Each bullet point should encapsulate a single fact.
+- Avoid including opinions or unnecessary additions.
 
-**FEW_SHOT_EXAMPLES:**
+**FEW_SHOT_EXAMPLES:**  
 Example:
-Question: A U.S. Coast Guard ship was cutting ice on frozen-over Lake St Clair Thursday morning when they came across a bizarre sight: a young man walking out on the ice alone in sub-freezing temperatures. When crew members brought the curious 25-year-old man on board, he said he was trying to walk from Detroit to Toronto. Detroit lies on the southwestern shore of Lake St Clair, and the unidentified ice-walker was found just half a mile from Seaway Island on the opposite shore. From there it's a 201-mile journey on land to reach the Canadian capital.
+Question: A young man on Lake St Clair was found walking during a freeze.
 Answer:
-- A 25-year-old man was rescued while attempting to walk on ice from Detroit to Toronto, found near Seaway Island.
-- He was two to three days into his journey when picked up by the Coast Guard.
+- A 25-year-old man was rescued from Lake St Clair while attempting to walk on ice from Detroit to Toronto.
+- He was picked up by the Coast Guard two to three days into his journey.
 
-This approach ensures that the summaries remain precise, factual, and aligned with task requirements.
-
----
-This prompt setup focuses on factual summarization. It guides the model to transform detailed narratives into succinct, clear bullet points while excluding unnecessary details, ensuring the output is both precise and comprehensive.
+This prompt design encourages precise, factual summarization with clear guidance on the desired output structure, supported by examples to illustrate the task requirements effectively.
