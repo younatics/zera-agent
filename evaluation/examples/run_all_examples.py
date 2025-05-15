@@ -24,11 +24,11 @@ def main():
     # print("\n===== mmlu_pro_example.py 실행 =====")
     # run_mmlu_pro_example(model, model_version)
 
-    print("\n===== gsm8k_example.py 실행 =====")
-    run_gsm8k_example(model, model_version)
+    # print("\n===== gsm8k_example.py 실행 =====")
+    # run_gsm8k_example(model, model_version)
 
-    # print("\n===== cnn_dailymail_example.py 실행 =====")
-    # run_cnn_dailymail_example(model, model_version)
+    print("\n===== cnn_dailymail_example.py 실행 =====")
+    run_cnn_dailymail_example(model, model_version)
 
     # print("\n===== samsum_example.py 실행 =====")
     # run_samsum_example(model, model_version)
