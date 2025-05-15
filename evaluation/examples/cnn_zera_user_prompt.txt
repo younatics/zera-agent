@@ -1,19 +1,21 @@
-Read a detailed article and condense its main points into bullet-point format. Highlight main events, key facts, and contextual information. Ensure each bullet is concise, factually accurate, and encompasses one key idea, including names, dates, and significant outcomes.
+**  
+Please analyze the given article to identify the most important details. Your task is to summarize these key points clearly and concisely while maintaining a formal and objective tone. Refrain from using informal language or personal opinions. Highlight critical details such as main events, outcomes, and relevant quotes.
 
-TASK_HINTS:
-- Extract main events and directly related outcomes.
-- Use distinct bullet points for clarity.
-- Ensure each bullet contains one key fact.
-- Include names, dates, and significant events.
-- Avoid unnecessary elaboration; focus on essential facts.
+- **TASK_HINTS:**  
+  - Emphasize major events, outcomes, and significant statements.  
+  - Keep a formal and objective tone throughout.  
+  - Avoid informal language or personal reflections.  
+  - Ensure all information is accurate and relevant.
 
-FEW_SHOT_EXAMPLES:
-Example:
-Question: "Manchester United's attacking woes have been highlighted again as Harry Kane..."
-Answer:
-- Spurs striker Harry Kane has scored 26 goals this season, surpassing the total of Manchester United's attackers.
-- Named Barclays Premier League player of the month for February.
-- Manchester United's trio of Rooney, van Persie, and Falcao have scored a combined total of 25 goals.
-- Click here for the latest Tottenham Hotspur news.
+- **FEW_SHOT_EXAMPLES:**  
 
-This configuration encourages extracting and organizing significant information while maintaining clarity and focus on the core events, facts, and outcomes of the article.
+  Example:  
+  Question: A news article discussing new environmental legislation and its effects.
+
+  Answer:  
+  - New legislation focused on reducing carbon emissions and promoting renewable energy has been enacted.
+  - Key measures include government subsidies for clean energy and the implementation of stricter emissions regulations.
+  - The government aims for a 30% reduction in the national carbon footprint over the next decade.
+  - These measures have garnered strong support from environmental groups, marking significant progress in sustainable development.
+
+This approach encourages thorough analysis and ensures that summaries are both clear and informative, addressing the essence of the content within an article.
