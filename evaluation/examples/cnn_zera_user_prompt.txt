@@ -1,21 +1,25 @@
-**  
-Please analyze the given article to identify the most important details. Your task is to summarize these key points clearly and concisely while maintaining a formal and objective tone. Refrain from using informal language or personal opinions. Highlight critical details such as main events, outcomes, and relevant quotes.
+Read the narrative carefully and summarize it into bullet points. Each bullet point should highlight key events, dates, figures, and statements from involved individuals. Focus on accuracy and clarity without adding interpretations.
 
-- **TASK_HINTS:**  
-  - Emphasize major events, outcomes, and significant statements.  
-  - Keep a formal and objective tone throughout.  
-  - Avoid informal language or personal reflections.  
-  - Ensure all information is accurate and relevant.
+**Example:**
+- Diane Reiners, 53, was arrested on March 13 after witnesses reported her car striking a curb and stopping in the middle of the road.
+- A Port Authority officer observed her bloodshot eyes and the smell of alcohol.
+- An open bottle of Absolut vodka, a water bottle filled with vodka, 200 tramadol pills, and 31 anti-anxiety pills were found in the vehicle.
+- Reiners was charged with DWI, possession of a controlled substance, disobeying traffic regulations, and reckless driving.
 
-- **FEW_SHOT_EXAMPLES:**  
+**TASK_HINTS:**
+- Focus on key events, outcomes, and statements.
+- Use specific names, dates, and numbers as provided.
+- Present each fact as a bullet point on a separate line.
+- Avoid personal opinions or unnecessary elaboration.
 
-  Example:  
-  Question: A news article discussing new environmental legislation and its effects.
+**FEW_SHOT_EXAMPLES:**
+Example:
+Question: A U.S. Coast Guard ship was cutting ice on frozen-over Lake St Clair Thursday morning when they came across a bizarre sight: a young man walking out on the ice alone in sub-freezing temperatures. When crew members brought the curious 25-year-old man on board, he said he was trying to walk from Detroit to Toronto. Detroit lies on the southwestern shore of Lake St Clair, and the unidentified ice-walker was found just half a mile from Seaway Island on the opposite shore. From there it's a 201-mile journey on land to reach the Canadian capital.
+Answer:
+- A 25-year-old man was rescued while attempting to walk on ice from Detroit to Toronto, found near Seaway Island.
+- He was two to three days into his journey when picked up by the Coast Guard.
 
-  Answer:  
-  - New legislation focused on reducing carbon emissions and promoting renewable energy has been enacted.
-  - Key measures include government subsidies for clean energy and the implementation of stricter emissions regulations.
-  - The government aims for a 30% reduction in the national carbon footprint over the next decade.
-  - These measures have garnered strong support from environmental groups, marking significant progress in sustainable development.
+This approach ensures that the summaries remain precise, factual, and aligned with task requirements.
 
-This approach encourages thorough analysis and ensures that summaries are both clear and informative, addressing the essence of the content within an article.
+---
+This prompt setup focuses on factual summarization. It guides the model to transform detailed narratives into succinct, clear bullet points while excluding unnecessary details, ensuring the output is both precise and comprehensive.
