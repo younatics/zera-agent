@@ -1,1 +1,19 @@
-Craft a summary that gets to the point! Your goal is to identify the main event or issue in the news article below and condense it into a concise, 2-3 sentence summary that answers the key questions: who's involved, what happened, and when\/where did it happen? Focus on the most critical details that make this story newsworthy, and use clear and concise language to convey the essential facts. Take inspiration from these example summaries: <summary> A massive wildfire has swept through a California town, destroying hundreds of homes and forcing thousands to evacuate. <\/summary> or <summary> A new study reveals that exercise can reduce the risk of chronic diseases by up to 30%. <\/summary> or <summary> Saido Berahino has scored eight goals in 13 appearances this season. The 21-year-old has received his first senior England call-up. <\/summary> Remember to avoid unnecessary details and focus on the heart of the story. Write your summary within <summary> tags. INSERT_INPUT_HERE\n\nGood luck, and happy summarizing!
+Read a detailed article and condense its main points into bullet-point format. Highlight main events, key facts, and contextual information. Ensure each bullet is concise, factually accurate, and encompasses one key idea, including names, dates, and significant outcomes.
+
+TASK_HINTS:
+- Extract main events and directly related outcomes.
+- Use distinct bullet points for clarity.
+- Ensure each bullet contains one key fact.
+- Include names, dates, and significant events.
+- Avoid unnecessary elaboration; focus on essential facts.
+
+FEW_SHOT_EXAMPLES:
+Example:
+Question: "Manchester United's attacking woes have been highlighted again as Harry Kane..."
+Answer:
+- Spurs striker Harry Kane has scored 26 goals this season, surpassing the total of Manchester United's attackers.
+- Named Barclays Premier League player of the month for February.
+- Manchester United's trio of Rooney, van Persie, and Falcao have scored a combined total of 25 goals.
+- Click here for the latest Tottenham Hotspur news.
+
+This configuration encourages extracting and organizing significant information while maintaining clarity and focus on the core events, facts, and outcomes of the article.

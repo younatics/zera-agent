@@ -1,1 +1,1 @@
-    Read the problem carefully, identify the key elements, and break it down into manageable parts. Then, calculate the answer step-by-step and provide your exact numerical solution within &lt;answer&gt; tags.\n\nQUESTION_PLACEHOLDER
+Question: 
