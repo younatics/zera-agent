@@ -82,9 +82,12 @@ class CNNDailyMailEvaluator(BaseEvaluator):
     
     def evaluate_response(self, response: str, ground_truth: Dict[str, Any]) -> Dict[str, Any]:
         """CNN/DailyMail 요약을 평가합니다."""
-        # 'article:' 이후의 텍스트만 추출
-        if 'article:' in response.lower():
-            response = response.lower().split('article:')[1].strip()
+        # 'article:' 또는 'points:' 이후의 텍스트만 추출
+        response_lower = response.lower()
+        if 'article:' in response_lower:
+            response = response_lower.split('article:')[1].strip()
+        elif 'points:' in response_lower:
+            response = response_lower.split('points:')[1].strip()
         
         rouge = Rouge()
         try:
