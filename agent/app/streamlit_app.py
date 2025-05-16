@@ -460,15 +460,20 @@ def process_dataset(data, dataset_type):
                 })
     elif dataset_type == "CNN":
         for item in data:
+            normalized_expected = ' '.join(
+                line.strip()
+                for line in item['expected_answer'].split('\n')
+                if line.strip() and not line.strip().startswith(('-', '*'))
+            )
             test_cases.append({
                 'question': item['input'],
-                'expected': item['expected_answer']
+                'expected': normalized_expected
             })
             
             if len(display_data) < 2000:  # display_data를 2000개로 제한
                 display_data.append({
                     'question': item['input'],
-                    'expected_answer': item['expected_answer']
+                    'expected_answer': normalized_expected
                 })
     elif dataset_type == "GSM8K":
         for item in data:
