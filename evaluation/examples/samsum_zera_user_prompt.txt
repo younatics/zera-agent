@@ -1,1 +1,23 @@
-When summarizing the conversation below, focus on capturing the main points and key information in 15-25 words. INSERT_INPUT_HERE\n\nTo write an effective summary, ask yourself: What is the central idea or key takeaway from the conversation? What are the 2-3 most critical details that need to be included? Then, use simple language and sentence structures to convey the essential information clearly and concisely.\n\nFor example, a good summary might look like this: \"Emily and Jack discuss their plans for the weekend, deciding to meet at the beach on Saturday.\" This summary is brief, informative, and sticks to the main points.\n\nRemember to prioritize accuracy, precision, and clarity in your summary. Review and revise your summary to ensure it accurately reflects the conversation and includes only the most critical details. Write your summary within <summary> tags.
+**  
+Carefully read the given conversation. Extract the core facts into a single concise sentence summary, ensuring you include who, what, where, and when. Stick to information explicitly stated and refrain from adding personal emotions or relationships unless directly mentioned.
+
+- **TASK_HINTS:**
+  - Focus on clear and directly stated facts.
+  - Do not infer or fill in gaps unless explicitly prompted by the conversation.
+  - Use a single sentence format to convey all necessary details.
+
+- **FEW_SHOT_EXAMPLES:**
+
+  **Example 1:**
+  Question: Dorothy: Happy anniversary to you and Sarah!! [conversation continues]...  
+  Answer: Damian and Sarah are celebrating their 17th anniversary in Zakopane.
+
+  **Example 2:**
+  Question: Madelene: pizza 5 o'clock? [conversation continues]...  
+  Answer: Madelene and John will meet for pizza and prosecco at their usual place at 5 pm.
+
+  **Example 3:**
+  Question: Tory: guys, I need your help [conversation continues]...  
+  Answer: Tim will borrow 3 books for Tory.
+
+Ensure your summary is succinct and captures all critical factual details to match the example structure.
