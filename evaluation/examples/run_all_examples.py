@@ -15,7 +15,7 @@ def main():
     # model = "gpt4o"
     # model_version = "gpt-3.5-turbo"
 
-    model = "local1"
+    model = "local2"
     model_version = "/data/project/private/kyle/hf_models/Mistral-7B-Instruct-v0.3"
     
     # print("\n===== mmlu_example.py 실행 =====")
