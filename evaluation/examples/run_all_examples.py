@@ -31,8 +31,9 @@ def main():
     # print("\n===== cnn_dailymail_example.py 실행 =====")
     # run_cnn_dailymail_example(model, model_version)
 
-    # print("\n===== samsum_example.py 실행 =====")
-    # run_samsum_example(model, model_version)
+    print("\n===== samsum_example.py 실행 =====")
+    run_samsum_example(model, model_version)
+    run_samsum_example(model, model_version)
 
     # print("\n===== meetingbank_example.py 실행 =====")
     # run_meetingbank_example(model, model_version)
