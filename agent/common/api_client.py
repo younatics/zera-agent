@@ -44,7 +44,7 @@ class Model:
         "local1": {
             "name": "Local Model 1",
             "description": "로컬 서버에서 실행되는 첫 번째 미스트랄 모델",
-            "default_version": "/data/project/private/kyle/hf_models/Mistral-7B-Instruct-v0.3",
+            "default_version": "/data/project/private/kyle/hf_models/Meta-Llama-3-70B-Instruct",
             "base_url": "http://localhost:8001/v1"
         },
         "local2": {

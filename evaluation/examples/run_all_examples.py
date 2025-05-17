@@ -16,7 +16,7 @@ def main():
     # model_version = "gpt-3.5-turbo"
 
     model = "local2"
-    model_version = "/data/project/private/kyle/hf_models/Mistral-7B-Instruct-v0.3"
+    model_version = "/data/project/private/kyle/hf_models/Meta-Llama-3-70B-Instruct"
     
     # print("\n===== mmlu_example.py 실행 =====")
     # run_mmlu_example(model, model_version)
@@ -36,11 +36,11 @@ def main():
     # print("\n===== meetingbank_example.py 실행 =====")
     # run_meetingbank_example(model, model_version)
 
-    print("\n===== mbpp_example.py 실행 =====")
-    run_mbpp_example(model, model_version)
+    # print("\n===== mbpp_example.py 실행 =====")
+    # run_mbpp_example(model, model_version)
 
-    print("\n===== humaneval_example.py 실행 =====")
-    run_humaneval_example(model, model_version)
+    # print("\n===== humaneval_example.py 실행 =====")
+    # run_humaneval_example(model, model_version)
 
     # print("\n===== bbh_example.py 실행 =====")
     # run_bbh_example(model, model_version)
