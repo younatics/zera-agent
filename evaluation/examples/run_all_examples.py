@@ -24,14 +24,14 @@ def main():
     # print("\n===== mmlu_pro_example.py 실행 =====")
     # run_mmlu_pro_example(model, model_version)
 
-    print("\n===== gsm8k_example.py 실행 =====")
-    run_gsm8k_example(model, model_version)
+    # print("\n===== gsm8k_example.py 실행 =====")
+    # run_gsm8k_example(model, model_version)
 
-    print("\n===== cnn_dailymail_example.py 실행 =====")
-    run_cnn_dailymail_example(model, model_version)
+    # print("\n===== cnn_dailymail_example.py 실행 =====")
+    # run_cnn_dailymail_example(model, model_version)
 
-    # print("\n===== samsum_example.py 실행 =====")
-    # run_samsum_example(model, model_version)
+    print("\n===== samsum_example.py 실행 =====")
+    run_samsum_example(model, model_version)
 
     # print("\n===== meetingbank_example.py 실행 =====")
     # run_meetingbank_example(model, model_version)
@@ -42,8 +42,8 @@ def main():
     # print("\n===== humaneval_example.py 실행 =====")
     # run_humaneval_example(model, model_version)
 
-    print("\n===== bbh_example.py 실행 =====")
-    run_bbh_example(model, model_version)
+    # print("\n===== bbh_example.py 실행 =====")
+    # run_bbh_example(model, model_version)
     
     # print("\n===== hellaswag_example.py 실행 =====")
     # run_hellaswag_example(model, model_version)
