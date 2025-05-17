@@ -30,11 +30,11 @@ def run_bbh_example(model="gpt4o", model_version="gpt-3.5-turbo", bbh_category=N
         "--dataset", "bbh",
         "--model", model,
         "--model_version", model_version,
-        "--base_system_prompt", base_system_prompt,
-        "--base_user_prompt", base_user_prompt,
+        # "--base_system_prompt", base_system_prompt,
+        # "--base_user_prompt", base_user_prompt,
         "--zera_system_prompt", zera_system_prompt,
         "--zera_user_prompt", zera_user_prompt,
-        "--num_samples", "500"
+        "--num_samples", "50"
     ]
     if bbh_category:
         sys.argv += ["--bbh_category", bbh_category]
@@ -42,4 +42,4 @@ def run_bbh_example(model="gpt4o", model_version="gpt-3.5-turbo", bbh_category=N
     main()
 
 if __name__ == "__main__":
-    run_bbh_example()
+    run_bbh_example(bbh_category="Geometry")
