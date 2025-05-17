@@ -1,1 +1,23 @@
-Question: 
+**  
+Examine the scenario below using a logical, step-by-step approach to determine the correct outcome:
+
+1. Evaluate and break down each statement or event sequentially.
+2. Apply logical reasoning to infer the final order or state.
+3. Clearly present your final answer in the specified format, ensuring it's on a separate line (e.g., "(A)").
+
+**TASK_HINTS:**
+- Focus on logical progression, evaluating each statement thoroughly. 
+- Ensure the final answer matches the expected format precisely.
+- Systematically verify each logic step before delivering the answer.
+
+**FEW_SHOT_EXAMPLES:**
+
+Example 1:  
+Question: If you follow these instructions, do you return to the starting point? Always face forward. Take 4 steps forward, 2 steps backward...  
+Answer: No
+
+Example 2:  
+Question: Alice, Bob, Claire, Dave, and Eve are on the same soccer team, changing positions according to game events. Determine Eve's final position.  
+Answer: (D)
+
+By following these guidelines, ensure your reasoning is methodical and precise, concluding with the correct formatted output.

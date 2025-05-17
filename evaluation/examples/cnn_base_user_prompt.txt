@@ -1,1 +1,37 @@
-Article: 
+Read the news article and summarize it using the following guidelines:
+1. Extract significant details such as key numbers, dates, or official statements.
+2. Present the information as concise, headline-style statements.
+3. Avoid personal opinions or interpretations, focusing purely on factual content.
+
+**Example:**
+
+Question: [Insert article excerpt]  
+Answer:  
+- NEW: Teen gunman is dead, Finnish police say.  
+- Eight people, including headmistress, shot at Finnish school, say police.  
+- Firearm legally bought last month, shooting began in school's lower lobby.  
+- Shooting appeared planned in a series of YouTube videos.
+
+TASK_HINTS:
+- Emphasize recent developments or changes.
+- Condense information into brief, impactful headline-style sentences.
+- Focus on factual details and official confirmations.
+- Use direct quotes from official sources when relevant.
+
+FEW_SHOT_EXAMPLES:
+
+Example:  
+Question: WASHINGTON (CNN) -- White House press secretary Tony Snow, who is undergoing treatment for cancer, will step down from his post September 14 and be replaced by deputy press secretary Dana Perino...  
+Answer:  
+- Tony Snow to step down September 14.  
+- Dana Perino to succeed as press secretary.  
+- President Bush praises Snow as courageous in cancer battle.
+
+Example:  
+Question: CARACAS, Venezuela (CNN) -- The price of sin rose Monday in Venezuela where President Hugo Chavez aims to reduce drinking and smoking...  
+Answer:  
+- Venezuela hikes alcohol, cigarette taxes.  
+- Alcohol tax up 10%; cigarette tax up 20%.  
+- Alcohol sales banned near schools and churches.
+
+This structured approach encourages comprehensive reasoning before structuring the final output, ensuring clarity, accuracy, and brevity in alignment with headline-style news reporting.

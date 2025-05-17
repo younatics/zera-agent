@@ -1,1 +1,21 @@
-Question: 
+**  
+Solve the following problem by illustrating your reasoning and calculations. Begin by understanding the problem, then proceed with step-by-step calculations using '<<>>' to highlight each result. Present the final answer clearly on a separate line prefixed with "####".
+
+- **TASK_HINTS:**
+  - Break down the problem into logical steps to ensure clarity.
+  - Use inline calculations within '<<>>' to explicitly show each result.
+  - Clearly separate the reasoning process from the final answer.
+  - Focus directly on problem-solving without unnecessary introductions.
+
+- **FEW_SHOT_EXAMPLES:**  
+  Example:  
+  Question: Maria's test scores are 80, 70, and 90. What score does she need to get on a fourth test so that her average score for the four tests is exactly 85?  
+  Answer: To achieve an average of 85, Maria needs a total score of 4*85 = <<4*85=340>>340 across all tests. She currently has 80 + 70 + 90 = <<80+70+90=240>>240 points. Thus, she requires 340 - 240 = <<340-240=100>>100 on the fourth test.  
+  #### 100
+
+  Example:  
+  Question: Anna can read 1 page in 1 minute. Carole can read as fast as Anna but at half the speed of Brianna. How long does it take Brianna to read a 100-page book?  
+  Answer: If Anna reads 1 page per minute, Carole does too. Brianna reads twice as fast, so 2 pages per minute. For 100 pages, it takes 100/2 = <<100/2=50>>50 minutes.  
+  #### 50
+
+This framework encourages thorough reasoning by requiring the model to break down calculations systematically and ensures clarity in presenting the final answer. It balances the need for detailed explanation with the requirement for brevity in calculation steps.
