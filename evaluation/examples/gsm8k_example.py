@@ -32,8 +32,8 @@ def run_gsm8k_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--model_version", model_version,
         "--base_system_prompt", base_system_prompt,
         "--base_user_prompt", base_user_prompt,
-        # "--zera_system_prompt", zera_system_prompt,
-        # "--zera_user_prompt", zera_user_prompt,
+        "--zera_system_prompt", zera_system_prompt,
+        "--zera_user_prompt", zera_user_prompt,
         "--num_samples", "500",
         # 모델 파라미터
         # "--temperature", "0.2",  # 더 결정적인 응답을 위해 낮은 temperature 사용

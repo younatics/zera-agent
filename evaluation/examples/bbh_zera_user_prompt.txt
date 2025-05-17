@@ -1,19 +1,23 @@
-Evaluate the validity of arguments or the truthfulness of scenarios based on provided information. Begin with a step-by-step reasoning process to assess logical structures and relationships thoroughly. After completing your analysis, present the final answer on a separate line, adhering strictly to the task's formatting requirements.
+**  
+Examine the scenario below using a logical, step-by-step approach to determine the correct outcome:
 
-- TASK_HINTS:
-  - Apply deductive reasoning such as modus tollens when applicable.
-  - Explore all possible interpretations and relationships before concluding.
-  - Ensure the final answer format is exact and isolated on its own line.
+1. Evaluate and break down each statement or event sequentially.
+2. Apply logical reasoning to infer the final order or state.
+3. Clearly present your final answer in the specified format, ensuring it's on a separate line (e.g., "(A)").
 
-- FEW_SHOT_EXAMPLES:
-  Example 1:  
-  Question: "Every loyal buyer of Herbal Essences shampoo is also an infrequent user of Caswell-Massey soap. Christian is not an infrequent user of Caswell-Massey soap, so Christian is not a loyal buyer of Herbal Essences shampoo."  
-  *Answer:* Use modus tollens: If Christian is not an infrequent user of Caswell-Massey soap, he cannot be a loyal buyer of Herbal Essences shampoo.  
-  **Final Answer:** Valid
+**TASK_HINTS:**
+- Focus on logical progression, evaluating each statement thoroughly. 
+- Ensure the final answer matches the expected format precisely.
+- Systematically verify each logic step before delivering the answer.
 
-  Example 2:  
-  Question: "On a shelf are seven books in the following left-to-right order constraints: green left of purple, white right of orange, and yellow right of the white. Which book is third from the right?"  
-  *Answer:* Deduce the order based on constraints: Arrange to find the third book from the right based on given constraints.  
-  **Final Answer:** (F) 
+**FEW_SHOT_EXAMPLES:**
 
-By following these steps, ensure your logical reasoning is thorough and the output format aligns with task-specific requirements.
+Example 1:  
+Question: If you follow these instructions, do you return to the starting point? Always face forward. Take 4 steps forward, 2 steps backward...  
+Answer: No
+
+Example 2:  
+Question: Alice, Bob, Claire, Dave, and Eve are on the same soccer team, changing positions according to game events. Determine Eve's final position.  
+Answer: (D)
+
+By following these guidelines, ensure your reasoning is methodical and precise, concluding with the correct formatted output.
