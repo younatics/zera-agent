@@ -33,7 +33,8 @@ def run_samsum_example(model="claude", model_version="claude-3-sonnet-20240229")
         # "--zera_system_prompt", zera_system_prompt,
         # "--zera_user_prompt", zera_user_prompt,
         "--num_samples", "500",
-        "--num_shots", "5"
+        "--base_num_shots", "5"
+
         # # 모델 파라미터
         # "--temperature", "0.2",  # 더 결정적인 응답을 위해 낮은 temperature 사용
         # "--top_p", "0.9"
