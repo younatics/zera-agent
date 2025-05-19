@@ -1,22 +1,39 @@
-Examine the scenario below using a logical, step-by-step approach to determine the correct outcome:
+To determine if a specific person is telling the truth or not, analyze the given statements step-by-step. Start with confirming or refuting each statement based on the prior one. After providing your logical deductions:
+- Clearly state your final conclusion in the format "Yes" or "No" at the end of your response. 
 
-1. Evaluate and break down each statement or event sequentially.
-2. Apply logical reasoning to infer the final order or state.
-3. Clearly present your final answer in the specified format, ensuring it's on a separate line (e.g., "(A)").
+Here's how you should structure your analysis:
 
-**TASK_HINTS:**
-- Focus on logical progression, evaluating each statement thoroughly. 
-- Ensure the final answer matches the expected format precisely.
-- Systematically verify each logic step before delivering the answer.
+Example:
+Question: Alex says Jamie lies. Jamie says Casey tells the truth. Casey says Alex lies. Does Casey tell the truth?
+Answer:
+- If Alex says Jamie lies and Jamie says Casey tells the truth, verifying whether Alex or Jamie tells the truth affects Casey's statement.
+- Assuming Alex lies, Jamie's statement about Casey could be correct. Therefore, Casey tells the truth about Alex.
+- Since our analysis concludes Casey tells the truth about Alex, and Alex's statement about Jamie lying is false, Casey indeed tells the truth.
+Yes
 
-**FEW_SHOT_EXAMPLES:**
+Remember to present your reasoning in an ordered manner and conclude with a straightforward "Yes" or "No" answer.
 
-Example 1:  
-Question: If you follow these instructions, do you return to the starting point? Always face forward. Take 4 steps forward, 2 steps backward...  
-Answer: No
+### TASK_HINTS:
+- Begin your reasoning by examining each individual's statement in order.
+- Consider the implications of each statement on the next, creating a logical flow.
+- To enhance clarity, use numbering or bullet points to separate each step of your reasoning.
+- Always ensure your conclusion clearly states whether the individual in question tells the truth as "Yes" or lies as "No."
 
-Example 2:  
-Question: Alice, Bob, Claire, Dave, and Eve are on the same soccer team, changing positions according to game events. Determine Eve's final position.  
-Answer: (D)
+### FEW_SHOT_EXAMPLES:
+**Example 1:**
+Question: Simon says Paula tells the truth. Paula says Lora lies. Lora says Simon lies. Does Lora tell the truth?
+Answer:
+- Simon's statement validates Paula.
+- Paula's accusation toward Lora, combined with Simon's confirmation, suggests Paula might be truthful.
+- Thus, Lora's counterclaim about Simon lying contradicts Simon and Paula's established truthfulness, indicating Lora lies.
+No
 
-By following these guidelines, ensure your reasoning is methodical and precise, concluding with the correct formatted output.
+**Example 2:**
+Question: Carl says Karen lies. Karen says Pete tells the truth. Pete says Carl lies. Does Pete tell the truth?
+Answer:
+- If Carl claims Karen lies and Karen endorses Pete’s truthfulness, their statements oppose.
+- Carl’s statement about Karen lying implies he might tell the truth.
+- Since Karen might lie about Pete, and Pete’s statement opposes Carl's, likely Pete also lies.
+No
+
+These guidelines should help the model articulate its reasoning clearly and lead to accurate, structured conclusions.

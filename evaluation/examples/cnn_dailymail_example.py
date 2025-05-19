@@ -32,9 +32,10 @@ def run_cnn_dailymail_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--model_version", model_version,
         "--base_system_prompt", base_system_prompt,
         "--base_user_prompt", base_user_prompt,
-        "--zera_system_prompt", zera_system_prompt,
-        "--zera_user_prompt", zera_user_prompt,
+        # "--zera_system_prompt", zera_system_prompt,
+        # "--zera_user_prompt", zera_user_prompt,
         "--num_samples", "500"
+        "--num_shots", "5"
     ]
     # 평가 실행
     main()

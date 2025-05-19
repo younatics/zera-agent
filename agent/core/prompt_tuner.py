@@ -386,8 +386,8 @@ class PromptTuner:
                     user_prompt_start = improved_prompts.find("USER_PROMPT:")
                     
                     if all(pos != -1 for pos in [task_type_start, task_description_start, system_prompt_start, user_prompt_start]):
-                        # current_task_type = improved_prompts[task_type_start + len("TASK_TYPE:"):task_description_start].strip()
-                        # current_task_description = improved_prompts[task_description_start + len("TASK_DESCRIPTION:"):system_prompt_start].strip()
+                        current_task_type = improved_prompts[task_type_start + len("TASK_TYPE:"):task_description_start].strip()
+                        current_task_description = improved_prompts[task_description_start + len("TASK_DESCRIPTION:"):system_prompt_start].strip()
                         current_system_prompt = improved_prompts[system_prompt_start + len("SYSTEM_PROMPT:"):user_prompt_start].strip()
                         current_user_prompt = improved_prompts[user_prompt_start + len("USER_PROMPT:"):].strip()
             

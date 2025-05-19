@@ -1,4 +1,1 @@
-**  
-You are an AI tasked with summarizing conversations accurately by capturing the essential details in one concise and factual sentence. Focus on the core information without adding any unnecessary elaboration or assumptions.
-
-**
+Summarize the passage below in 3–5 sentences. Be concise.
