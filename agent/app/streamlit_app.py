@@ -212,7 +212,7 @@ with st.sidebar:
             "모델 선택",
             options=list(MODEL_INFO.keys()),
             format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
-            index=list(MODEL_INFO.keys()).index("local1") if "local1" in MODEL_INFO else 0,
+            # index=list(MODEL_INFO.keys()).index("local1") if "local1" in MODEL_INFO else 0,
             help="메타 프롬프트 생성에 사용할 모델을 선택하세요. (solar_strawberry: Upstage Solar-Strawberry API)"
         )
         st.caption(MODEL_INFO[meta_prompt_model]['description'])
