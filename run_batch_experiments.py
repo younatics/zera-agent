@@ -36,6 +36,9 @@ def setup_logging():
 
 def create_default_config():
     """기본 실험 설정 생성 - GSM8K 샘플 수 변화 실험"""
+    # 타임스탬프 생성 (실행 시점 기준)
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    
     config = {
         "experiments": [
             {
@@ -47,7 +50,7 @@ def create_default_config():
                 "model": "solar",
                 "evaluator": "claude",
                 "meta_model": "gpt4o",
-                "output_dir": "./results/gsm8k_sample_5",
+                "output_dir": f"./results/gsm8k_sample_5_{timestamp}",
                 "enabled": True
             },
             {
@@ -59,7 +62,7 @@ def create_default_config():
                 "model": "solar",
                 "evaluator": "claude",
                 "meta_model": "gpt4o",
-                "output_dir": "./results/gsm8k_sample_20",
+                "output_dir": f"./results/gsm8k_sample_20_{timestamp}",
                 "enabled": True
             },
             {
@@ -71,7 +74,7 @@ def create_default_config():
                 "model": "solar",
                 "evaluator": "claude",
                 "meta_model": "gpt4o",
-                "output_dir": "./results/gsm8k_sample_50",
+                "output_dir": f"./results/gsm8k_sample_50_{timestamp}",
                 "enabled": True
             },
             {
@@ -83,7 +86,7 @@ def create_default_config():
                 "model": "solar",
                 "evaluator": "claude",
                 "meta_model": "gpt4o",
-                "output_dir": "./results/gsm8k_sample_100",
+                "output_dir": f"./results/gsm8k_sample_100_{timestamp}",
                 "enabled": True
             },
             {
@@ -95,7 +98,7 @@ def create_default_config():
                 "model": "solar",
                 "evaluator": "claude",
                 "meta_model": "gpt4o",
-                "output_dir": "./results/gsm8k_sample_200",
+                "output_dir": f"./results/gsm8k_sample_200_{timestamp}",
                 "enabled": True
             }
         ],
