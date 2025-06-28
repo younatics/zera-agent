@@ -24,15 +24,79 @@ from evaluation.base.main import main as evaluation_main
 def setup_logging():
     """로깅 설정"""
     log_file = f"batch_experiments_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(log_file, encoding='utf-8'),
-            logging.StreamHandler()
-        ]
-    )
-    return logging.getLogger(__name__)
+    
+    # 커스텀 포맷터 클래스
+    class ColoredFormatter(logging.Formatter):
+        """색깔과 이모지가 포함된 로그 포맷터"""
+        
+        # ANSI 색깔 코드
+        COLORS = {
+            'DEBUG': '\033[36m',      # 청록색
+            'INFO': '\033[32m',       # 녹색  
+            'WARNING': '\033[33m',    # 노란색
+            'ERROR': '\033[31m',      # 빨간색
+            'CRITICAL': '\033[35m',   # 자주색
+            'RESET': '\033[0m'        # 리셋
+        }
+        
+        # 이모지 매핑
+        EMOJIS = {
+            'DEBUG': '🔍',
+            'INFO': '📝',
+            'WARNING': '⚠️',
+            'ERROR': '❌',
+            'CRITICAL': '🚨'
+        }
+        
+        def format(self, record):
+            # 시간 포맷
+            time_str = self.formatTime(record, '%H:%M:%S')
+            
+            # 레벨별 색깔과 이모지
+            level_color = self.COLORS.get(record.levelname, '')
+            reset_color = self.COLORS['RESET']
+            emoji = self.EMOJIS.get(record.levelname, '📝')
+            
+            # 메시지에 특별한 키워드가 있으면 추가 이모지
+            message = record.getMessage()
+            if '실험 시작:' in message:
+                emoji = '🚀'
+            elif '실험 완료:' in message:
+                emoji = '✅'
+            elif '실험 실패:' in message:
+                emoji = '❌'
+            elif '평가 시작' in message:
+                emoji = '🔍'
+            elif '평가 완료' in message:
+                emoji = '🎯'
+            elif '새로운 베스트' in message:
+                emoji = '🏆'
+            elif '진행도:' in message:
+                emoji = '⏳'
+            elif '대기' in message:
+                emoji = '⏸️'
+            elif '배치 실험 완료' in message:
+                emoji = '🎉'
+            
+            # 포맷된 로그 메시지
+            formatted = f"{level_color}{emoji} [{time_str}] {message}{reset_color}"
+            return formatted
+    
+    # 콘솔 핸들러 (색깔 있음)
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(ColoredFormatter())
+    
+    # 파일 핸들러 (색깔 없음)
+    file_handler = logging.FileHandler(log_file, encoding='utf-8')
+    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    
+    # 루트 로거 설정
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+    logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
+    
+    return logger
 
 def create_default_config():
     """기본 실험 설정 생성 - GSM8K 샘플 수 변화 실험"""
@@ -159,10 +223,11 @@ def run_evaluation_after_experiment(experiment_config, output_dir, global_settin
             logger.error("프롬프트가 비어있습니다. 평가를 건너뜁니다.")
             return False
         
-        logger.info(f"평가 시작 - 최고 성능 프롬프트 (평균 점수: {avg_score:.3f})")
-        logger.info(f"시스템 프롬프트 길이: {len(system_prompt)} 문자")
-        logger.info(f"유저 프롬프트 길이: {len(user_prompt)} 문자")
-        logger.info(f"사용 모델: {config_data.get('model', 'solar')} (버전: {config_data.get('model_version', 'N/A')})")
+        print(f"🏆 최고 성능 프롬프트 사용 (튜닝 점수: {avg_score:.3f})")
+        print(f"📝 시스템 프롬프트: {len(system_prompt)} 문자")
+        print(f"📝 유저 프롬프트: {len(user_prompt)} 문자")
+        print(f"🤖 사용 모델: {config_data.get('model', 'solar')} (버전: {config_data.get('model_version', 'N/A')})")
+        print(f"📊 평가 샘플 수: {global_settings.get('evaluation_samples', 500)}개")
         
         # api_client의 모델 정보 import
         from agent.common.api_client import Model as ApiModel
@@ -192,7 +257,7 @@ def run_evaluation_after_experiment(experiment_config, output_dir, global_settin
         eval_args = EvaluationArgs()
         
         # 평가 실행 및 결과 캡처
-        logger.info(f"GSM8K 평가 실행 중... (샘플 수: {eval_args.num_samples})")
+        print(f"🔍 GSM8K 평가 실행 중... (샘플 수: {eval_args.num_samples}개)")
         
         # 평가 결과를 파일로 캡처
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -212,8 +277,9 @@ def run_evaluation_after_experiment(experiment_config, output_dir, global_settin
             # 평가 결과 파일에서 정확도 추출
             accuracy = extract_accuracy_from_output(eval_output_file)
             
-            logger.info(f"GSM8K 평가 완료 - 정확도: {accuracy:.2%}")
-            logger.info(f"평가 상세 결과 저장: {eval_output_file}")
+            print(f"🎯 GSM8K 평가 완료!")
+            print(f"📊 정확도: {accuracy:.2%}")
+            print(f"💾 결과 파일: {eval_output_file}")
             
             # 평가 요약 정보 저장
             eval_summary = {
@@ -230,7 +296,7 @@ def run_evaluation_after_experiment(experiment_config, output_dir, global_settin
             with open(eval_summary_file, 'w', encoding='utf-8') as f:
                 json.dump(eval_summary, f, ensure_ascii=False, indent=2)
             
-            logger.info(f"평가 요약 저장: {eval_summary_file}")
+            print(f"📋 요약 저장: {eval_summary_file}")
             return True
             
         except Exception as e:
@@ -269,10 +335,21 @@ def extract_accuracy_from_output(output_file):
         print(f"정확도 추출 중 오류: {str(e)}")
         return 0.0
 
+def print_experiment_header(experiment_name, experiment_num, total_experiments, logger):
+    """실험 시작 헤더 출력"""
+    print("\n" + "="*80)
+    print(f"🚀 실험 {experiment_num}/{total_experiments}: {experiment_name}")
+    print("="*80)
+
+def print_section_divider(title, logger):
+    """섹션 구분선 출력"""
+    print(f"\n{'─'*60}")
+    print(f"🔸 {title}")
+    print("─"*60)
+
 def run_experiment(experiment_config, global_settings, logger):
     """단일 실험 실행"""
     experiment_name = experiment_config["name"]
-    logger.info(f"실험 시작: {experiment_name}")
     
     # 출력 디렉토리 생성
     output_dir = experiment_config["output_dir"]
@@ -303,35 +380,39 @@ def run_experiment(experiment_config, global_settings, logger):
     
     logger.info(f"실행 명령어: {' '.join(cmd)}")
     
+    print_section_divider("프롬프트 튜닝 실행", logger)
+    print(f"🔥 명령어: {' '.join(cmd)}")
+    
     # 실험 실행
     start_time = time.time()
     try:
+        print("🚀 프롬프트 튜닝 시작...")
         result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8')
         end_time = time.time()
         duration = end_time - start_time
         
         if result.returncode == 0:
-            logger.info(f"실험 완료: {experiment_name} (소요 시간: {duration:.1f}초)")
-            logger.info(f"출력: {result.stdout}")
+            print(f"✅ 프롬프트 튜닝 완료! (소요 시간: {duration:.1f}초)")
             
             # 실험 성공 시 평가 실행
-            logger.info(f"=== {experiment_name} 평가 시작 ===")
+            print_section_divider("GSM8K 평가 실행", logger)
             eval_success = run_evaluation_after_experiment(experiment_config, output_dir, global_settings, logger)
             if eval_success:
-                logger.info(f"=== {experiment_name} 평가 완료 ===")
+                print("🎯 평가 완료!")
             else:
-                logger.warning(f"=== {experiment_name} 평가 실패 ===")
+                print("⚠️ 평가 실패")
                 
         else:
-            logger.error(f"실험 실패: {experiment_name}")
-            logger.error(f"에러: {result.stderr}")
+            print(f"❌ 프롬프트 튜닝 실패!")
+            logger.error(f"에러 출력: {result.stderr}")
             
         return result.returncode == 0, duration
         
     except Exception as e:
         end_time = time.time()
         duration = end_time - start_time
-        logger.error(f"실험 실행 중 예외 발생: {experiment_name} - {str(e)}")
+        print(f"❌ 실험 실행 중 예외 발생: {str(e)}")
+        logger.error(f"예외 상세: {str(e)}")
         return False, duration
 
 def main():
@@ -384,39 +465,85 @@ def main():
             logger.info(f"  출력 디렉토리: {experiment['output_dir']}")
         return
     
+    # 배치 실험 시작 헤더
+    print("\n" + "🎯" + "="*78 + "🎯")
+    print(f"🎯 배치 프롬프트 튜닝 실험 시작! ({len(enabled_experiments)}개 실험)")
+    print("🎯" + "="*78 + "🎯")
+    
     # 실험 실행
     total_start_time = time.time()
     successful_experiments = 0
     failed_experiments = 0
     
     for i, experiment in enumerate(enabled_experiments):
-        logger.info(f"진행도: {i+1}/{len(enabled_experiments)}")
+        # 실험 헤더 출력
+        print_experiment_header(experiment['name'], i+1, len(enabled_experiments), logger)
+        
+        # 실험 설정 요약 출력
+        print(f"📊 데이터셋: {experiment['dataset']}")
+        print(f"📈 총 샘플: {experiment['total_samples']}")
+        print(f"🔄 이터레이션: {experiment['iterations']}")
+        print(f"🤖 모델: {experiment['model']}")
+        print(f"📁 출력: {experiment['output_dir']}")
+        
+        progress_percent = ((i) / len(enabled_experiments)) * 100
+        progress_bar = "█" * int(progress_percent // 5) + "░" * (20 - int(progress_percent // 5))
+        print(f"\n전체 진행률: [{progress_bar}] {progress_percent:.1f}%")
         
         success, duration = run_experiment(experiment, global_settings, logger)
         
         if success:
             successful_experiments += 1
+            print(f"\n✅ 실험 완료! (소요시간: {duration:.1f}초)")
         else:
             failed_experiments += 1
+            print(f"\n❌ 실험 실패! (소요시간: {duration:.1f}초)")
         
         # 다음 실험 전 대기 (마지막 실험이 아닌 경우)
         if i < len(enabled_experiments) - 1:
             delay = global_settings.get("delay_between_experiments", 60)
-            logger.info(f"다음 실험까지 {delay}초 대기...")
-            time.sleep(delay)
+            print(f"\n⏸️ 다음 실험까지 {delay}초 대기...")
+            
+            # 카운트다운 표시
+            for remaining in range(delay, 0, -1):
+                print(f"\r⏳ 대기 중... {remaining}초 남음", end="", flush=True)
+                time.sleep(1)
+            print("\r" + " " * 30 + "\r", end="")  # 라인 클리어
     
     total_duration = time.time() - total_start_time
     
+    # 최종 요약 헤더
+    print("\n" + "🎉" + "="*78 + "🎉")
+    print("🎉 배치 실험 완료!")
+    print("🎉" + "="*78 + "🎉")
+    
+    # 실행 시간 포맷팅
+    hours = int(total_duration // 3600)
+    minutes = int((total_duration % 3600) // 60)
+    seconds = int(total_duration % 60)
+    
+    if hours > 0:
+        time_str = f"{hours}시간 {minutes}분 {seconds}초"
+    elif minutes > 0:
+        time_str = f"{minutes}분 {seconds}초"
+    else:
+        time_str = f"{seconds}초"
+    
     # 최종 요약
-    logger.info("=== 배치 실험 완료 ===")
-    logger.info(f"총 실행 시간: {total_duration:.1f}초 ({total_duration/3600:.1f}시간)")
-    logger.info(f"성공한 실험: {successful_experiments}")
-    logger.info(f"실패한 실험: {failed_experiments}")
-    logger.info(f"전체 실험: {len(enabled_experiments)}")
+    print(f"⏱️  총 실행 시간: {time_str}")
+    print(f"✅ 성공한 실험: {successful_experiments}")
+    print(f"❌ 실패한 실험: {failed_experiments}")
+    print(f"📊 전체 실험: {len(enabled_experiments)}")
+    
+    # 성공률 계산 및 표시
+    if len(enabled_experiments) > 0:
+        success_rate = (successful_experiments / len(enabled_experiments)) * 100
+        success_bar = "█" * int(success_rate // 5) + "░" * (20 - int(success_rate // 5))
+        print(f"📈 성공률: [{success_bar}] {success_rate:.1f}%")
     
     # 평가 결과 요약 생성
     if global_settings.get("run_evaluation", True):
-        logger.info("\n=== 평가 결과 요약 ===")
+        print_section_divider("평가 결과 요약", logger)
         generate_evaluation_summary(enabled_experiments, logger)
 
 def generate_evaluation_summary(experiments, logger):
@@ -443,17 +570,36 @@ def generate_evaluation_summary(experiments, logger):
         # 결과 정렬 (GSM8K 정확도 기준)
         summary_data.sort(key=lambda x: x.get("gsm8k_accuracy", 0), reverse=True)
         
-        logger.info("실험별 성능 비교:")
-        logger.info(f"{'실험명':<20} {'튜닝점수':<12} {'GSM8K정확도':<15} {'샘플수':<8}")
-        logger.info("-" * 60)
+        print("\n🏆 실험별 성능 순위:")
+        print("─" * 80)
+        print(f"{'순위':<4} {'실험명':<20} {'튜닝점수':<12} {'GSM8K정확도':<15} {'샘플수':<8}")
+        print("─" * 80)
         
-        for data in summary_data:
+        for i, data in enumerate(summary_data, 1):
             exp_name = data.get("experiment_name", "N/A")[:18]
             tuning_score = data.get("tuning_avg_score", 0)
             gsm8k_acc = data.get("gsm8k_accuracy", 0)
             samples = data.get("evaluation_samples", 0)
             
-            logger.info(f"{exp_name:<20} {tuning_score:<12.3f} {gsm8k_acc:<15.2%} {samples:<8}")
+            # 순위별 메달 이모지
+            if i == 1:
+                rank_emoji = "🥇"
+            elif i == 2:
+                rank_emoji = "🥈"
+            elif i == 3:
+                rank_emoji = "🥉"
+            else:
+                rank_emoji = f"{i:2d}"
+            
+            print(f"{rank_emoji:<4} {exp_name:<20} {tuning_score:<12.3f} {gsm8k_acc:<15.2%} {samples:<8}")
+        
+        print("─" * 80)
+        
+        # 최고 성능 하이라이트
+        best_data = summary_data[0]
+        print(f"\n🎖️  최고 성능: {best_data.get('experiment_name', 'N/A')}")
+        print(f"   📊 GSM8K 정확도: {best_data.get('gsm8k_accuracy', 0):.2%}")
+        print(f"   🎯 튜닝 점수: {best_data.get('tuning_avg_score', 0):.3f}")
         
         # 전체 요약 CSV 생성
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -468,13 +614,13 @@ def generate_evaluation_summary(experiments, logger):
             import pandas as pd
             df = pd.DataFrame(summary_data)
             df.to_csv(summary_csv_file, index=False, encoding='utf-8')
-            logger.info(f"\n전체 평가 요약 CSV 저장: {summary_csv_file}")
+            print(f"\n💾 전체 평가 요약 CSV 저장: {summary_csv_file}")
         except ImportError:
-            logger.warning("pandas가 설치되지 않아 CSV 파일 생성을 건너뜁니다.")
+            logger.warning("⚠️ pandas가 설치되지 않아 CSV 파일 생성을 건너뜁니다.")
         except Exception as e:
-            logger.error(f"CSV 파일 생성 중 오류: {str(e)}")
+            logger.error(f"❌ CSV 파일 생성 중 오류: {str(e)}")
     else:
-        logger.warning("평가 결과 요약 데이터를 찾을 수 없습니다.")
+        print("⚠️ 평가 결과 요약 데이터를 찾을 수 없습니다.")
 
 if __name__ == "__main__":
     main() 
