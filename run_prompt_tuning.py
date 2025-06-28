@@ -381,9 +381,56 @@ def main():
             
             logger.info(f"🏆 새로운 베스트 프롬프트 저장: {best_prompt_file} (Iteration {iteration}, 점수: {avg_score:.3f})")
         
+        # 프롬프트 변화 과정 트랙킹 콜백들
+        def prompt_improvement_start_callback(iteration, avg_score, current_system_prompt, current_user_prompt):
+            """프롬프트 개선 시작 시점 콜백"""
+            logger.info(f"\n🔄 [Iteration {iteration}] 프롬프트 개선 시작 (현재 점수: {avg_score:.3f})")
+            logger.info(f"   📋 현재 시스템 프롬프트: {current_system_prompt[:100]}{'...' if len(current_system_prompt) > 100 else ''}")
+            logger.info(f"   📝 현재 유저 프롬프트: {current_user_prompt[:100]}{'...' if len(current_user_prompt) > 100 else ''}")
+        
+        def meta_prompt_generated_callback(iteration, meta_prompt):
+            """메타프롬프트 생성 완료 시점 콜백"""
+            logger.info(f"\n📊 [Iteration {iteration}] 메타프롬프트 생성 완료")
+            logger.info(f"   🧠 메타프롬프트 길이: {len(meta_prompt)} 문자")
+            # 메타프롬프트의 일부만 표시 (너무 길 수 있음)
+            meta_preview = meta_prompt[:200] + "..." if len(meta_prompt) > 200 else meta_prompt
+            logger.info(f"   📜 메타프롬프트 미리보기: {meta_preview}")
+        
+        def prompt_updated_callback(iteration, previous_system_prompt, previous_user_prompt, 
+                                  previous_task_type, previous_task_description,
+                                  new_system_prompt, new_user_prompt, 
+                                  new_task_type, new_task_description, raw_improved_prompts):
+            """프롬프트 업데이트 완료 시점 콜백"""
+            logger.info(f"\n✨ [Iteration {iteration}] 프롬프트 업데이트 완료!")
+            
+            # 태스크 정보 변화
+            if previous_task_type != new_task_type:
+                logger.info(f"   🎯 태스크 타입 변경: '{previous_task_type}' → '{new_task_type}'")
+            if previous_task_description != new_task_description:
+                logger.info(f"   📖 태스크 설명 변경: '{previous_task_description[:50]}...' → '{new_task_description[:50]}...'")
+            
+            # 시스템 프롬프트 변화
+            if previous_system_prompt != new_system_prompt:
+                logger.info(f"   🔧 시스템 프롬프트 변경:")
+                logger.info(f"      이전: {previous_system_prompt[:100]}{'...' if len(previous_system_prompt) > 100 else ''}")
+                logger.info(f"      신규: {new_system_prompt[:100]}{'...' if len(new_system_prompt) > 100 else ''}")
+            else:
+                logger.info(f"   🔧 시스템 프롬프트: 변경 없음")
+            
+            # 유저 프롬프트 변화  
+            if previous_user_prompt != new_user_prompt:
+                logger.info(f"   📝 유저 프롬프트 변경:")
+                logger.info(f"      이전: {previous_user_prompt[:100]}{'...' if len(previous_user_prompt) > 100 else ''}")
+                logger.info(f"      신규: {new_user_prompt[:100]}{'...' if len(new_user_prompt) > 100 else ''}")
+            else:
+                logger.info(f"   📝 유저 프롬프트: 변경 없음")
+        
         tuner.progress_callback = progress_callback
         tuner.iteration_callback = iteration_callback
         tuner.best_prompt_callback = best_prompt_callback
+        tuner.prompt_improvement_start_callback = prompt_improvement_start_callback
+        tuner.meta_prompt_generated_callback = meta_prompt_generated_callback
+        tuner.prompt_updated_callback = prompt_updated_callback
         
         # 프롬프트 튜닝 실행
         logger.info("프롬프트 튜닝 실행 중...")

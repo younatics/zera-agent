@@ -34,6 +34,10 @@ class PromptTuner:
         self.iteration_results = []
         self.progress_callback = None
         self.iteration_callback = None
+        # 새로운 콜백들 추가
+        self.prompt_improvement_start_callback = None
+        self.meta_prompt_generated_callback = None
+        self.prompt_updated_callback = None
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
         
@@ -299,12 +303,34 @@ class PromptTuner:
         best_user_prompt = initial_user_prompt
         best_avg_score = 0.0
         
+        # 초기 프롬프트 로깅
+        self.logger.info(f"📝 초기 프롬프트:")
+        self.logger.info(f"   시스템 프롬프트: {initial_system_prompt[:200]}{'...' if len(initial_system_prompt) > 200 else ''}")
+        self.logger.info(f"   유저 프롬프트: {initial_user_prompt[:200]}{'...' if len(initial_user_prompt) > 200 else ''}")
+        
         # 초기 task_type과 task_description 설정
         current_task_type = "General Task"
         current_task_description = "General task requiring outputs to various questions"
         
+        # 튜닝 설정 정보 로깅
+        self.logger.info(f"🎯 프롬프트 튜닝 설정:")
+        self.logger.info(f"   num_iterations: {num_iterations}")
+        self.logger.info(f"   score_threshold: {score_threshold}")
+        self.logger.info(f"   evaluation_score_threshold: {evaluation_score_threshold}")
+        self.logger.info(f"   use_meta_prompt: {use_meta_prompt}")
+        self.logger.info(f"   num_samples: {num_samples}")
+        self.logger.info(f"   총 테스트 케이스 수: {len(initial_test_cases)}")
+        
         for iteration in range(num_iterations):
-            self.logger.info(f"\nIteration {iteration + 1}/{num_iterations}")
+            self.logger.info(f"\n{'='*60}")
+            self.logger.info(f"🔄 Iteration {iteration + 1}/{num_iterations} 시작")
+            self.logger.info(f"{'='*60}")
+            self.logger.info(f"📋 현재 이터레이션 프롬프트:")
+            self.logger.info(f"   시스템: {current_system_prompt[:150]}{'...' if len(current_system_prompt) > 150 else ''}")
+            self.logger.info(f"   유저: {current_user_prompt[:150]}{'...' if len(current_user_prompt) > 150 else ''}")
+            self.logger.info(f"   태스크 타입: {current_task_type}")
+            self.logger.info(f"   태스크 설명: {current_task_description[:100]}{'...' if len(current_task_description) > 100 else ''}")
+            
             iteration_scores = []
             test_case_results = []
             iteration_best_sample_score = 0.0  # 이터레이션별 최고 점수 초기화
@@ -331,11 +357,12 @@ class PromptTuner:
                     task_description=current_task_description,
                     iteration=iteration + 1
                 )
-                self.logger.info(f"Score: {score}")
-                self.logger.info(f"Evaluation details: {evaluation_details}")
+                self.logger.info(f"📊 Score: {score}")
+                self.logger.info(f"📝 Evaluation details: {evaluation_details}")
                 
                 # 점수와 출력 저장
                 iteration_scores.append(score)
+                self.logger.info(f"🎯 테스트 케이스 {i+1}/{len(test_cases)} 완료 - 점수: {score}")
                 
                 # TestCaseResult 생성
                 test_case_result = TestCaseResult(
@@ -358,6 +385,10 @@ class PromptTuner:
             
             # iteration이 끝난 후 평균 점수 계산
             valid_scores = [score for score in iteration_scores if score is not None]
+            self.logger.info(f"\n📊 Iteration {iteration + 1} 점수 요약:")
+            self.logger.info(f"   전체 점수: {iteration_scores}")
+            self.logger.info(f"   유효 점수: {valid_scores} (총 {len(valid_scores)}개)")
+            
             if valid_scores:
                 avg_score = sum(valid_scores) / len(valid_scores)
                 # 표준편차 계산
@@ -365,14 +396,21 @@ class PromptTuner:
                 # top3 평균 점수 계산
                 top3_scores = sorted(valid_scores, reverse=True)[:3]
                 top3_avg_score = sum(top3_scores) / len(top3_scores)
+                
+                self.logger.info(f"   평균 점수: {avg_score:.3f}")
+                self.logger.info(f"   표준편차: {std_dev:.3f}")
+                self.logger.info(f"   Top3 점수: {top3_scores}")
+                self.logger.info(f"   Top3 평균: {top3_avg_score:.3f}")
             else:
                 avg_score = 0.0
                 std_dev = 0.0
                 top3_avg_score = 0.0
-            self.logger.info(f"Iteration {iteration + 1} 평균 점수: {avg_score:.2f}, 표준편차: {std_dev:.2f}, Top3 평균 점수: {top3_avg_score:.2f}")
+                self.logger.warning(f"   ⚠️ 유효한 점수가 없습니다!")
             
             # 현재까지의 최고 평균 점수와 비교
+            self.logger.info(f"🏆 베스트 점수 비교: 현재 {avg_score:.3f} vs 이전 최고 {best_avg_score:.3f}")
             if avg_score > best_avg_score:
+                self.logger.info(f"🎉 새로운 베스트 점수 달성! {best_avg_score:.3f} → {avg_score:.3f}")
                 best_avg_score = avg_score
                 best_system_prompt = current_system_prompt
                 best_user_prompt = current_user_prompt
@@ -380,6 +418,8 @@ class PromptTuner:
                 # 실시간 베스트 프롬프트 저장을 위한 콜백 호출
                 if hasattr(self, 'best_prompt_callback') and self.best_prompt_callback:
                     self.best_prompt_callback(iteration + 1, avg_score, current_system_prompt, current_user_prompt)
+            else:
+                self.logger.info(f"📊 베스트 점수 유지: {best_avg_score:.3f} (현재: {avg_score:.3f})")
             
             # IterationResult 생성
             iteration_result = IterationResult(
@@ -410,8 +450,25 @@ class PromptTuner:
                 break
             
             # 프롬프트 개선 (평균 점수가 평가 임계값 미만인 경우)
+            self.logger.info(f"🔍 메타프롬프트 트리거 조건 체크:")
+            self.logger.info(f"   use_meta_prompt: {use_meta_prompt}")
+            self.logger.info(f"   avg_score: {avg_score:.3f}")
+            self.logger.info(f"   evaluation_score_threshold: {evaluation_score_threshold}")
+            self.logger.info(f"   조건 만족: {use_meta_prompt and avg_score < evaluation_score_threshold}")
+            
             if use_meta_prompt and avg_score < evaluation_score_threshold:
-                self.logger.info("프롬프트 개선 중...")
+                self.logger.info("🔄 프롬프트 개선 조건 만족! 메타프롬프트 실행합니다...")
+                
+                # 프롬프트 개선 시작 콜백 호출
+                if self.prompt_improvement_start_callback:
+                    self.prompt_improvement_start_callback(
+                        iteration=iteration + 1,
+                        avg_score=avg_score,
+                        current_system_prompt=current_system_prompt,
+                        current_user_prompt=current_user_prompt
+                    )
+            else:
+                self.logger.info(f"⏭️ 프롬프트 개선 생략 - 조건 불만족 또는 임계값 초과")
                 
                 # 메타프롬프트를 사용하여 현재 프롬프트를 개선
                 improvement_prompt = self._generate_meta_prompt(
@@ -423,30 +480,93 @@ class PromptTuner:
                     current_task_description
                 )
                 
+                # 메타프롬프트 생성 완료 콜백 호출
+                if self.meta_prompt_generated_callback:
+                    self.meta_prompt_generated_callback(
+                        iteration=iteration + 1,
+                        meta_prompt=improvement_prompt
+                    )
+                
                 # 결과에 메타프롬프트 추가
                 iteration_result.meta_prompt = improvement_prompt
                 
                 # 메타프롬프트를 사용하여 프롬프트 개선 및 통계 업데이트
+                self.logger.info(f"🤖 메타프롬프트 모델에 질의 중...")
                 improved_prompts, meta_metadata = self.meta_prompt_model.ask(
                     question=improvement_prompt,
                     system_prompt=self.meta_system_prompt_template
                 )
                 self._update_stats(self.meta_prompt_stats, meta_metadata, iteration + 1)
+                
+                self.logger.info(f"🔍 메타프롬프트 응답 수신 완료 (길이: {len(improved_prompts) if improved_prompts else 0} 문자)")
+                self.logger.info(f"📄 메타프롬프트 원본 응답:\n{'-'*50}\n{improved_prompts}\n{'-'*50}")
+                
                 if improved_prompts and improved_prompts.strip():
                     # 개선된 프롬프트에서 TASK_TYPE, TASK_DESCRIPTION, 시스템 프롬프트, 유저 프롬프트 분리
                     improved_prompts = improved_prompts.strip()
                     
-                    # TASK_TYPE 추출
-                    task_type_start = improved_prompts.find("TASK_TYPE:")
-                    task_description_start = improved_prompts.find("TASK_DESCRIPTION:")
-                    system_prompt_start = improved_prompts.find("SYSTEM_PROMPT:")
-                    user_prompt_start = improved_prompts.find("USER_PROMPT:")
+                    # TASK_TYPE 추출 (여러 형태 지원)
+                    task_type_patterns = ["TASK_TYPE:", "Task Type:", "Task type:"]
+                    task_description_patterns = ["TASK_DESCRIPTION:", "Task Description:", "Task description:"]
+                    system_prompt_patterns = ["SYSTEM_PROMPT:", "System Prompt:", "System prompt:"]
+                    user_prompt_patterns = ["USER_PROMPT:", "User Prompt:", "User prompt:"]
+                    
+                    def find_pattern(text, patterns):
+                        for pattern in patterns:
+                            pos = text.find(pattern)
+                            if pos != -1:
+                                return pos, pattern
+                        return -1, None
+                    
+                    task_type_start, task_type_pattern = find_pattern(improved_prompts, task_type_patterns)
+                    task_description_start, task_description_pattern = find_pattern(improved_prompts, task_description_patterns)
+                    system_prompt_start, system_prompt_pattern = find_pattern(improved_prompts, system_prompt_patterns)
+                    user_prompt_start, user_prompt_pattern = find_pattern(improved_prompts, user_prompt_patterns)
+                    
+                    self.logger.info(f"🔍 프롬프트 파싱 위치:")
+                    self.logger.info(f"   TASK_TYPE 위치: {task_type_start} (패턴: {task_type_pattern})")
+                    self.logger.info(f"   TASK_DESCRIPTION 위치: {task_description_start} (패턴: {task_description_pattern})")
+                    self.logger.info(f"   SYSTEM_PROMPT 위치: {system_prompt_start} (패턴: {system_prompt_pattern})")
+                    self.logger.info(f"   USER_PROMPT 위치: {user_prompt_start} (패턴: {user_prompt_pattern})")
                     
                     if all(pos != -1 for pos in [task_type_start, task_description_start, system_prompt_start, user_prompt_start]):
-                        current_task_type = improved_prompts[task_type_start + len("TASK_TYPE:"):task_description_start].strip()
-                        current_task_description = improved_prompts[task_description_start + len("TASK_DESCRIPTION:"):system_prompt_start].strip()
-                        current_system_prompt = improved_prompts[system_prompt_start + len("SYSTEM_PROMPT:"):user_prompt_start].strip()
-                        current_user_prompt = improved_prompts[user_prompt_start + len("USER_PROMPT:"):].strip()
+                        # 이전 프롬프트 저장 (비교용)
+                        previous_system_prompt = current_system_prompt
+                        previous_user_prompt = current_user_prompt
+                        previous_task_type = current_task_type
+                        previous_task_description = current_task_description
+                        
+                        # 새로운 프롬프트 파싱
+                        current_task_type = improved_prompts[task_type_start + len(task_type_pattern):task_description_start].strip()
+                        current_task_description = improved_prompts[task_description_start + len(task_description_pattern):system_prompt_start].strip()
+                        current_system_prompt = improved_prompts[system_prompt_start + len(system_prompt_pattern):user_prompt_start].strip()
+                        current_user_prompt = improved_prompts[user_prompt_start + len(user_prompt_pattern):].strip()
+                        
+                        self.logger.info(f"✅ 프롬프트 파싱 성공!")
+                        self.logger.info(f"   새 태스크 타입: {current_task_type}")
+                        self.logger.info(f"   새 태스크 설명: {current_task_description[:100]}{'...' if len(current_task_description) > 100 else ''}")
+                        self.logger.info(f"   새 시스템 프롬프트: {current_system_prompt[:150]}{'...' if len(current_system_prompt) > 150 else ''}")
+                        self.logger.info(f"   새 유저 프롬프트: {current_user_prompt[:150]}{'...' if len(current_user_prompt) > 150 else ''}")
+                        
+                        # 프롬프트 업데이트 완료 콜백 호출
+                        if self.prompt_updated_callback:
+                            self.prompt_updated_callback(
+                                iteration=iteration + 1,
+                                previous_system_prompt=previous_system_prompt,
+                                previous_user_prompt=previous_user_prompt,
+                                previous_task_type=previous_task_type,
+                                previous_task_description=previous_task_description,
+                                new_system_prompt=current_system_prompt,
+                                new_user_prompt=current_user_prompt,
+                                new_task_type=current_task_type,
+                                new_task_description=current_task_description,
+                                raw_improved_prompts=improved_prompts
+                            )
+                    else:
+                        self.logger.warning(f"❌ 프롬프트 파싱 실패! 필요한 섹션을 찾을 수 없습니다.")
+                        self.logger.warning(f"   현재 프롬프트를 그대로 유지합니다.")
+                else:
+                    self.logger.warning(f"❌ 메타프롬프트 응답이 비어있습니다! 현재 프롬프트를 그대로 유지합니다.")
             
             if self.iteration_callback:
                 self.iteration_callback(iteration_result)
