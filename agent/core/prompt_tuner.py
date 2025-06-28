@@ -376,6 +376,10 @@ class PromptTuner:
                 best_avg_score = avg_score
                 best_system_prompt = current_system_prompt
                 best_user_prompt = current_user_prompt
+                
+                # 실시간 베스트 프롬프트 저장을 위한 콜백 호출
+                if hasattr(self, 'best_prompt_callback') and self.best_prompt_callback:
+                    self.best_prompt_callback(iteration + 1, avg_score, current_system_prompt, current_user_prompt)
             
             # IterationResult 생성
             iteration_result = IterationResult(

@@ -362,8 +362,28 @@ def main():
         def iteration_callback(result):
             logger.info(f"Iteration {result.iteration} 완료 - 평균 점수: {result.avg_score:.3f}, 표준편차: {result.std_dev:.3f}")
         
+        def best_prompt_callback(iteration, avg_score, system_prompt, user_prompt):
+            """새로운 베스트 프롬프트가 발견될 때마다 실시간으로 저장"""
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            best_prompt_file = os.path.join(args.output_dir, f"best_prompt_{args.dataset}_{timestamp}.json")
+            
+            best_prompt_data = {
+                "iteration": iteration,
+                "avg_score": avg_score,
+                "system_prompt": system_prompt,
+                "user_prompt": user_prompt,
+                "updated_at": datetime.now().isoformat(),
+                "note": "실시간 업데이트된 베스트 프롬프트"
+            }
+            
+            with open(best_prompt_file, 'w', encoding='utf-8') as f:
+                json.dump(best_prompt_data, f, ensure_ascii=False, indent=2)
+            
+            logger.info(f"🏆 새로운 베스트 프롬프트 저장: {best_prompt_file} (Iteration {iteration}, 점수: {avg_score:.3f})")
+        
         tuner.progress_callback = progress_callback
         tuner.iteration_callback = iteration_callback
+        tuner.best_prompt_callback = best_prompt_callback
         
         # 프롬프트 튜닝 실행
         logger.info("프롬프트 튜닝 실행 중...")
