@@ -142,7 +142,13 @@ class BaseEvaluator(ABC):
                 if few_shot_prompt:
                     full_question += few_shot_prompt + "---\n"  # 예시와 질문 사이에 구분자 추가
                 full_question += question
-                response = self.model.ask(full_question, system_prompt, user_prompt)
+                # 모델 응답에서 텍스트 부분만 추출 (메타데이터 제외)
+                response_data = self.model.ask(full_question, system_prompt, user_prompt)
+                if isinstance(response_data, tuple):
+                    response = response_data[0]  # 텍스트 부분만 사용
+                else:
+                    response = response_data  # 이미 텍스트인 경우
+                
                 is_correct = self.evaluate_response(response, item)
                 results["correct"] += 1 if is_correct else 0
                 sample_info = {

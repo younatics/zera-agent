@@ -109,7 +109,12 @@ class MeetingBankEvaluator(BaseEvaluator):
         for idx, item in enumerate(dataset):
             try:
                 question = self.format_question(item)
-                response = self.model.ask(question, system_prompt, user_prompt)
+                # 모델 응답에서 텍스트 부분만 추출 (메타데이터 제외)
+                response_data = self.model.ask(question, system_prompt, user_prompt)
+                if isinstance(response_data, tuple):
+                    response = response_data[0]  # 텍스트 부분만 사용
+                else:
+                    response = response_data  # 이미 텍스트인 경우
                 # 응답이 에러(예: Exception 객체이거나, 'Error:'로 시작하거나, 'error' 포함)인 경우 평가에서 제외
                 if isinstance(response, Exception) or (
                     isinstance(response, str) and (

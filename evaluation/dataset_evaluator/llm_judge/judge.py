@@ -39,7 +39,12 @@ Provide your evaluation in the following format:
 SCORE: [0-1] (where 1 means the response is correct and 0 means incorrect)
 EXPLANATION: Brief explanation of your scoring"""
             
-            judge_response = self.model.ask(user_prompt, system_prompt)
+            # 모델 응답에서 텍스트 부분만 추출 (메타데이터 제외)
+            judge_response_data = self.model.ask(user_prompt, system_prompt)
+            if isinstance(judge_response_data, tuple):
+                judge_response = judge_response_data[0]  # 텍스트 부분만 사용
+            else:
+                judge_response = judge_response_data  # 이미 텍스트인 경우
             
             # 판사의 응답에서 점수 추출
             try:
