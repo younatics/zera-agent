@@ -27,8 +27,13 @@ class BaseEvaluator(ABC):
             top_p: 모델의 top_p 값 (선택사항)
         """
         self.model_name = model_name
-        self.model_version = model_version
-        self.model = Model(model_name).set_version(model_version)
+        self.model_version = model_version or "unknown"
+        
+        # model_version이 None이면 Model 클래스에서 기본값 사용
+        if model_version:
+            self.model = Model(model_name).set_version(model_version)
+        else:
+            self.model = Model(model_name)  # 기본 버전 사용
         
         # temperature와 top_p가 제공된 경우에만 설정
         if temperature is not None:
@@ -163,7 +168,7 @@ class BaseEvaluator(ABC):
         accuracy = results["correct"] / results["total"] if results["total"] > 0 else 0
         results["accuracy"] = accuracy
         timestamp = time.strftime("%Y%m%d_%H%M%S")
-        model_version_safe = self.model_version.replace('/', '_')
+        model_version_safe = (self.model_version or "unknown").replace('/', '_')
         result_file = self.results_dir / f"{self.__class__.__name__}_{model_version_safe}_{timestamp}.json"
         self.save_results(results, str(result_file), is_zera=is_zera)
         return results
