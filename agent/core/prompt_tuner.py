@@ -467,8 +467,6 @@ class PromptTuner:
                         current_system_prompt=current_system_prompt,
                         current_user_prompt=current_user_prompt
                     )
-            else:
-                self.logger.info(f"⏭️ 프롬프트 개선 생략 - 조건 불만족 또는 임계값 초과")
                 
                 # 메타프롬프트를 사용하여 현재 프롬프트를 개선
                 improvement_prompt = self._generate_meta_prompt(
@@ -543,10 +541,39 @@ class PromptTuner:
                         current_user_prompt = improved_prompts[user_prompt_start + len(user_prompt_pattern):].strip()
                         
                         self.logger.info(f"✅ 프롬프트 파싱 성공!")
-                        self.logger.info(f"   새 태스크 타입: {current_task_type}")
-                        self.logger.info(f"   새 태스크 설명: {current_task_description[:100]}{'...' if len(current_task_description) > 100 else ''}")
-                        self.logger.info(f"   새 시스템 프롬프트: {current_system_prompt[:150]}{'...' if len(current_system_prompt) > 150 else ''}")
-                        self.logger.info(f"   새 유저 프롬프트: {current_user_prompt[:150]}{'...' if len(current_user_prompt) > 150 else ''}")
+                        self.logger.info(f"📝 파싱된 메타프롬프트 결과:")
+                        self.logger.info(f"{'='*60}")
+                        self.logger.info(f"🏷️  새 태스크 타입:")
+                        self.logger.info(f"    {current_task_type}")
+                        self.logger.info(f"📋 새 태스크 설명:")
+                        self.logger.info(f"    {current_task_description}")
+                        self.logger.info(f"⚙️  새 시스템 프롬프트:")
+                        self.logger.info(f"    {current_system_prompt}")
+                        self.logger.info(f"👤 새 유저 프롬프트:")
+                        self.logger.info(f"    {current_user_prompt}")
+                        self.logger.info(f"{'='*60}")
+                        
+                        # 변화 요약 출력
+                        self.logger.info(f"🔄 프롬프트 변화 요약:")
+                        if current_task_type != previous_task_type:
+                            self.logger.info(f"   태스크 타입 변경: '{previous_task_type}' → '{current_task_type}'")
+                        else:
+                            self.logger.info(f"   태스크 타입 유지: '{current_task_type}'")
+                        
+                        if current_task_description != previous_task_description:
+                            self.logger.info(f"   태스크 설명 변경됨 ({len(previous_task_description)} → {len(current_task_description)} 문자)")
+                        else:
+                            self.logger.info(f"   태스크 설명 유지 ({len(current_task_description)} 문자)")
+                        
+                        if current_system_prompt != previous_system_prompt:
+                            self.logger.info(f"   시스템 프롬프트 변경됨 ({len(previous_system_prompt)} → {len(current_system_prompt)} 문자)")
+                        else:
+                            self.logger.info(f"   시스템 프롬프트 유지 ({len(current_system_prompt)} 문자)")
+                        
+                        if current_user_prompt != previous_user_prompt:
+                            self.logger.info(f"   유저 프롬프트 변경됨 ({len(previous_user_prompt)} → {len(current_user_prompt)} 문자)")
+                        else:
+                            self.logger.info(f"   유저 프롬프트 유지 ({len(current_user_prompt)} 문자)")
                         
                         # 프롬프트 업데이트 완료 콜백 호출
                         if self.prompt_updated_callback:
@@ -567,6 +594,8 @@ class PromptTuner:
                         self.logger.warning(f"   현재 프롬프트를 그대로 유지합니다.")
                 else:
                     self.logger.warning(f"❌ 메타프롬프트 응답이 비어있습니다! 현재 프롬프트를 그대로 유지합니다.")
+            else:
+                self.logger.info(f"⏭️ 프롬프트 개선 생략 - 조건 불만족 또는 임계값 초과")
             
             if self.iteration_callback:
                 self.iteration_callback(iteration_result)
