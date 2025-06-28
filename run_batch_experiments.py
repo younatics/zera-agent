@@ -112,8 +112,8 @@ def create_default_config():
                 "iteration_samples": 5,
                 "iterations": 10,
                 "model": "local1",
-                "evaluator": "claude",
-                "meta_model": "gpt4o",
+                "evaluator": "local1",
+                "meta_model": "local1",
                 "output_dir": f"./results/gsm8k_sample_5_{timestamp}",
                 "enabled": True
             },
@@ -124,8 +124,8 @@ def create_default_config():
                 "iteration_samples": 5,
                 "iterations": 10,
                 "model": "local1",
-                "evaluator": "claude",
-                "meta_model": "gpt4o",
+                "evaluator": "local1",
+                "meta_model": "local1",
                 "output_dir": f"./results/gsm8k_sample_20_{timestamp}",
                 "enabled": True
             },
@@ -136,8 +136,8 @@ def create_default_config():
                 "iteration_samples": 5,
                 "iterations": 10,
                 "model": "local1",
-                "evaluator": "claude",
-                "meta_model": "gpt4o",
+                "evaluator": "local1",
+                "meta_model": "local1",
                 "output_dir": f"./results/gsm8k_sample_50_{timestamp}",
                 "enabled": True
             },
@@ -148,8 +148,8 @@ def create_default_config():
                 "iteration_samples": 5,
                 "iterations": 10,
                 "model": "local1",
-                "evaluator": "claude",
-                "meta_model": "gpt4o",
+                "evaluator": "local1",
+                "meta_model": "local1",
                 "output_dir": f"./results/gsm8k_sample_100_{timestamp}",
                 "enabled": True
             },
@@ -160,8 +160,8 @@ def create_default_config():
                 "iteration_samples": 5,
                 "iterations": 10,
                 "model": "local1",
-                "evaluator": "claude",
-                "meta_model": "gpt4o",
+                "evaluator": "local1",
+                "meta_model": "local1",
                 "output_dir": f"./results/gsm8k_sample_200_{timestamp}",
                 "enabled": True
             }
