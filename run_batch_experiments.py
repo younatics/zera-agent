@@ -387,10 +387,16 @@ def run_experiment(experiment_config, global_settings, logger):
     start_time = time.time()
     try:
         print("🚀 프롬프트 튜닝 시작...")
-        result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8')
+        print("─" * 60)
+        print("📝 실시간 로그:")
+        print("─" * 60)
+        
+        # 실시간 출력을 위해 capture_output=False로 변경
+        result = subprocess.run(cmd, text=True, encoding='utf-8')
         end_time = time.time()
         duration = end_time - start_time
         
+        print("─" * 60)
         if result.returncode == 0:
             print(f"✅ 프롬프트 튜닝 완료! (소요 시간: {duration:.1f}초)")
             
@@ -403,8 +409,7 @@ def run_experiment(experiment_config, global_settings, logger):
                 print("⚠️ 평가 실패")
                 
         else:
-            print(f"❌ 프롬프트 튜닝 실패!")
-            logger.error(f"에러 출력: {result.stderr}")
+            print(f"❌ 프롬프트 튜닝 실패! (리턴 코드: {result.returncode})")
             
         return result.returncode == 0, duration
         
