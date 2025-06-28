@@ -1204,7 +1204,80 @@ def run_tuning_process():
             st.success("프롬프트 튜닝 완료!")
             logging.info(f"Final results count: {len(results)}")
             
+            # 비용 요약 표시
+            st.header("💰 비용 및 사용량 요약")
+            cost_summary = tuner.get_cost_summary()
+            
+            # 전체 비용 정보를 메트릭으로 표시
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("총 비용", f"${cost_summary['total_cost']:.4f}")
+            with col2:
+                st.metric("총 토큰", f"{cost_summary['total_tokens']:,}")
+            with col3:
+                st.metric("총 시간", f"{cost_summary['total_duration']:.1f}초")
+            with col4:
+                st.metric("총 호출", f"{cost_summary['total_calls']}")
+            
+            # 모델별 상세 비용 정보
+            with st.expander("모델별 상세 비용 정보", expanded=False):
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.subheader("🤖 모델 호출")
+                    model_stats = cost_summary['model_stats']
+                    st.write(f"호출 횟수: {model_stats['total_calls']}")
+                    st.write(f"입력 토큰: {model_stats['total_input_tokens']:,}")
+                    st.write(f"출력 토큰: {model_stats['total_output_tokens']:,}")
+                    st.write(f"총 토큰: {model_stats['total_tokens']:,}")
+                    st.write(f"비용: ${model_stats['total_cost']:.4f}")
+                    st.write(f"시간: {model_stats['total_duration']:.2f}초")
+                
+                with col2:
+                    st.subheader("📊 평가자 호출")
+                    eval_stats = cost_summary['evaluator_stats']
+                    st.write(f"호출 횟수: {eval_stats['total_calls']}")
+                    st.write(f"입력 토큰: {eval_stats['total_input_tokens']:,}")
+                    st.write(f"출력 토큰: {eval_stats['total_output_tokens']:,}")
+                    st.write(f"총 토큰: {eval_stats['total_tokens']:,}")
+                    st.write(f"비용: ${eval_stats['total_cost']:.4f}")
+                    st.write(f"시간: {eval_stats['total_duration']:.2f}초")
+                
+                with col3:
+                    st.subheader("🔧 메타 프롬프트 생성")
+                    meta_stats = cost_summary['meta_prompt_stats']
+                    st.write(f"호출 횟수: {meta_stats['total_calls']}")
+                    st.write(f"입력 토큰: {meta_stats['total_input_tokens']:,}")
+                    st.write(f"출력 토큰: {meta_stats['total_output_tokens']:,}")
+                    st.write(f"총 토큰: {meta_stats['total_tokens']:,}")
+                    st.write(f"비용: ${meta_stats['total_cost']:.4f}")
+                    st.write(f"시간: {meta_stats['total_duration']:.2f}초")
+            
+            # 이터레이션별 비용 분석
+            iteration_breakdown = tuner.get_iteration_cost_breakdown()
+            if iteration_breakdown:
+                with st.expander("이터레이션별 비용 분석", expanded=False):
+                    # 이터레이션별 비용 데이터를 데이터프레임으로 변환
+                    breakdown_data = []
+                    for iteration_key, data in iteration_breakdown.items():
+                        breakdown_data.append({
+                            'Iteration': iteration_key.replace('iteration_', ''),
+                            'Model Cost': f"${data['model_cost']:.4f}",
+                            'Evaluator Cost': f"${data['evaluator_cost']:.4f}",
+                            'Meta Prompt Cost': f"${data['meta_prompt_cost']:.4f}",
+                            'Total Cost': f"${data['total_cost']:.4f}",
+                            'Model Calls': data['model_calls'],
+                            'Evaluator Calls': data['evaluator_calls'],
+                            'Meta Prompt Calls': data['meta_prompt_calls'],
+                            'Total Calls': data['total_calls']
+                        })
+                    
+                    if breakdown_data:
+                        df_breakdown = pd.DataFrame(breakdown_data)
+                        st.dataframe(df_breakdown, use_container_width=True)
+            
             # 전체 결과에서 가장 높은 평균 점수를 가진 프롬프트 찾기
+            st.header("🏆 최고 성능 프롬프트")
             best_result = max(results, key=lambda x: x.avg_score)
             st.write("Final Best Prompt:")
             col1, col2 = st.columns(2)
@@ -1216,18 +1289,42 @@ def run_tuning_process():
                 st.code(best_result.user_prompt)
             st.write(f"최종 결과: 평균 점수 {best_result.avg_score:.2f}, 최고 평균 점수 {best_result.best_avg_score:.2f}, 최고 개별 점수 {best_result.best_sample_score:.2f}")
             
-            # CSV 다운로드 버튼
-            try:
-                csv_data = tuner.save_results_to_csv()
-                st.download_button(
-                    label="결과를 CSV 파일로 저장",
-                    data=csv_data,
-                    file_name=f"prompt_tuning_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                    mime="text/csv",
-                    key="download_csv"
-                )
-            except Exception as e:
-                st.error(f"CSV 파일 생성 중 오류가 발생했습니다: {str(e)}")
+            # 다운로드 버튼들
+            st.header("📥 결과 다운로드")
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                # 전체 결과 (비용 정보 포함) CSV 다운로드
+                try:
+                    csv_data = tuner.save_results_to_csv()
+                    st.download_button(
+                        label="📊 전체 결과 (비용 포함) CSV 저장",
+                        data=csv_data,
+                        file_name=f"prompt_tuning_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                        mime="text/csv",
+                        key="download_full_csv",
+                        help="테스트 케이스별 상세 결과와 비용 정보가 포함된 전체 데이터"
+                    )
+                except Exception as e:
+                    st.error(f"전체 결과 CSV 파일 생성 중 오류가 발생했습니다: {str(e)}")
+            
+            with col2:
+                # 비용 요약만 CSV 다운로드
+                try:
+                    cost_csv_data = tuner.export_cost_summary_to_csv()
+                    st.download_button(
+                        label="💰 비용 요약 CSV 저장",
+                        data=cost_csv_data,
+                        file_name=f"cost_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                        mime="text/csv",
+                        key="download_cost_csv",
+                        help="모델별, 이터레이션별 비용 요약 데이터"
+                    )
+                except Exception as e:
+                    st.error(f"비용 요약 CSV 파일 생성 중 오류가 발생했습니다: {str(e)}")
+            
+            # 콘솔에도 비용 요약 출력 (개발자용)
+            tuner.print_cost_summary()
         else:
             st.warning("튜닝 결과가 없습니다.")
 

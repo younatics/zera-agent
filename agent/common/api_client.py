@@ -1,9 +1,10 @@
 import base64
 import json
 import os
+import time
 from openai import OpenAI
 from anthropic import Anthropic
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple
 
 
 def create_messages(question, system_prompt, user_prompt):
@@ -22,6 +23,34 @@ def create_messages(question, system_prompt, user_prompt):
 
 
 class Model:
+    # 모델별 가격 정보 (입력 토큰당, 출력 토큰당 USD)
+    token_prices = {
+        "solar": {
+            "input_price_per_1k": 0.0002,  # 예시 가격
+            "output_price_per_1k": 0.0004
+        },
+        "gpt4o": {
+            "input_price_per_1k": 0.005,
+            "output_price_per_1k": 0.015
+        },
+        "claude": {
+            "input_price_per_1k": 0.003,
+            "output_price_per_1k": 0.015
+        },
+        "local1": {
+            "input_price_per_1k": 0.0,  # 로컬 모델은 무료
+            "output_price_per_1k": 0.0
+        },
+        "local2": {
+            "input_price_per_1k": 0.0,  # 로컬 모델은 무료
+            "output_price_per_1k": 0.0
+        },
+        "solar_strawberry": {
+            "input_price_per_1k": 0.0002,  # 예시 가격
+            "output_price_per_1k": 0.0004
+        }
+    }
+
     model_info = {
         "solar": {
             "name": "Solar",
@@ -123,12 +152,30 @@ class Model:
         self.top_p = top_p
         return self
 
+    def _calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
+        """토큰 사용량을 기반으로 비용을 계산합니다."""
+        prices = self.token_prices.get(self.name, {"input_price_per_1k": 0, "output_price_per_1k": 0})
+        input_cost = (input_tokens / 1000) * prices["input_price_per_1k"]
+        output_cost = (output_tokens / 1000) * prices["output_price_per_1k"]
+        return input_cost + output_cost
+
     def _create_handler(self):
-        def handler(question, system_prompt=None, user_prompt=None):
+        def handler(question, system_prompt=None, user_prompt=None) -> Tuple[str, Dict[str, Any]]:
+            start_time = time.time()
+            metadata = {
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "total_tokens": 0,
+                "cost": 0.0,
+                "duration": 0.0,
+                "model": self.model_id
+            }
+            
             try:
                 system_prompt = system_prompt or self.system_prompt or ""
                 user_prompt = user_prompt or self.user_prompt or ""
                 messages = create_messages(question, system_prompt, user_prompt)
+                
                 if "claude" in self.model_id:
                     response = self.client.messages.create(
                         model=self.model_id,
@@ -136,7 +183,15 @@ class Model:
                         system=messages[0]["content"],
                         messages=[messages[1]]
                     )
-                    return response.content[0].text
+                    
+                    # Claude API에서 토큰 사용량 정보 추출
+                    metadata["input_tokens"] = response.usage.input_tokens
+                    metadata["output_tokens"] = response.usage.output_tokens
+                    metadata["total_tokens"] = metadata["input_tokens"] + metadata["output_tokens"]
+                    metadata["cost"] = self._calculate_cost(metadata["input_tokens"], metadata["output_tokens"])
+                    metadata["duration"] = time.time() - start_time
+                    
+                    return response.content[0].text, metadata
                 else:
                     # API 파라미터 준비
                     api_params = {
@@ -157,14 +212,32 @@ class Model:
                         api_params["stream"] = False
                     
                     response = self.client.chat.completions.create(**api_params)
-                    return response.choices[0].message.content
+                    
+                    # OpenAI 호환 API에서 토큰 사용량 정보 추출
+                    if response.usage:
+                        metadata["input_tokens"] = response.usage.prompt_tokens if hasattr(response.usage, 'prompt_tokens') else 0
+                        metadata["output_tokens"] = response.usage.completion_tokens if hasattr(response.usage, 'completion_tokens') else 0
+                        metadata["total_tokens"] = response.usage.total_tokens if hasattr(response.usage, 'total_tokens') else metadata["input_tokens"] + metadata["output_tokens"]
+                    metadata["cost"] = self._calculate_cost(metadata["input_tokens"], metadata["output_tokens"])
+                    metadata["duration"] = time.time() - start_time
+                    
+                    return response.choices[0].message.content, metadata
+                    
             except Exception as e:
-                return f"Error: {e}"
+                metadata["duration"] = time.time() - start_time
+                return f"Error: {e}", metadata
+                
         return handler
 
-    def ask(self, question, system_prompt=None, user_prompt=None):
-        answer = self.handler(question, system_prompt, user_prompt)
+    def ask(self, question, system_prompt=None, user_prompt=None) -> Tuple[str, Dict[str, Any]]:
+        """모델에게 질문하고 응답과 메타데이터를 반환합니다."""
+        answer, metadata = self.handler(question, system_prompt, user_prompt)
         print("Done.")
+        return answer, metadata
+
+    def ask_simple(self, question, system_prompt=None, user_prompt=None) -> str:
+        """기존 호환성을 위한 간단한 응답만 반환하는 메서드"""
+        answer, _ = self.ask(question, system_prompt, user_prompt)
         return answer
 
     @classmethod
