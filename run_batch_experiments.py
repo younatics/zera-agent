@@ -45,9 +45,9 @@ def create_default_config():
                 "name": "GSM8K_Sample_5",
                 "dataset": "gsm8k",
                 "total_samples": 5,
-                "iteration_samples": 2,
-                "iterations": 2,
-                "model": "solar",
+                "iteration_samples": 5,
+                "iterations": 10,
+                "model": "local1",
                 "evaluator": "claude",
                 "meta_model": "gpt4o",
                 "output_dir": f"./results/gsm8k_sample_5_{timestamp}",
@@ -58,8 +58,8 @@ def create_default_config():
                 "dataset": "gsm8k",
                 "total_samples": 20,
                 "iteration_samples": 5,
-                "iterations": 2,
-                "model": "solar",
+                "iterations": 10,
+                "model": "local1",
                 "evaluator": "claude",
                 "meta_model": "gpt4o",
                 "output_dir": f"./results/gsm8k_sample_20_{timestamp}",
@@ -69,9 +69,9 @@ def create_default_config():
                 "name": "GSM8K_Sample_50",
                 "dataset": "gsm8k",
                 "total_samples": 50,
-                "iteration_samples": 2,
-                "iterations": 2,
-                "model": "solar",
+                "iteration_samples": 5,
+                "iterations": 10,
+                "model": "local1",
                 "evaluator": "claude",
                 "meta_model": "gpt4o",
                 "output_dir": f"./results/gsm8k_sample_50_{timestamp}",
@@ -81,9 +81,9 @@ def create_default_config():
                 "name": "GSM8K_Sample_100",
                 "dataset": "gsm8k",
                 "total_samples": 100,
-                "iteration_samples": 2,
-                "iterations": 2,
-                "model": "solar",
+                "iteration_samples": 5,
+                "iterations": 10,
+                "model": "local1",
                 "evaluator": "claude",
                 "meta_model": "gpt4o",
                 "output_dir": f"./results/gsm8k_sample_100_{timestamp}",
@@ -93,9 +93,9 @@ def create_default_config():
                 "name": "GSM8K_Sample_200",
                 "dataset": "gsm8k",
                 "total_samples": 200,
-                "iteration_samples": 2,
-                "iterations": 2,
-                "model": "solar",
+                "iteration_samples": 5,
+                "iterations": 10,
+                "model": "local1",
                 "evaluator": "claude",
                 "meta_model": "gpt4o",
                 "output_dir": f"./results/gsm8k_sample_200_{timestamp}",
@@ -109,7 +109,7 @@ def create_default_config():
             "seed": 42,
             "delay_between_experiments": 5,  # 실험 간 대기 시간 (초)
             "run_evaluation": True,  # 실험 완료 후 평가 실행 여부
-            "evaluation_samples": 2  # 평가용 샘플 수
+            "evaluation_samples": 500  # 평가용 샘플 수
         }
     }
     return config
@@ -172,10 +172,10 @@ def run_evaluation_after_experiment(experiment_config, output_dir, global_settin
             def __init__(self):
                 self.dataset = "gsm8k"
                 # config 파일에서 모델 정보 사용
-                self.model = config_data.get("model", "solar")
+                self.model = config_data.get("model", "local1")
                 
                 # config에서 model_version을 가져오고, 없으면 api_client의 기본값 사용
-                model_name = config_data.get("model", "solar")
+                model_name = config_data.get("model", "local1")
                 self.model_version = config_data.get("model_version") or ApiModel.get_model_info(model_name)["default_version"]
                 
                 self.base_system_prompt = None
