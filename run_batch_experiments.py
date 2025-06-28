@@ -168,7 +168,7 @@ def create_default_config():
         ],
         "global_settings": {
             "use_meta_prompt": True,
-            "evaluation_threshold": 0.95,
+            "evaluation_threshold": 0.95,  # 높은 값으로 설정하여 거의 항상 개선되도록
             "score_threshold": None,
             "seed": 42,
             "delay_between_experiments": 5,  # 실험 간 대기 시간 (초)

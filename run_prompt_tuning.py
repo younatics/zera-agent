@@ -354,6 +354,19 @@ def main():
         with open(os.path.join(prompts_dir, 'initial_user_prompt.txt'), 'r', encoding='utf-8') as f:
             initial_user_prompt = f.read()
         
+        # 메타프롬프트 파일 로드 및 설정 (Streamlit 앱과 동일하게)
+        with open(os.path.join(prompts_dir, 'meta_system_prompt.txt'), 'r', encoding='utf-8') as f:
+            meta_system_prompt = f.read()
+        with open(os.path.join(prompts_dir, 'meta_user_prompt.txt'), 'r', encoding='utf-8') as f:
+            meta_user_prompt = f.read()
+        
+        # 메타프롬프트 설정 (Streamlit 앱과 동일한 로직)
+        if meta_system_prompt.strip() and meta_user_prompt.strip():
+            tuner.set_meta_prompt(meta_system_prompt, meta_user_prompt)
+            logger.info("✅ 메타프롬프트 설정 완료")
+        else:
+            logger.warning("⚠️ 메타프롬프트가 비어있습니다.")
+        
         # 프로그레스 콜백 설정
         def progress_callback(iteration, test_case_index):
             progress = ((iteration - 1) * args.iteration_samples + test_case_index) / (args.iterations * args.iteration_samples)
