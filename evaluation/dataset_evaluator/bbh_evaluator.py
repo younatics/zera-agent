@@ -6,7 +6,7 @@ import csv
 
 class BBHEvaluator(BaseEvaluator):
     def load_dataset(self, dataset_path: str) -> List[Dict[str, Any]]:
-        """BBH 데이터셋을 로드합니다."""
+        """Load BBH dataset."""
         if not dataset_path or dataset_path.lower() == "bbh":
             dataset_path = "agent/dataset/bbh_data/test.csv"
         data = []
@@ -21,14 +21,14 @@ class BBHEvaluator(BaseEvaluator):
         return data
     
     def format_question(self, item: Dict[str, Any]) -> str:
-        """BBH 질문을 포맷팅합니다."""
+        """Format BBH question."""
         return f"{item['question']}"
     
     def evaluate_response(self, response: str, ground_truth: Dict[str, Any]) -> bool:
-        """BBH 응답을 평가합니다. 다양한 패턴에서 정답을 robust하게 추출합니다."""
+        """Evaluate BBH response. Robustly extract correct answers from various patterns."""
         def semantic_normalize(ans):
             ans = ans.strip().lower()
-            # 부정형 우선 처리
+            # Handle negative forms first
             if any(x in ans for x in [
                 "not plausible", "not possible", "not valid", "not correct", "not true", "not likely", "not feasible", "not reasonable", "not acceptable", "not accurate"]):
                 return "no"
@@ -38,7 +38,7 @@ class BBHEvaluator(BaseEvaluator):
                 return "yes"
             return ans
         def normalize_answer(ans):
-            ans = re.sub(r'(?i)(final answer:|answer is|answer:|정답은|정답:)', '', ans)
+            ans = re.sub(r'(?i)(final answer:|answer is|answer:|answer is|answer:)', '', ans)
             ans = ans.replace('\n', ' ').replace('\r', ' ')
             numbers = re.findall(r'-?\d+(?:\.\d+)?', ans)
             if numbers:
@@ -46,22 +46,22 @@ class BBHEvaluator(BaseEvaluator):
             result = re.sub(r'[^A-Z0-9-]', '', ans.upper())
             return result if result else ans.strip().upper()
         def normalize_list_answer(ans):
-            ans = re.sub(r'(?i)(final answer:|answer is|answer:|정답은|정답:)', '', ans)
+            ans = re.sub(r'(?i)(final answer:|answer is|answer:|answer is|answer:)', '', ans)
             ans = ans.replace('\n', ' ').replace('\r', ' ').replace(',', ' ')
             return [w for w in re.findall(r'[A-Z0-9-]+', ans.upper()) if w]
         response_clean = response.strip().upper()
         model_answer = ""
-        # 1. 'Final Answer:' 이후에 괄호/숫자/문자/문장 추출
+        # 1. Extract brackets/numbers/characters/sentences after 'Final Answer:'
         final_answer_match = re.search(r'FINAL ANSWER[:\-\s]*([\(\[]?([A-Z0-9\.]+)[\)\]]?)', response_clean)
         if final_answer_match:
             model_answer = final_answer_match.group(2)
         else:
-            # 2. 맨 마지막 괄호 안에 있는 알파벳/숫자/문자열 (우선순위 가장 높음)
+            # 2. Alphabet/numbers/strings in the last parentheses (highest priority)
             matches = re.findall(r'\(([A-Z0-9\.]+)\)', response_clean)
             if matches:
                 model_answer = matches[-1]
             else:
-                # 3. '**J. ...**' 또는 '**J**' 또는 'J. ...' 또는 'J ...' 등 다양한 패턴
+                # 3. Various patterns like '**J. ...**' or '**J**' or 'J. ...' or 'J ...'
                 match = re.search(r'\*\*?([A-Z0-9\.]+)\*\*?[\s\.]', response_clean)
                 if not match:
                     match = re.search(r'([A-Z0-9\.]+)\.[\s]', response_clean)
@@ -70,14 +70,14 @@ class BBHEvaluator(BaseEvaluator):
                 if not match:
                     match = re.search(r'ANSWER IS[\s:]*\(?([A-Z0-9\.]+)\)?', response_clean)
                 if not match:
-                    match = re.search(r'정답[은는]?[\s:]*\(?([A-Z0-9\.]+)\)?', response_clean)
+                    match = re.search(r'ANSWER[\s:]*\(?([A-Z0-9\.]+)\)?', response_clean)
                 if not match:
-                    # 4. 마지막에 등장하는 한 글자/숫자/문자열 추출
+                    # 4. Extract the last single character/number/string
                     matches = re.findall(r'([A-Z0-9\.]+)', response_clean)
                     if matches:
                         model_answer = matches[-1]
                     else:
-                        # 5. 마지막 줄의 단답형(숫자, True/False 등)
+                        # 5. Short answer type (numbers, True/False, etc.) in the last line
                         lines = response_clean.splitlines()
                         for line in reversed(lines):
                             line = line.strip()
@@ -88,55 +88,55 @@ class BBHEvaluator(BaseEvaluator):
                             return False
                 else:
                     model_answer = match.group(1)
-        # 마지막에라도 model_answer가 비어있으면 전체 response_clean 사용
+        # If model_answer is still empty at the end, use the entire response_clean
         if not model_answer:
             model_answer = response_clean.strip()
         correct_answer = ground_truth['answer']
-        # 디버깅용 로그
-        print(f"모델 답변: {model_answer} / 실제 답변: {correct_answer}")
-        print(f"normalize_answer(모델): {normalize_answer(model_answer)} / normalize_answer(정답): {normalize_answer(correct_answer)}")
-        print(f"normalize_list_answer(모델): {normalize_list_answer(model_answer)} / normalize_list_answer(정답): {normalize_list_answer(correct_answer)}")
-        # 정답 비교
+        # Debug logs
+        print(f"Model answer: {model_answer} / Actual answer: {correct_answer}")
+        print(f"normalize_answer(model): {normalize_answer(model_answer)} / normalize_answer(correct): {normalize_answer(correct_answer)}")
+        print(f"normalize_list_answer(model): {normalize_list_answer(model_answer)} / normalize_list_answer(correct): {normalize_list_answer(correct_answer)}")
+        # Compare answers
         model_list = normalize_list_answer(model_answer)
         correct_list = normalize_list_answer(correct_answer)
-        # 1. 숫자형: 실제 정답이 숫자이고, 모델 답변 내에 그 숫자가 있으면 정답
+        # 1. Numeric type: If actual answer is numeric and that number exists in model answer, it's correct
         if re.fullmatch(r'-?\d+(?:\.\d+)?', correct_answer.strip()):
             if correct_answer.strip() in re.findall(r'-?\d+(?:\.\d+)?', model_answer):
                 return True
-        # 2. 숫자가 포함된 경우: normalize_answer만 비교
+        # 2. If numbers are included: Compare only with normalize_answer
         if re.search(r'-?\d+(?:\.\d+)?', model_answer) or re.search(r'-?\d+(?:\.\d+)?', correct_answer):
             if normalize_answer(model_answer) == normalize_answer(correct_answer):
                 return True
-        # 3. 리스트형(여러 단어): 단어 리스트가 같으면 정답
+        # 3. List type (multiple words): Correct if word lists are the same
         if len(model_list) > 1 or len(correct_list) > 1:
             if model_list == correct_list:
                 return True
-            # 모델 답변의 마지막 줄만 normalize_list_answer로 비교
+            # Compare only the last line of model answer with normalize_list_answer
             last_line = response.strip().split('\n')[-1]
             if normalize_list_answer(last_line) == correct_list:
                 return True
-        # 4. 의미적 동치(불리언/판별형 등): 모델 답변 내 포함 여부까지
+        # 4. Semantic equivalence (boolean/discriminative, etc.): Including presence in model answer
         if semantic_normalize(model_answer) == semantic_normalize(correct_answer):
             return True
         if semantic_normalize(response.strip().split('\n')[-1]) == semantic_normalize(correct_answer):
             return True
-        # 모델 답변에 의미적 동치 키워드가 포함되어 있으면 정답
+        # Correct if model answer contains semantically equivalent keywords
         if semantic_normalize(correct_answer) == "no":
             if any(x in model_answer.lower() for x in ["no", "false", "implausible", "incorrect", "not plausible", "not valid", "not correct", "not possible"]):
                 return True
         if semantic_normalize(correct_answer) == "yes":
             if any(x in model_answer.lower() for x in ["yes", "true", "plausible", "valid", "correct"]):
                 return True
-        # 0. 모델 답변의 마지막 단어만 추출해서 실제 정답과 normalize 결과가 같으면 무조건 정답 처리
+        # 0. Extract only the last word of model answer and treat as correct if normalize result matches actual answer
         last_line = response.strip().split('\n')[-1]
         last_word = re.findall(r'[A-Z0-9-]+', last_line.upper())
         if last_word and normalize_answer(last_word[-1]) == normalize_answer(correct_answer):
             return True
-        # 6. 단일 답변: normalize_answer로 비교
+        # 6. Single answer: Compare with normalize_answer
         return normalize_answer(model_answer) == normalize_answer(correct_answer)
 
     def get_sample_indices(self, num_samples: int) -> list:
-        """평가에 사용할 샘플의 인덱스를 반환합니다."""
+        """Return indices of samples to use for evaluation."""
         if not hasattr(self, 'dataset_cache') or self.dataset_cache is None:
             self.dataset_cache = self.load_dataset("")
         total_samples = len(self.dataset_cache)

@@ -7,18 +7,18 @@ import random
 
 class MMLUEvaluator(BaseEvaluator):
     def __init__(self, model_name: str, model_version: str, temperature: float = 0.7, top_p: float = 0.9):
-        """MMLU 평가기를 초기화합니다."""
+        """Initialize MMLU evaluator."""
         super().__init__(model_name, model_version, temperature, top_p)
         self.dataset_cache = None
 
     def load_dataset(self, dataset_path: str) -> List[Dict[str, Any]]:
-        """MMLU 데이터셋을 로드합니다."""
+        """Load MMLU dataset."""
         if self.dataset_cache is None:
-            # Hugging Face에서 MMLU 데이터셋 로드
+            # Load MMLU dataset from Hugging Face
             dataset = load_dataset("cais/mmlu", "all")
             test_data = dataset["test"]
             
-            # 필요한 형식으로 변환
+            # Convert to required format
             formatted_data = []
             for item in test_data:
                 formatted_item = {
@@ -33,37 +33,37 @@ class MMLUEvaluator(BaseEvaluator):
         return self.dataset_cache
     
     def get_sample_indices(self, num_samples: int) -> List[int]:
-        """평가에 사용할 샘플의 인덱스를 반환합니다."""
+        """Return indices of samples to use for evaluation."""
         if self.dataset_cache is None:
             self.load_dataset("")
         
         total_samples = len(self.dataset_cache)
-        # 중복 없이 랜덤하게 인덱스 선택
+        # Randomly select indices without duplicates
         indices = random.sample(range(total_samples), min(num_samples, total_samples))
         return indices
 
     def format_question(self, item: Dict[str, Any]) -> str:
-        """MMLU 질문을 포맷팅합니다."""
+        """Format MMLU question."""
         question = item['question']
         choices = "\n".join([f"{chr(65+i)}. {choice}" for i, choice in enumerate(item['choices'])])
         return f"{question}\n\n{choices}\n\nAnswer:"
     
     def evaluate_response(self, response: str, ground_truth: Dict[str, Any]) -> bool:
-        """MMLU 응답을 평가합니다."""
+        """Evaluate MMLU response."""
         response_clean = response.strip().upper()
         
-        # 괄호 안에 있는 알파벳(A~D) 우선 추출
+        # First extract alphabet (A~D) in parentheses
         match = re.search(r'\(([A-D])\)', response_clean)
         if match:
             model_answer = match.group(1)
         else:
-            # "final answer:" 또는 "the answer is" 패턴 검색
+            # Search for "final answer:" or "the answer is" pattern
             match = re.search(r'(?:FINAL|THE)\s+ANSWER(?:\s+IS)?[:\s]*([A-D])', response_clean)
             if not match:
-                # 첫 번째 알파벳 추출 (기존 방식)
+                # Extract first alphabet (existing method)
                 match = re.match(r'^([A-D])', response_clean)
             if not match:
-                # 마지막에 등장하는 한 글자 알파벳 추출 (A~D)
+                # Extract last single character alphabet (A~D)
                 matches = re.findall(r'([A-D])', response_clean)
                 if matches:
                     model_answer = matches[-1]
@@ -74,5 +74,5 @@ class MMLUEvaluator(BaseEvaluator):
             
         correct_answer = chr(65 + ground_truth['answer'])  # 0->A, 1->B, 2->C, 3->D
         
-        print(f"모델 답변: {model_answer}, 정답: {correct_answer}")  # 디버깅용
+        print(f"Model answer: {model_answer}, Correct answer: {correct_answer}")  # For debugging
         return model_answer == correct_answer 

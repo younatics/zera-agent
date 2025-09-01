@@ -1,24 +1,24 @@
 """
-XSUM 데이터셋 평가 예제
+XSUM Dataset Evaluation Example
 
-이 예제는 XSUM 데이터셋을 사용하여 모델의 뉴스 요약 능력을 평가합니다.
-기존 프롬프트와 제라 프롬프트를 동일한 샘플에 대해 비교 평가합니다.
+This example evaluates the model's news summarization ability using the XSUM dataset.
+It compares existing prompts and Zera prompts on the same samples.
 """
 
 from evaluation.base.main import main
 import sys
 
 def run_xsum_example(model="gpt4o", model_version="gpt-3.5-turbo"):
-    # 명령줄 인자 설정
+    # Set command line arguments
     sys.argv = [
         "xsum_example.py",
         "--dataset", "xsum",
         "--model", model,
         "--model_version", model_version,
-        # 기존 프롬프트
+        # Base prompts
         "--base_system_prompt", "Summarize the following article in one sentence:",
         "--base_user_prompt", "Article:",
-        # 제라 프롬프트
+        # Zera prompts
         "--zera_system_prompt", "You are an AI assistant skilled in careful reading and logical reasoning. First, logically analyze the text provided, reasoning freely to pinpoint the single most newsworthy event. Then express this clearly as a concise, accurate, factual news headline.",
         "--zera_user_prompt", """Read the following text thoroughly and summarize its most newsworthy event in one concise, clear, headline-style sentence.
 
@@ -43,12 +43,12 @@ Text: [Insert user's text here]
 Concise summary:
         """,
         "--num_samples", "1000",
-        # 모델 파라미터
-        # "--temperature", "0.2",  # 더 결정적인 응답을 위해 낮은 temperature 사용
+        # Model parameters
+        # "--temperature", "0.2",  # Use low temperature for more deterministic responses
         # "--top_p", "0.9"
     ]
     
-    # 평가 실행
+    # Execute evaluation
     main()
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ import io
 
 @dataclass
 class TestCaseResult:
-    """개별 테스트 케이스의 결과를 저장하는 데이터 클래스"""
+    """Data class to store results of individual test cases"""
     test_case: int
     question: str
     expected_output: str
@@ -17,7 +17,7 @@ class TestCaseResult:
 
 @dataclass
 class IterationResult:
-    """각 반복에 대한 결과를 저장하는 데이터 클래스"""
+    """Data class to store results for each iteration"""
     iteration: int
     system_prompt: str
     user_prompt: str
@@ -39,7 +39,7 @@ class IterationResult:
                          actual_output: str,
                          score: float,
                          evaluation_details: Dict) -> None:
-        """테스트 케이스 결과를 추가합니다."""
+        """Add test case result."""
         test_case_result = TestCaseResult(
             test_case=test_case,
             question=question,
@@ -50,6 +50,6 @@ class IterationResult:
         )
         self.test_case_results.append(test_case_result)
 
-        # 최고 점수 업데이트
+        # Update best score
         if score > self.best_sample_score:
             self.best_sample_score = score

@@ -89,13 +89,13 @@ if __name__ == "__main__":
     dataset = MeetingBankDataset()
     try:
         test_data = dataset.get_split_data("test")
-        print(f"테스트 예제 수: {len(test_data)}")
+        print(f"Number of test examples: {len(test_data)}")
         if test_data:
             first_example = test_data[0]
-            print("\n첫 번째 테스트 예제:")
+            print("\nFirst test example:")
             print(f"ID: {first_example['id']}")
             print(f"UID: {first_example['uid']}")
-            print(f"Transcript (앞 200자):\n{first_example['transcript'][:200]}...")
+            print(f"Transcript (first 200 characters):\n{first_example['transcript'][:200]}...")
             print(f"Summary:\n{first_example['summary']}")
     except ValueError as e:
         print(e) 

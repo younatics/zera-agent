@@ -34,7 +34,7 @@ def run_mmlu_pro_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--zera_user_prompt", zera_user_prompt,
         "--num_samples", "500"
     ]
-    # 평가 실행
+    # Execute evaluation
     main()
 
 if __name__ == "__main__":

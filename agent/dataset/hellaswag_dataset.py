@@ -11,10 +11,10 @@ class HellaSwagDataset:
             base_dir = os.path.join(current_dir, 'hellaswag_data')
         self.base_dir = base_dir
         
-        # 기본 디렉토리 생성
+        # Create base directory
         Path(self.base_dir).mkdir(parents=True, exist_ok=True)
         
-        # 데이터셋이 이미 다운로드되어 있는지 확인
+        # Check if dataset is already downloaded
         if not self._check_dataset_exists():
             print("Dataset not found. Downloading and processing dataset...")
             try:
@@ -24,19 +24,19 @@ class HellaSwagDataset:
                 raise
     
     def _check_dataset_exists(self) -> bool:
-        """데이터가 존재하는지 확인"""
+        """Check if data exists"""
         for split in ['validation', 'train']:
             if not os.path.exists(os.path.join(self.base_dir, f"{split}.csv")):
                 return False
         return True
     
     def _download_and_process_dataset(self) -> None:
-        """HellaSwag 데이터셋을 다운로드하고 처리"""
+        """Download and process HellaSwag dataset"""
         try:
-            # Hugging Face에서 데이터셋 로드
+            # Load dataset from Hugging Face
             dataset = load_dataset("Rowan/hellaswag")
             
-            # 각 분할 데이터를 저장
+            # Save each split data
             for split in ['validation', 'train']:
                 data = []
                 for item in dataset[split]:
@@ -47,7 +47,7 @@ class HellaSwagDataset:
                         'answer': item['label']
                     })
                 
-                # 데이터를 CSV로 저장
+                # Save data as CSV
                 df = pd.DataFrame(data)
                 df.to_csv(os.path.join(self.base_dir, f"{split}.csv"), index=False)
                 print(f"Saved {split} data")
@@ -56,7 +56,7 @@ class HellaSwagDataset:
             print(f"Error processing dataset: {str(e)}")
     
     def get_split_data(self, split: str) -> List[Dict]:
-        """특정 분할의 데이터를 가져옴"""
+        """Get data for specific split"""
         if split not in ['validation', 'train']:
             raise ValueError(f"Invalid split: {split}")
         
@@ -64,12 +64,12 @@ class HellaSwagDataset:
         if not os.path.exists(csv_path):
             raise FileNotFoundError(f"Data file not found: {csv_path}")
         
-        # CSV 파일에서 데이터 로드
+        # Load data from CSV file
         df = pd.read_csv(csv_path)
         data = []
         
         for _, row in df.iterrows():
-            # choices 문자열을 리스트로 변환
+            # Convert choices string to list
             choices = eval(row['choices']) if isinstance(row['choices'], str) else row['choices']
             data.append({
                 'activity_label': row['activity_label'],
@@ -81,7 +81,7 @@ class HellaSwagDataset:
         return data
 
     def get_all_data(self) -> Dict[str, List[Dict]]:
-        """모든 분할의 데이터를 가져옴"""
+        """Get data for all splits"""
         all_data = {}
         for split in ['validation', 'train']:
             try:
@@ -93,23 +93,23 @@ class HellaSwagDataset:
         return all_data
 
 if __name__ == "__main__":
-    # 사용 예시
+    # Usage example
     dataset = HellaSwagDataset()
     
-    # 특정 분할 데이터 접근 예시
+    # Example of accessing specific split data
     try:
         validation_data = dataset.get_split_data("validation")
-        print(f"검증 예제 수: {len(validation_data)}")
+        print(f"Number of validation examples: {len(validation_data)}")
         
-        # 첫 번째 예제 출력
+        # Output first example
         if validation_data:
             first_example = validation_data[0]
-            print("\n첫 번째 검증 예제:")
-            print(f"활동: {first_example['activity_label']}")
-            print(f"문맥: {first_example['context']}")
-            print("선택지:")
+            print("\nFirst validation example:")
+            print(f"Activity: {first_example['activity_label']}")
+            print(f"Context: {first_example['context']}")
+            print("Choices:")
             for i, choice in enumerate(first_example['choices'], 1):
                 print(f"{i}. {choice}")
-            print(f"정답: {int(first_example['answer']) + 1}")  # 0-based를 1-based로 변환
+            print(f"Answer: {int(first_example['answer']) + 1}")  # Convert 0-based to 1-based
     except ValueError as e:
         print(e) 

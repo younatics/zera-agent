@@ -34,42 +34,42 @@ class PromptTuner:
         self.iteration_results = []
         self.progress_callback = None
         self.iteration_callback = None
-        # 새로운 콜백들 추가
+        # Add new callbacks
         self.prompt_improvement_start_callback = None
         self.meta_prompt_generated_callback = None
         self.prompt_updated_callback = None
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
         
-        # 비용 트랙킹을 위한 통계 초기화
-        self.model_stats = self._initialize_stats("모델 호출")
-        self.evaluator_stats = self._initialize_stats("평가자 호출") 
-        self.meta_prompt_stats = self._initialize_stats("메타 프롬프트 생성")
+        # Initialize statistics for cost tracking
+        self.model_stats = self._initialize_stats("Model calls")
+        self.evaluator_stats = self._initialize_stats("Evaluator calls") 
+        self.meta_prompt_stats = self._initialize_stats("Meta prompt generation")
         
-        # 프롬프트 파일 경로
+        # Prompt file paths
         prompts_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'prompts')
         
-        # 기본 initial_system_prompt 로드
+        # Load default initial_system_prompt
         with open(os.path.join(prompts_dir, 'initial_system_prompt.txt'), 'r', encoding='utf-8') as f:
             self.initial_system_prompt = f.read()
-        # 기본 initial_user_prompt 로드
+        # Load default initial_user_prompt
         with open(os.path.join(prompts_dir, 'initial_user_prompt.txt'), 'r', encoding='utf-8') as f:
             self.initial_user_prompt = f.read()
         
-        # 기본 평가 프롬프트 로드
+        # Load default evaluation prompts
         with open(os.path.join(prompts_dir, 'evaluation_system_prompt.txt'), 'r', encoding='utf-8') as f:
             self.evaluation_system_prompt_template = f.read()
         with open(os.path.join(prompts_dir, 'evaluation_user_prompt.txt'), 'r', encoding='utf-8') as f:
             self.evaluation_user_prompt_template = f.read()
         
-        # 기본 메타프롬프트 로드
+        # Load default meta prompts
         with open(os.path.join(prompts_dir, 'meta_system_prompt.txt'), 'r', encoding='utf-8') as f:
             self.meta_system_prompt_template = f.read()
         with open(os.path.join(prompts_dir, 'meta_user_prompt.txt'), 'r', encoding='utf-8') as f:
             self.meta_user_prompt_template = f.read()
     
     def _initialize_stats(self, stat_type: str) -> Dict:
-        """통계 추적을 위한 딕셔너리를 초기화합니다."""
+        """Initialize dictionary for statistics tracking."""
         return {
             "type": stat_type,
             "total_calls": 0,
@@ -82,7 +82,7 @@ class PromptTuner:
         }
 
     def _update_stats(self, stats: Dict, metadata: Dict, iteration: int = None):
-        """통계를 업데이트합니다."""
+        """Update statistics."""
         stats["total_calls"] += 1
         stats["total_input_tokens"] += metadata.get("input_tokens", 0)
         stats["total_output_tokens"] += metadata.get("output_tokens", 0)
@@ -111,33 +111,33 @@ class PromptTuner:
 
     def set_evaluation_prompt(self, system_prompt_template: str, user_prompt_template: str):
         """
-        평가 프롬프트 템플릿을 설정합니다.
+        Set evaluation prompt templates.
         
         Args:
-            system_prompt_template (str): 평가 시스템 프롬프트 템플릿
-            user_prompt_template (str): 평가 유저 프롬프트 템플릿
+            system_prompt_template (str): Evaluation system prompt template
+            user_prompt_template (str): Evaluation user prompt template
         """
         self.evaluation_system_prompt_template = system_prompt_template
         self.evaluation_user_prompt_template = user_prompt_template
     
     def set_meta_prompt(self, system_prompt_template: str, user_prompt_template: str):
         """
-        메타프롬프트 템플릿을 설정합니다.
+        Set meta prompt templates.
         
         Args:
-            system_prompt_template (str): 메타 시스템 프롬프트 템플릿
-            user_prompt_template (str): 메타 유저 프롬프트 템플릿
+            system_prompt_template (str): Meta system prompt template
+            user_prompt_template (str): Meta user prompt template
         """
         self.meta_system_prompt_template = system_prompt_template
         self.meta_user_prompt_template = user_prompt_template
     
     def set_initial_prompt(self, system_prompt: str, user_prompt: str):
         """
-        초기 프롬프트를 설정합니다.
+        Set initial prompts.
         
         Args:
-            system_prompt (str): 초기 시스템 프롬프트
-            user_prompt (str): 초기 유저 프롬프트
+            system_prompt (str): Initial system prompt
+            user_prompt (str): Initial user prompt
         """
         self.initial_system_prompt = system_prompt
         self.initial_user_prompt = user_prompt
@@ -158,7 +158,7 @@ class PromptTuner:
             tuple[float, Dict]: A tuple containing the score and evaluation details
         """
         try:
-            # 평가 유저 프롬프트 생성
+            # Generate evaluation user prompt
             evaluation_prompt = self.evaluation_user_prompt_template.format(
                 response=output,
                 expected=expected,
@@ -167,19 +167,19 @@ class PromptTuner:
                 task_description=task_description
             )
             
-            # 평가 시스템 프롬프트 생성
+            # Generate evaluation system prompt
             evaluation_system_prompt = self.evaluation_system_prompt_template.format(
                 task_type=task_type,
                 task_description=task_description
             )
             
-            # 평가 모델로 평가 수행 및 통계 업데이트
+            # Perform evaluation using evaluation model and update statistics
             evaluation, metadata = self.evaluator.ask(
                 question=evaluation_prompt,
                 system_prompt=evaluation_system_prompt
             )
             
-            # 평가자 통계 업데이트
+            # Update evaluator statistics
             self._update_stats(self.evaluator_stats, metadata, iteration)
             self.logger.info(f"Evaluating output:")
             self.logger.info(f"Question: {question}")
@@ -187,37 +187,37 @@ class PromptTuner:
             self.logger.info(f"Expected output: {expected}")
             self.logger.info(f"Evaluation: {evaluation}")
             
-            # JSON 문자열 추출 및 파싱
+            # Extract and parse JSON string
             try:
-                # 응답에서 JSON 부분만 추출
+                # Extract only JSON part from response
                 evaluation = evaluation.strip()
                 json_start = evaluation.find('{')
                 json_end = evaluation.rfind('}') + 1
                 
                 if json_start == -1 or json_end == 0:
-                    raise ValueError("응답에서 JSON 객체를 찾을 수 없습니다")
+                    raise ValueError("JSON object not found in response")
                 
                 json_str = evaluation[json_start:json_end]
                 
-                # JSON 파싱
+                # Parse JSON
                 evaluation_data = json.loads(json_str)
                 
-                # 필수 필드 검증
+                # Validate required fields
                 if 'scores' not in evaluation_data:
-                    raise ValueError("JSON 응답에 scores 필드가 없습니다")
+                    raise ValueError("JSON response missing scores field")
                 
-                # 카테고리별 점수와 가중치 추출
+                # Extract category scores and weights
                 scores_data = evaluation_data.get('scores', {})
                 evaluation_details = {'category_scores': {}}
                 total_weighted_score = 0.0
                 total_weight = 0.0
                 
-                # 각 카테고리별 점수와 피드백 정보 추출
+                # Extract scores and feedback information for each category
                 for category, details in scores_data.items():
                     if isinstance(details, str):
-                        # 문자열인 경우 (예: 'PASS', 'FAIL') 직접 변환
+                        # If string (e.g., 'PASS', 'FAIL'), convert directly
                         score = self._convert_to_float(details)
-                        weight = 0.5  # 기본 가중치를 0.5로 변경
+                        weight = 0.5  # Change default weight to 0.5
                         evaluation_details['category_scores'][category] = {
                             'score': score,
                             'current_state': details,
@@ -225,9 +225,9 @@ class PromptTuner:
                             'weight': weight
                         }
                     else:
-                        # 딕셔너리인 경우 기존 로직 사용
+                        # If dictionary, use existing logic
                         score = self._convert_to_float(details.get('score', 0))
-                        weight = self._convert_to_float(details.get('weight', 0.5))  # 기본 가중치를 0.5로 변경
+                        weight = self._convert_to_float(details.get('weight', 0.5))  # Change default weight to 0.5
                         evaluation_details['category_scores'][category] = {
                             'score': score,
                             'current_state': details.get('current_state', ''),
@@ -235,11 +235,11 @@ class PromptTuner:
                             'weight': weight
                         }
                     
-                    # 가중치가 적용된 점수 누적
+                    # Accumulate weighted scores
                     total_weighted_score += score * weight
                     total_weight += weight
                 
-                # 최종 점수 계산 (가중치 합으로 나누어 정규화)
+                # Calculate final score (normalize by dividing by weight sum)
                 final_score = total_weighted_score / total_weight if total_weight > 0 else 0.0
                 
                 self.logger.info(f"Evaluation score: {final_score}")
@@ -248,8 +248,8 @@ class PromptTuner:
                 return final_score, evaluation_details
                 
             except (ValueError, TypeError, json.JSONDecodeError) as e:
-                self.logger.error(f"평가 중 오류 발생: {str(e)}")
-                # 오류 발생 시 기본값 반환
+                self.logger.error(f"Error occurred during evaluation: {str(e)}")
+                # Return default value when error occurs
                 return 0.0, {'final_score': 0.0, 'category_scores': {}, 'error': str(e)}
             
         except (ValueError, TypeError, json.JSONDecodeError) as e:
@@ -303,52 +303,52 @@ class PromptTuner:
         best_user_prompt = initial_user_prompt
         best_avg_score = 0.0
         
-        # 초기 프롬프트 로깅
-        self.logger.info(f"📝 초기 프롬프트:")
-        self.logger.info(f"   시스템 프롬프트: {initial_system_prompt[:200]}{'...' if len(initial_system_prompt) > 200 else ''}")
-        self.logger.info(f"   유저 프롬프트: {initial_user_prompt[:200]}{'...' if len(initial_user_prompt) > 200 else ''}")
+        # Log initial prompts
+        self.logger.info(f"📝 Initial prompts:")
+        self.logger.info(f"   System prompt: {initial_system_prompt[:200]}{'...' if len(initial_system_prompt) > 200 else ''}")
+        self.logger.info(f"   User prompt: {initial_user_prompt[:200]}{'...' if len(initial_user_prompt) > 200 else ''}")
         
-        # 초기 task_type과 task_description 설정
+        # Set initial task_type and task_description
         current_task_type = "General Task"
         current_task_description = "General task requiring outputs to various questions"
         
-        # 튜닝 설정 정보 로깅
-        self.logger.info(f"🎯 프롬프트 튜닝 설정:")
+        # Log tuning configuration
+        self.logger.info(f"🎯 Prompt tuning configuration:")
         self.logger.info(f"   num_iterations: {num_iterations}")
         self.logger.info(f"   score_threshold: {score_threshold}")
         self.logger.info(f"   evaluation_score_threshold: {evaluation_score_threshold}")
         self.logger.info(f"   use_meta_prompt: {use_meta_prompt}")
         self.logger.info(f"   num_samples: {num_samples}")
-        self.logger.info(f"   총 테스트 케이스 수: {len(initial_test_cases)}")
+        self.logger.info(f"   Total test cases: {len(initial_test_cases)}")
         
         for iteration in range(num_iterations):
             self.logger.info(f"\n{'='*60}")
-            self.logger.info(f"🔄 Iteration {iteration + 1}/{num_iterations} 시작")
+            self.logger.info(f"🔄 Iteration {iteration + 1}/{num_iterations} started")
             self.logger.info(f"{'='*60}")
-            self.logger.info(f"📋 현재 이터레이션 프롬프트:")
-            self.logger.info(f"   시스템: {current_system_prompt[:150]}{'...' if len(current_system_prompt) > 150 else ''}")
-            self.logger.info(f"   유저: {current_user_prompt[:150]}{'...' if len(current_user_prompt) > 150 else ''}")
-            self.logger.info(f"   태스크 타입: {current_task_type}")
-            self.logger.info(f"   태스크 설명: {current_task_description[:100]}{'...' if len(current_task_description) > 100 else ''}")
+            self.logger.info(f"📋 Current iteration prompts:")
+            self.logger.info(f"   System: {current_system_prompt[:150]}{'...' if len(current_system_prompt) > 150 else ''}")
+            self.logger.info(f"   User: {current_user_prompt[:150]}{'...' if len(current_user_prompt) > 150 else ''}")
+            self.logger.info(f"   Task type: {current_task_type}")
+            self.logger.info(f"   Task description: {current_task_description[:100]}{'...' if len(current_task_description) > 100 else ''}")
             
             iteration_scores = []
             test_case_results = []
-            iteration_best_sample_score = 0.0  # 이터레이션별 최고 점수 초기화
+            iteration_best_sample_score = 0.0  # Initialize best score for this iteration
             
-            # 각 이터레이션마다 랜덤 샘플링
+            # Random sampling for each iteration
             test_cases = random.sample(initial_test_cases, num_samples) if num_samples is not None and num_samples < len(initial_test_cases) else initial_test_cases
             
-            # 테스트 케이스 실행 및 평가
+            # Execute and evaluate test cases
             for i, test_case in enumerate(test_cases):
                 self.logger.info(f"\nTest Case {i}/{len(test_cases)}")
                 self.logger.info(f"Question: {test_case['question']}")
                 
-                # 현재 프롬프트로 출력 생성 및 통계 업데이트
+                # Generate output using current prompt and update statistics
                 output, model_metadata = self.model.ask(test_case['question'], system_prompt=current_system_prompt, user_prompt=current_user_prompt)
                 self._update_stats(self.model_stats, model_metadata, iteration + 1)
                 self.logger.info(f"Output: {output}")
                 
-                # 출력 평가
+                # Evaluate output
                 score, evaluation_details = self._evaluate_output(
                     output=output,
                     expected=test_case['expected'],
@@ -360,11 +360,11 @@ class PromptTuner:
                 self.logger.info(f"📊 Score: {score}")
                 self.logger.info(f"📝 Evaluation details: {evaluation_details}")
                 
-                # 점수와 출력 저장
+                # Save score and output
                 iteration_scores.append(score)
-                self.logger.info(f"🎯 테스트 케이스 {i+1}/{len(test_cases)} 완료 - 점수: {score}")
+                self.logger.info(f"🎯 Test case {i+1}/{len(test_cases)} completed - Score: {score}")
                 
-                # TestCaseResult 생성
+                # Create TestCaseResult
                 test_case_result = TestCaseResult(
                     test_case=i,
                     question=test_case['question'],
@@ -375,53 +375,53 @@ class PromptTuner:
                 )
                 test_case_results.append(test_case_result)
                 
-                # 최고 개별 점수 업데이트
+                # Update best individual score
                 if score is not None and score > iteration_best_sample_score:
                     iteration_best_sample_score = score
                 
-                # 프로그레스 바 업데이트
+                # Update progress bar
                 if self.progress_callback:
                     self.progress_callback(iteration + 1, i + 1)
             
-            # iteration이 끝난 후 평균 점수 계산
+            # Calculate average score after iteration ends
             valid_scores = [score for score in iteration_scores if score is not None]
-            self.logger.info(f"\n📊 Iteration {iteration + 1} 점수 요약:")
-            self.logger.info(f"   전체 점수: {iteration_scores}")
-            self.logger.info(f"   유효 점수: {valid_scores} (총 {len(valid_scores)}개)")
+            self.logger.info(f"\n📊 Iteration {iteration + 1} score summary:")
+            self.logger.info(f"   All scores: {iteration_scores}")
+            self.logger.info(f"   Valid scores: {valid_scores} (Total: {len(valid_scores)})")
             
             if valid_scores:
                 avg_score = sum(valid_scores) / len(valid_scores)
-                # 표준편차 계산
+                # Calculate standard deviation
                 std_dev = statistics.stdev(valid_scores) if len(valid_scores) > 1 else 0.0
-                # top3 평균 점수 계산
+                # Calculate top3 average score
                 top3_scores = sorted(valid_scores, reverse=True)[:3]
                 top3_avg_score = sum(top3_scores) / len(top3_scores)
                 
-                self.logger.info(f"   평균 점수: {avg_score:.3f}")
-                self.logger.info(f"   표준편차: {std_dev:.3f}")
-                self.logger.info(f"   Top3 점수: {top3_scores}")
-                self.logger.info(f"   Top3 평균: {top3_avg_score:.3f}")
+                self.logger.info(f"   Average score: {avg_score:.3f}")
+                self.logger.info(f"   Standard deviation: {std_dev:.3f}")
+                self.logger.info(f"   Top3 scores: {top3_scores}")
+                self.logger.info(f"   Top3 average: {top3_avg_score:.3f}")
             else:
                 avg_score = 0.0
                 std_dev = 0.0
                 top3_avg_score = 0.0
-                self.logger.warning(f"   ⚠️ 유효한 점수가 없습니다!")
+                self.logger.warning(f"   ⚠️ No valid scores!")
             
-            # 현재까지의 최고 평균 점수와 비교
-            self.logger.info(f"🏆 베스트 점수 비교: 현재 {avg_score:.3f} vs 이전 최고 {best_avg_score:.3f}")
+            # Compare with best average score so far
+            self.logger.info(f"🏆 Best score comparison: Current {avg_score:.3f} vs Previous best {best_avg_score:.3f}")
             if avg_score > best_avg_score:
-                self.logger.info(f"🎉 새로운 베스트 점수 달성! {best_avg_score:.3f} → {avg_score:.3f}")
+                self.logger.info(f"🎉 New best score achieved! {best_avg_score:.3f} → {avg_score:.3f}")
                 best_avg_score = avg_score
                 best_system_prompt = current_system_prompt
                 best_user_prompt = current_user_prompt
                 
-                # 실시간 베스트 프롬프트 저장을 위한 콜백 호출
+                # Call callback for real-time best prompt saving
                 if hasattr(self, 'best_prompt_callback') and self.best_prompt_callback:
                     self.best_prompt_callback(iteration + 1, avg_score, current_system_prompt, current_user_prompt)
             else:
-                self.logger.info(f"📊 베스트 점수 유지: {best_avg_score:.3f} (현재: {avg_score:.3f})")
+                self.logger.info(f"📊 Best score maintained: {best_avg_score:.3f} (Current: {avg_score:.3f})")
             
-            # IterationResult 생성
+            # Create IterationResult
             iteration_result = IterationResult(
                 iteration=iteration + 1,
                 system_prompt=current_system_prompt,
@@ -438,9 +438,9 @@ class PromptTuner:
             )
             self.iteration_results.append(iteration_result)
             
-            # 점수 임계값 체크
+            # Check score threshold
             if score_threshold is not None and avg_score >= score_threshold:
-                self.logger.info(f"평균 점수가 임계값({score_threshold}) 이상입니다. 튜닝을 종료합니다.")
+                self.logger.info(f"Average score is above threshold ({score_threshold}). Stopping tuning.")
                 if self.progress_callback:
                     self.progress_callback(num_iterations, len(test_cases))
 
@@ -449,17 +449,17 @@ class PromptTuner:
 
                 break
             
-            # 프롬프트 개선 (평균 점수가 평가 임계값 미만인 경우)
-            self.logger.info(f"🔍 메타프롬프트 트리거 조건 체크:")
+            # Prompt improvement (when average score is below evaluation threshold)
+            self.logger.info(f"🔍 Meta prompt trigger condition check:")
             self.logger.info(f"   use_meta_prompt: {use_meta_prompt}")
             self.logger.info(f"   avg_score: {avg_score:.3f}")
             self.logger.info(f"   evaluation_score_threshold: {evaluation_score_threshold}")
-            self.logger.info(f"   조건 만족: {use_meta_prompt and avg_score < evaluation_score_threshold}")
+            self.logger.info(f"   Condition met: {use_meta_prompt and avg_score < evaluation_score_threshold}")
             
             if use_meta_prompt and avg_score < evaluation_score_threshold:
-                self.logger.info("🔄 프롬프트 개선 조건 만족! 메타프롬프트 실행합니다...")
+                self.logger.info("🔄 Prompt improvement condition met! Executing meta prompt...")
                 
-                # 프롬프트 개선 시작 콜백 호출
+                # Call prompt improvement start callback
                 if self.prompt_improvement_start_callback:
                     self.prompt_improvement_start_callback(
                         iteration=iteration + 1,
@@ -468,7 +468,7 @@ class PromptTuner:
                         current_user_prompt=current_user_prompt
                     )
                 
-                # 메타프롬프트를 사용하여 현재 프롬프트를 개선
+                # Improve current prompt using meta prompt
                 improvement_prompt = self._generate_meta_prompt(
                     current_system_prompt, 
                     current_user_prompt, 
@@ -478,32 +478,32 @@ class PromptTuner:
                     current_task_description
                 )
                 
-                # 메타프롬프트 생성 완료 콜백 호출
+                # Call meta prompt generation completion callback
                 if self.meta_prompt_generated_callback:
                     self.meta_prompt_generated_callback(
                         iteration=iteration + 1,
                         meta_prompt=improvement_prompt
                     )
                 
-                # 결과에 메타프롬프트 추가
+                # Add meta prompt to result
                 iteration_result.meta_prompt = improvement_prompt
                 
-                # 메타프롬프트를 사용하여 프롬프트 개선 및 통계 업데이트
-                self.logger.info(f"🤖 메타프롬프트 모델에 질의 중...")
+                # Use meta prompt to improve prompt and update statistics
+                self.logger.info(f"🤖 Querying meta prompt model...")
                 improved_prompts, meta_metadata = self.meta_prompt_model.ask(
                     question=improvement_prompt,
                     system_prompt=self.meta_system_prompt_template
                 )
                 self._update_stats(self.meta_prompt_stats, meta_metadata, iteration + 1)
                 
-                self.logger.info(f"🔍 메타프롬프트 응답 수신 완료 (길이: {len(improved_prompts) if improved_prompts else 0} 문자)")
-                self.logger.info(f"📄 메타프롬프트 원본 응답:\n{'-'*50}\n{improved_prompts}\n{'-'*50}")
+                self.logger.info(f"🔍 Meta prompt response received (length: {len(improved_prompts) if improved_prompts else 0} characters)")
+                self.logger.info(f"📄 Meta prompt original response:\n{'-'*50}\n{improved_prompts}\n{'-'*50}")
                 
                 if improved_prompts and improved_prompts.strip():
-                    # 개선된 프롬프트에서 TASK_TYPE, TASK_DESCRIPTION, 시스템 프롬프트, 유저 프롬프트 분리
+                    # Extract TASK_TYPE, TASK_DESCRIPTION, system prompt, user prompt from improved prompt
                     improved_prompts = improved_prompts.strip()
                     
-                    # TASK_TYPE 추출 (여러 형태 지원)
+                    # Extract TASK_TYPE (support multiple formats)
                     task_type_patterns = ["TASK_TYPE:", "Task Type:", "Task type:"]
                     task_description_patterns = ["TASK_DESCRIPTION:", "Task Description:", "Task description:"]
                     system_prompt_patterns = ["SYSTEM_PROMPT:", "System Prompt:", "System prompt:"]
@@ -521,61 +521,61 @@ class PromptTuner:
                     system_prompt_start, system_prompt_pattern = find_pattern(improved_prompts, system_prompt_patterns)
                     user_prompt_start, user_prompt_pattern = find_pattern(improved_prompts, user_prompt_patterns)
                     
-                    self.logger.info(f"🔍 프롬프트 파싱 위치:")
-                    self.logger.info(f"   TASK_TYPE 위치: {task_type_start} (패턴: {task_type_pattern})")
-                    self.logger.info(f"   TASK_DESCRIPTION 위치: {task_description_start} (패턴: {task_description_pattern})")
-                    self.logger.info(f"   SYSTEM_PROMPT 위치: {system_prompt_start} (패턴: {system_prompt_pattern})")
-                    self.logger.info(f"   USER_PROMPT 위치: {user_prompt_start} (패턴: {user_prompt_pattern})")
+                    self.logger.info(f"🔍 Prompt parsing positions:")
+                    self.logger.info(f"   TASK_TYPE position: {task_type_start} (pattern: {task_type_pattern})")
+                    self.logger.info(f"   TASK_DESCRIPTION position: {task_description_start} (pattern: {task_description_pattern})")
+                    self.logger.info(f"   SYSTEM_PROMPT position: {system_prompt_start} (pattern: {system_prompt_pattern})")
+                    self.logger.info(f"   USER_PROMPT position: {user_prompt_start} (pattern: {user_prompt_pattern})")
                     
                     if all(pos != -1 for pos in [task_type_start, task_description_start, system_prompt_start, user_prompt_start]):
-                        # 이전 프롬프트 저장 (비교용)
+                        # Save previous prompts (for comparison)
                         previous_system_prompt = current_system_prompt
                         previous_user_prompt = current_user_prompt
                         previous_task_type = current_task_type
                         previous_task_description = current_task_description
                         
-                        # 새로운 프롬프트 파싱
+                        # Parse new prompts
                         current_task_type = improved_prompts[task_type_start + len(task_type_pattern):task_description_start].strip()
                         current_task_description = improved_prompts[task_description_start + len(task_description_pattern):system_prompt_start].strip()
                         current_system_prompt = improved_prompts[system_prompt_start + len(system_prompt_pattern):user_prompt_start].strip()
                         current_user_prompt = improved_prompts[user_prompt_start + len(user_prompt_pattern):].strip()
                         
-                        self.logger.info(f"✅ 프롬프트 파싱 성공!")
-                        self.logger.info(f"📝 파싱된 메타프롬프트 결과:")
+                        self.logger.info(f"✅ Prompt parsing successful!")
+                        self.logger.info(f"📝 Parsed meta prompt results:")
                         self.logger.info(f"{'='*60}")
-                        self.logger.info(f"🏷️  새 태스크 타입:")
+                        self.logger.info(f"🏷️  New task type:")
                         self.logger.info(f"    {current_task_type}")
-                        self.logger.info(f"📋 새 태스크 설명:")
+                        self.logger.info(f"📋 New task description:")
                         self.logger.info(f"    {current_task_description}")
-                        self.logger.info(f"⚙️  새 시스템 프롬프트:")
+                        self.logger.info(f"⚙️  New system prompt:")
                         self.logger.info(f"    {current_system_prompt}")
-                        self.logger.info(f"👤 새 유저 프롬프트:")
+                        self.logger.info(f"👤 New user prompt:")
                         self.logger.info(f"    {current_user_prompt}")
                         self.logger.info(f"{'='*60}")
                         
-                        # 변화 요약 출력
-                        self.logger.info(f"🔄 프롬프트 변화 요약:")
+                        # Output change summary
+                        self.logger.info(f"🔄 Prompt change summary:")
                         if current_task_type != previous_task_type:
-                            self.logger.info(f"   태스크 타입 변경: '{previous_task_type}' → '{current_task_type}'")
+                            self.logger.info(f"   Task type changed: '{previous_task_type}' → '{current_task_type}'")
                         else:
-                            self.logger.info(f"   태스크 타입 유지: '{current_task_type}'")
+                            self.logger.info(f"   Task type maintained: '{current_task_type}'")
                         
                         if current_task_description != previous_task_description:
-                            self.logger.info(f"   태스크 설명 변경됨 ({len(previous_task_description)} → {len(current_task_description)} 문자)")
+                            self.logger.info(f"   Task description changed ({len(previous_task_description)} → {len(current_task_description)} characters)")
                         else:
-                            self.logger.info(f"   태스크 설명 유지 ({len(current_task_description)} 문자)")
+                            self.logger.info(f"   Task description maintained ({len(current_task_description)} characters)")
                         
                         if current_system_prompt != previous_system_prompt:
-                            self.logger.info(f"   시스템 프롬프트 변경됨 ({len(previous_system_prompt)} → {len(current_system_prompt)} 문자)")
+                            self.logger.info(f"   System prompt changed ({len(previous_system_prompt)} → {len(current_system_prompt)} characters)")
                         else:
-                            self.logger.info(f"   시스템 프롬프트 유지 ({len(current_system_prompt)} 문자)")
+                            self.logger.info(f"   System prompt maintained ({len(current_system_prompt)} characters)")
                         
                         if current_user_prompt != previous_user_prompt:
-                            self.logger.info(f"   유저 프롬프트 변경됨 ({len(previous_user_prompt)} → {len(current_user_prompt)} 문자)")
+                            self.logger.info(f"   User prompt changed ({len(previous_user_prompt)} → {len(current_user_prompt)} characters)")
                         else:
-                            self.logger.info(f"   유저 프롬프트 유지 ({len(current_user_prompt)} 문자)")
+                            self.logger.info(f"   User prompt maintained ({len(current_user_prompt)} characters)")
                         
-                        # 프롬프트 업데이트 완료 콜백 호출
+                        # Call prompt update completion callback
                         if self.prompt_updated_callback:
                             self.prompt_updated_callback(
                                 iteration=iteration + 1,
@@ -590,12 +590,12 @@ class PromptTuner:
                                 raw_improved_prompts=improved_prompts
                             )
                     else:
-                        self.logger.warning(f"❌ 프롬프트 파싱 실패! 필요한 섹션을 찾을 수 없습니다.")
-                        self.logger.warning(f"   현재 프롬프트를 그대로 유지합니다.")
+                        self.logger.warning(f"❌ Prompt parsing failed! Could not find required sections.")
+                        self.logger.warning(f"   Keeping current prompt unchanged.")
                 else:
-                    self.logger.warning(f"❌ 메타프롬프트 응답이 비어있습니다! 현재 프롬프트를 그대로 유지합니다.")
+                    self.logger.warning(f"❌ Meta prompt response is empty! Keeping current prompt unchanged.")
             else:
-                self.logger.info(f"⏭️ 프롬프트 개선 생략 - 조건 불만족 또는 임계값 초과")
+                self.logger.info(f"⏭️ Prompt improvement skipped - condition not met or threshold exceeded")
             
             if self.iteration_callback:
                 self.iteration_callback(iteration_result)

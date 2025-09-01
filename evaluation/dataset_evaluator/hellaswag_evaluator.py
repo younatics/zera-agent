@@ -28,23 +28,23 @@ class HellaSwagEvaluator(BaseEvaluator):
 
     def evaluate_response(self, response: str, ground_truth: Dict[str, Any]) -> bool:
         response_clean = response.strip().upper()
-        # 'Answer:' 이후에 나오는 첫 번째 A/B/C/D 또는 1/2/3/4 추출
+        # Extract first A/B/C/D or 1/2/3/4 after 'Answer:'
         match = re.search(r'ANSWER[:\s]*([A-D1-4])', response_clean)
         if match:
             model_answer = match.group(1)
         else:
-            # 괄호 안의 숫자/알파벳 우선 추출
+            # Prioritize numbers/alphabet in parentheses
             match = re.search(r'\(([A-D1-4])\)', response_clean)
             if match:
                 model_answer = match.group(1)
             else:
-                # "final answer:" 등 패턴
+                # "final answer:" etc. patterns
                 match = re.search(r'(?:FINAL|THE)\s+ANSWER(?:\s+IS)?[:\s]*([A-D1-4])', response_clean)
                 if not match:
-                    # 첫 알파벳/숫자
+                    # First alphabet/number
                     match = re.match(r'^([A-D1-4])', response_clean)
                 if not match:
-                    # 마지막 등장하는 알파벳/숫자
+                    # Last occurring alphabet/number
                     matches = re.findall(r'([A-D1-4])', response_clean)
                     if matches:
                         model_answer = matches[-1]
@@ -53,12 +53,12 @@ class HellaSwagEvaluator(BaseEvaluator):
                 else:
                     model_answer = match.group(1)
 
-        # 정답 변환
+        # Convert correct answer
         correct_idx = int(ground_truth['answer'])
         correct_letter = chr(65 + correct_idx)  # 0->A, 1->B, ...
         correct_number = str(correct_idx + 1)   # 0->1, 1->2, ...
 
-        # 디버깅용 상세 로그 추가
-        print(f"모델 답변: {model_answer}, correct_letter: {correct_letter}, correct_number: {correct_number}, 실제 답변: {ground_truth['answer']}")
-        print(f"비교 결과: {model_answer in [correct_letter, correct_number]}")
+        # Add detailed debug logs
+        print(f"Model answer: {model_answer}, correct_letter: {correct_letter}, correct_number: {correct_number}, actual answer: {ground_truth['answer']}")
+        print(f"Comparison result: {model_answer in [correct_letter, correct_number]}")
         return model_answer in [correct_letter, correct_number] 

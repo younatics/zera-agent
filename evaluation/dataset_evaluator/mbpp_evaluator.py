@@ -14,7 +14,7 @@ import difflib
 
 class MBPPEvaluator(BaseEvaluator):
     def load_dataset(self, dataset_path: str) -> List[Dict[str, Any]]:
-        """MBPP 데이터셋을 로드합니다."""
+        """Load MBPP dataset."""
         if dataset_path == "mbpp":
             dataset_path = "agent/dataset/mbpp_data/test.csv"
         df = pd.read_csv(dataset_path)
@@ -22,18 +22,18 @@ class MBPPEvaluator(BaseEvaluator):
         return data
     
     def format_question(self, item: Dict[str, Any]) -> str:
-        """MBPP 질문을 포맷팅합니다."""
-        # code에서 함수명 추출
+        """Format MBPP question."""
+        # Extract function name from code
         match = re.search(r'def ([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', item['code'])
         func_name = match.group(1) if match else "unknown_function"
         return f"{item['text']}\n\nFunction name: {func_name}"
     
     def extract_code(self, response: str) -> str:
-        # 코드블록이 있으면 내부만 추출 (맨 마지막 코드블록만)
+        # If code blocks exist, extract only the content (last code block only)
         code_blocks = re.findall(r"```(?:python)?(.*?)```", response, re.DOTALL)
         if code_blocks:
             return code_blocks[-1].strip()
-        # 코드블록이 없으면 함수 정의부터 끝까지 추출 (fallback)
+        # If no code blocks, extract from function definition to end (fallback)
         func_def_match = re.search(r'(def [a-zA-Z_][a-zA-Z0-9_]*\s*\(.*)', response, re.DOTALL)
         if func_def_match:
             return func_def_match.group(1).strip()
@@ -110,24 +110,24 @@ class MBPPEvaluator(BaseEvaluator):
                     test_code = f"{full_code}\nprint({call})"
                     stdout, stderr, success = run_safely(test_code, timeout=10)
                     if not success:
-                        logger.error(f"[서브프로세스실패] {call} | stdout: {stdout} | stderr: {stderr}")
+                        logger.error(f"[SUBPROCESS FAILED] {call} | stdout: {stdout} | stderr: {stderr}")
                         return False
                     actual_output = stdout.strip()
                     norm_actual = self._normalize_output(actual_output)
                     norm_expected = self._normalize_output(expected)
                     if isinstance(norm_actual, float) and isinstance(norm_expected, float):
                         if not math.isclose(norm_actual, norm_expected, rel_tol=1e-4, abs_tol=1e-4):
-                            logger.error(f"[테스트실패] {call} -> {norm_actual} (예상: {norm_expected})")
+                            logger.error(f"[TEST FAILED] {call} -> {norm_actual} (Expected: {norm_expected})")
                             return False
                     elif norm_actual != norm_expected:
-                        logger.error(f"[테스트실패] {call} -> {norm_actual} (예상: {norm_expected})")
+                        logger.error(f"[TEST FAILED] {call} -> {norm_actual} (Expected: {norm_expected})")
                         return False
                 except Exception as e:
-                    logger.error(f"[테스트케이스실행실패] {test_case} | {e}")
+                    logger.error(f"[TEST CASE EXECUTION FAILED] {test_case} | {e}")
                     return False
             return True
         except Exception as e:
-            logger.error(f"[예외] {e}\nresponse: {response}\nground_truth: {ground_truth}")
+            logger.error(f"[EXCEPTION] {e}\nresponse: {response}\nground_truth: {ground_truth}")
             return False
 
     def get_sample_indices(self, num_samples: int) -> List[int]:

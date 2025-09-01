@@ -1,8 +1,8 @@
 """
-MMLU 데이터셋 평가 예제
+MMLU Dataset Evaluation Example
 
-이 예제는 MMLU 데이터셋을 사용하여 모델의 다중 선택형 문제 풀이 능력을 평가합니다.
-기존 프롬프트와 제라 프롬프트를 동일한 샘플에 대해 비교 평가합니다.
+This example evaluates the model's multiple-choice problem-solving ability using the MMLU dataset.
+It compares the existing prompt and Zera prompt on the same samples.
 """
 
 import sys
@@ -33,11 +33,11 @@ def run_mmlu_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--zera_system_prompt", zera_system_prompt,
         "--zera_user_prompt", zera_user_prompt,
         "--num_samples", "500",
-        # 모델 파라미터
-        # "--temperature", "0.2",  # 더 결정적인 응답을 위해 낮은 temperature 사용
+        # Model parameters
+        # "--temperature", "0.2",  # Use low temperature for more deterministic responses
         # "--top_p", "0.9"
     ]
-    # 평가 실행
+    # Execute evaluation
     main()
 
 if __name__ == "__main__":

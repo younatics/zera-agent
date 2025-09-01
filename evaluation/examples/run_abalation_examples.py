@@ -19,7 +19,7 @@ def run_gsm8k_fewshot_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
     eval_main()
 
 def run_gsm8k_prompt_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
-    ## 위에 예시만 뺸 것, 밑에 추론만 뺸것
+    ## Remove examples from above, remove reasoning from below
     sys.argv = [
         "gsm8k_example.py",
         "--dataset", "gsm8k",
@@ -51,7 +51,7 @@ def run_bbh_fewshot_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
     eval_main()
 
 def run_bbh_prompt_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
-    ## 위에 예시만 뺸 것, 밑에 추론만 뺸것
+    ## Remove examples from above, remove reasoning from below
 
     sys.argv = [
         "bbh_example.py",
@@ -109,7 +109,7 @@ def run_cnn_fewshot_dailymail_ablation(model="gpt4o", model_version="gpt-3.5-tur
     eval_main()
 
 def run_cnn_prompt_dailymail_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
-    ## 위에 예시만 뺸 것, 밑에 추론만 뺸것
+    ## Remove examples from above, remove reasoning from below
 
     sys.argv = [
         "example.py",
@@ -154,7 +154,7 @@ def run_mbpp_fewshot_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
     eval_main()
 
 def run_mbpp_prompt_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
-    ## 위에 예시만 뺸 것, 밑에 추론만 뺸것
+    ## Remove examples from above, remove reasoning from below
 
     sys.argv = [
         "mbpp_example.py",
@@ -196,7 +196,7 @@ def run_mmlu_pro_fewshot_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
     eval_main()
 
 def run_mmlu_pro_prompt_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
-        ## 위에 예시만 뺸 것, 밑에 추론만 뺸것
+        ## Remove examples from above, remove reasoning from below
     sys.argv = [
         "mmlu_pro_example.py",
         "--dataset", "mmlu_pro",
@@ -212,27 +212,27 @@ def run_mmlu_pro_prompt_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
 
 
 def run_fewshot_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
-    print("\n===== gsm8k fewshot ablation 평가 실행 =====")
+    print("\n===== gsm8k fewshot ablation evaluation execution =====")
     run_gsm8k_fewshot_ablation(model, model_version)
-    print("\n===== bbh fewshot ablation 평가 실행 =====")
+    print("\n===== bbh fewshot ablation evaluation execution =====")
     run_bbh_fewshot_ablation(model, model_version)
-    # print("\n===== cnn_dailymail fewshot ablation 평가 실행 =====")
+    # print("\n===== cnn_dailymail fewshot ablation evaluation execution =====")
     # run_cnn_fewshot_dailymail_ablation(model, model_version)
-    print("\n===== mbpp fewshot ablation 평가 실행 =====")
+    print("\n===== mbpp fewshot ablation evaluation execution =====")
     run_mbpp_fewshot_ablation(model, model_version)
-    print("\n===== mmlu_pro fewshot ablation 평가 실행 =====")
+    print("\n===== mmlu_pro fewshot ablation evaluation execution =====")
     run_mmlu_pro_fewshot_ablation(model, model_version)
 
 def run_prompt_ablation(model="gpt4o", model_version="gpt-3.5-turbo"):
-    # print("\n===== gsm8k prompt ablation 평가 실행 =====")
+    # print("\n===== gsm8k prompt ablation evaluation execution =====")
     # run_gsm8k_prompt_ablation(model, model_version)
-    # print("\n===== bbh prompt ablation 평가 실행 =====")
+    # print("\n===== bbh prompt ablation evaluation execution =====")
     # run_bbh_prompt_ablation(model, model_version)
-    # print("\n===== cnn_dailymail prompt ablation 평가 실행 =====")
+    # print("\n===== cnn_dailymail prompt ablation evaluation execution =====")
     # run_cnn_prompt_dailymail_ablation(model, model_version)
-    # print("\n===== mbpp prompt ablation 평가 실행 =====")
+    # print("\n===== mbpp prompt ablation evaluation execution =====")
     # run_mbpp_prompt_ablation(model, model_version)
-    print("\n===== mmlu_pro prompt ablation 평가 실행 =====")
+    print("\n===== mmlu_pro prompt ablation evaluation execution =====")
     run_mmlu_pro_prompt_ablation(model, model_version)
 
 

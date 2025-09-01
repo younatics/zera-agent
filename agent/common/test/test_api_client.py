@@ -4,13 +4,13 @@ from openai import OpenAI
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
-# .env 파일 로드
+# Load .env file
 load_dotenv()
 
-# 테스트 질문 정의
-TEST_QUESTION = "안녕하세요! 당신은 누구인가요?"
+# Define test question
+TEST_QUESTION = "Hello! Who are you?"
 
-# API 키 설정
+# Set API keys
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 anthropic_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 solar_client = OpenAI(
@@ -19,64 +19,64 @@ solar_client = OpenAI(
 )
 
 def test_model_initialization():
-    print("\n=== 모델 초기화 테스트 ===")
+    print("\n=== Model Initialization Test ===")
     
-    # GPT 모델 테스트
+    # GPT model test
     try:
         model = Model("gpt4o")
-        print("GPT 모델 초기화 성공:", model.name)
+        print("GPT model initialization successful:", model.name)
     except Exception as e:
-        print("GPT 모델 초기화 실패:", str(e))
+        print("GPT model initialization failed:", str(e))
     
-    # Claude 모델 테스트
+    # Claude model test
     try:
         model = Model("claude")
-        print("Claude 모델 초기화 성공:", model.name)
+        print("Claude model initialization successful:", model.name)
     except Exception as e:
-        print("Claude 모델 초기화 실패:", str(e))
+        print("Claude model initialization failed:", str(e))
     
-    # Solar Pro 모델 테스트
+    # Solar Pro model test
     try:
         model = Model("solar")
-        print("Solar Pro 모델 초기화 성공:", model.name)
+        print("Solar Pro model initialization successful:", model.name)
     except Exception as e:
-        print("Solar Pro 모델 초기화 실패:", str(e))
+        print("Solar Pro model initialization failed:", str(e))
     
-    # 잘못된 모델 이름 테스트
+    # Invalid model name test
     try:
         model = Model("invalid_model")
     except Exception as e:
-        print("잘못된 모델 이름 테스트 성공:", str(e))
+        print("Invalid model name test successful:", str(e))
 
 def test_available_models():
-    print("\n=== 사용 가능한 모델 목록 테스트 ===")
+    print("\n=== Available Models List Test ===")
     models = Model.get_available_models()
-    print("사용 가능한 모델:", models)
+    print("Available models:", models)
 
 def test_model_responses():
-    print("\n=== 모델 질문 테스트 ===")
+    print("\n=== Model Question Test ===")
     
-    # GPT 모델 테스트
-    print("\n[GPT 모델 테스트]")
+    # GPT model test
+    print("\n[GPT Model Test]")
     gpt_model = Model("gpt4o")
     gpt_response = gpt_model.ask(TEST_QUESTION)
-    print("GPT 응답:", gpt_response)
+    print("GPT response:", gpt_response)
     
-    # Claude 모델 테스트
-    print("\n[Claude 모델 테스트]")
+    # Claude model test
+    print("\n[Claude Model Test]")
     claude_model = Model("claude")
     claude_response = claude_model.ask(TEST_QUESTION)
-    print("Claude 응답:", claude_response)
+    print("Claude response:", claude_response)
     
-    # Solar Pro 모델 테스트
-    print("\n[Solar Pro 모델 테스트]")
+    # Solar Pro model test
+    print("\n[Solar Pro Model Test]")
     solar_model = Model("solar")
     solar_response = solar_model.ask(TEST_QUESTION)
-    print("Solar Pro 응답:", solar_response)
+    print("Solar Pro response:", solar_response)
 
 if __name__ == "__main__":
-    print("API 클라이언트 테스트 시작")
+    print("API client test started")
     test_model_initialization()
     test_available_models()
     test_model_responses()
-    print("\n테스트 완료") 
+    print("\nTest completed") 

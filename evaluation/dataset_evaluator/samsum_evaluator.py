@@ -16,14 +16,14 @@ class SamSumEvaluator(BaseEvaluator):
         self.samples_dir.mkdir(exist_ok=True)
 
     def load_dataset(self, dataset_path: str = "samsum", num_samples: Optional[int] = None) -> List[Dict[str, Any]]:
-        """SamSum 데이터셋을 로드합니다. 샘플 파일(json) 관리 방식."""
+        """Load SamSum dataset. Sample file (json) management method."""
         if num_samples:
             sample_file = self.samples_dir / f"samsum_samples_{num_samples}.json"
             if sample_file.exists():
                 print(f"[INFO] Loading existing samples from {sample_file}")
                 with open(sample_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            # 샘플 파일이 없으면 새로 생성
+            # Create new sample file if it doesn't exist
             print(f"[INFO] Creating new samples file: {sample_file}")
             samsum_dataset = SamsumDataset()
             all_data = samsum_dataset.get_split_data("test")
@@ -32,7 +32,7 @@ class SamSumEvaluator(BaseEvaluator):
                 json.dump(sampled_data, f, ensure_ascii=False, indent=2)
             return sampled_data
         else:
-            # 전체 데이터셋 로드
+            # Load entire dataset
             samsum_dataset = SamsumDataset()
             return samsum_dataset.get_split_data("test")
 
@@ -44,23 +44,23 @@ class SamSumEvaluator(BaseEvaluator):
         return random.sample(range(total_samples), num_samples)
 
     def format_question(self, item: Dict[str, Any]) -> str:
-        """SamSum 대화를 입력으로 사용합니다."""
+        """Use SamSum dialogue as input."""
         return item['dialogue']
 
     def evaluate_response(self, response: str, ground_truth: Dict[str, Any]) -> Dict[str, Any]:
-        """SamSum 요약을 평가합니다 (ROUGE-L 기준 없이, 항상 정답 처리)."""
+        """Evaluate SamSum summary (always treat as correct without ROUGE-L criteria)."""
         try:
             scores = self.rouge.get_scores(response, ground_truth['summary'])
-            # ROUGE-L F1 기준 없이 항상 정답 처리
+            # Always treat as correct without ROUGE-L F1 criteria
             is_passed = True
             return {
                 'is_passed': is_passed,
-                'rouge_scores': scores[0]  # ROUGE-1, ROUGE-2, ROUGE-L 점수 모두 포함
+                'rouge_scores': scores[0]  # Include ROUGE-1, ROUGE-2, ROUGE-L scores
             }
         except Exception as e:
-            print(f"ROUGE 평가 중 오류 발생: {str(e)}")
+            print(f"Error during ROUGE evaluation: {str(e)}")
             return {
-                'is_passed': True,  # 오류 발생 시에도 정답 처리
+                'is_passed': True,  # Treat as correct even when error occurs
                 'rouge_scores': None,
                 'error': str(e)
             }
@@ -74,15 +74,15 @@ class SamSumEvaluator(BaseEvaluator):
                       is_zera: Optional[bool] = None,
                       num_shots: Optional[int] = None,
                       dataset_display_name: Optional[str] = None) -> Dict[str, Any]:
-        """전체 평가를 실행하는 메서드"""
+        """Method to execute the entire evaluation"""
         dataset = self.load_dataset(dataset_name, num_samples)
         if sample_indices is not None:
             dataset_len = len(dataset)
             sample_indices = [i for i in sample_indices if i < dataset_len]
             dataset = [dataset[i] for i in sample_indices]
-        # 샘플이 0개면 바로 반환 (ZeroDivisionError 방지)
+        # Return immediately if no samples (prevent ZeroDivisionError)
         if len(dataset) == 0:
-            print("[경고] 평가할 샘플이 없습니다. 데이터셋 경로와 num_samples, sample_indices 값을 확인하세요.")
+            print("[WARNING] No samples to evaluate. Please check the dataset path, num_samples, and sample_indices values.")
             return {
                 "total": 0,
                 "correct": 0,
@@ -111,20 +111,20 @@ class SamSumEvaluator(BaseEvaluator):
         for idx, item in enumerate(dataset):
             try:
                 question = self.format_question(item)
-                # 모델 응답에서 텍스트 부분만 추출 (메타데이터 제외)
+                # Extract only text part from model response (exclude metadata)
                 response_data = self.model.ask(question, system_prompt, user_prompt)
                 if isinstance(response_data, tuple):
-                    response = response_data[0]  # 텍스트 부분만 사용
+                    response = response_data[0]  # Use only text part
                 else:
-                    response = response_data  # 이미 텍스트인 경우
+                    response = response_data  # Already text
                 eval_result = self.evaluate_response(response, item)
                 is_correct = eval_result['is_passed']
                 results["correct"] += 1 if is_correct else 0
-                # ROUGE 점수 누적
+                # Accumulate ROUGE scores
                 if eval_result['rouge_scores']:
                     for metric in ['rouge-1', 'rouge-2', 'rouge-l']:
                         results["rouge_scores"][metric]["f"] += eval_result['rouge_scores'][metric]['f']
-                # 각 샘플의 상세 정보 저장
+                # Save detailed information for each sample
                 sample_info = {
                     "question": question,
                     "model_response": response,
@@ -133,26 +133,26 @@ class SamSumEvaluator(BaseEvaluator):
                     "rouge_scores": eval_result['rouge_scores']
                 }
                 results["samples"].append(sample_info)
-                # 상세 정보 출력
-                print(f"\n샘플 {idx+1}/{len(dataset)}:")
-                print(f"문제: {question}")
-                print(f"모델 답변: {response}")
-                print(f"실제 답변: {sample_info['actual_answer']}")
-                print(f"정답 여부: {'정답' if is_correct else '오답'}")
+                # Output detailed information
+                print(f"\nSample {idx+1}/{len(dataset)}:")
+                print(f"Question: {question}")
+                print(f"Model response: {response}")
+                print(f"Actual answer: {sample_info['actual_answer']}")
+                print(f"Correctness: {'Correct' if is_correct else 'Incorrect'}")
                 if eval_result['rouge_scores']:
-                    print("ROUGE 점수:")
+                    print("ROUGE scores:")
                     for metric, scores in eval_result['rouge_scores'].items():
                         print(f"  {metric}: F1={scores['f']:.3f}")
                 print("-" * 50)
             except Exception as e:
                 print(f"Error processing sample {idx}: {str(e)}")
                 continue
-        # ROUGE 점수 평균 계산
+        # Calculate average ROUGE scores
         for metric in results["rouge_scores"]:
             results["rouge_scores"][metric]["f"] /= results["total"]
         accuracy = results["correct"] / results["total"] if results["total"] > 0 else 0
         results["accuracy"] = accuracy
-        # 결과 저장
+        # Save results
         import time
         if not hasattr(self, 'results_dir'):
             self.results_dir = Path("evaluation/results")
@@ -161,14 +161,14 @@ class SamSumEvaluator(BaseEvaluator):
         result_file = self.results_dir / f"{self.__class__.__name__}_{timestamp}.json"
         self.save_results(results, str(result_file))
 
-        # 슬랙 알림 메시지에 ROUGE 점수 추가
+        # Add ROUGE scores to Slack notification message
         rouge_scores = results["rouge_scores"]
-        rouge_msg = "\nROUGE 점수:"
+        rouge_msg = "\nROUGE scores:"
         for metric, scores in rouge_scores.items():
             rouge_msg += f"\n{metric}: F1={scores['f']:.3f}"
         
-        # 슬랙 알림 전송
-        msg = f"SamSum 평가 완료!\n정확도: {results['accuracy']:.2%}{rouge_msg}"
+        # Send Slack notification
+        msg = f"SamSum evaluation completed!\nAccuracy: {results['accuracy']:.2%}{rouge_msg}"
         self.send_slack_notification(msg)
 
         return results

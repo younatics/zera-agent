@@ -1,21 +1,21 @@
 """
-HellaSwag 데이터셋 평가 예제
+HellaSwag Dataset Evaluation Example
 
-이 예제는 HellaSwag 데이터셋을 사용하여 모델의 상식적 문장 완성 능력을 평가합니다.
-기존 프롬프트와 제라 프롬프트를 동일한 샘플에 대해 비교 평가합니다.
+This example evaluates the model's commonsense sentence completion ability using the HellaSwag dataset.
+It compares the existing prompt and Zera prompt on the same samples.
 """
 
 import sys
 from evaluation.base.main import main
 
 def run_hellaswag_example(model="gpt4o", model_version="gpt-3.5-turbo"):
-    # 프롬프트 파일 경로 지정
+    # Specify prompt file paths
     base_system_prompt_path = "evaluation/examples/hellaswag_base_system_prompt.txt"
     base_user_prompt_path = "evaluation/examples/hellaswag_base_user_prompt.txt"
     zera_system_prompt_path = "evaluation/examples/hellaswag_zera_system_prompt.txt"
     zera_user_prompt_path = "evaluation/examples/hellaswag_zera_user_prompt.txt"
 
-    # 파일에서 프롬프트 읽기
+    # Read prompts from files
     with open(base_system_prompt_path, "r", encoding="utf-8") as f:
         base_system_prompt = f.read()
     with open(base_user_prompt_path, "r", encoding="utf-8") as f:
@@ -35,11 +35,11 @@ def run_hellaswag_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--zera_system_prompt", zera_system_prompt,
         "--zera_user_prompt", zera_user_prompt,
         "--num_samples", "500",
-        # 모델 파라미터
-        # "--temperature", "0.2",  # 더 결정적인 응답을 위해 낮은 temperature 사용
+        # Model parameters
+        # "--temperature", "0.2",  # Use low temperature for more deterministic responses
         # "--top_p", "0.9"
     ]
-    # 평가 실행
+    # Execute evaluation
     main()
 
 if __name__ == "__main__":

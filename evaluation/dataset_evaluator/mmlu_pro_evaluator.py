@@ -66,8 +66,8 @@ class MMLUProEvaluator(BaseEvaluator):
                 # 2. "the answer is X" or "the answer is (X)" pattern
                 match = re.search(r'answer is[\s:]*\(?([A-J])\)?', response_clean)
             if not match:
-                # 3. Korean patterns like "정답은 X" or "정답은 (X)" also added
-                match = re.search(r'정답[은는]?[\s:]*\(?([A-J])\)?', response_clean)
+                # 3. Korean patterns like "answer is X" or "answer is (X)" also added
+                match = re.search(r'answer[\s:]*\(?([A-J])\)?', response_clean)
             if not match:
                 # 4. Extract the last single alphabet (A~J)
                 matches = re.findall(r'([A-J])', response_clean)

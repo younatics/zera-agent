@@ -22,10 +22,10 @@ class MMLUProDataset:
             "chemistry", "health", "math", "physics"
         ]
         
-        # 기본 디렉토리 생성
+        # Create base directory
         Path(self.base_dir).mkdir(parents=True, exist_ok=True)
         
-        # 데이터셋이 이미 다운로드되어 있는지 확인
+        # Check if dataset is already downloaded
         if not self._check_dataset_exists():
             print("Dataset not found. Downloading and processing dataset...")
             try:
@@ -35,7 +35,7 @@ class MMLUProDataset:
                 raise
     
     def _check_dataset_exists(self) -> bool:
-        """모든 과목의 데이터가 존재하는지 확인"""
+        """Check if data exists for all subjects"""
         for subject in self.subjects:
             subject_dir = os.path.join(self.base_dir, subject)
             if not os.path.exists(subject_dir):
@@ -46,14 +46,14 @@ class MMLUProDataset:
         return True
     
     def _download_and_process_dataset(self) -> None:
-        """MMLU Pro 데이터셋을 다운로드하고 처리"""
+        """Download and process MMLU Pro dataset"""
         print("Downloading MMLU-Pro dataset...")
         
         try:
-            # Hugging Face에서 데이터셋 로드
+            # Load dataset from Hugging Face
             dataset = load_dataset("TIGER-Lab/MMLU-Pro")
             
-            # 각 분할 데이터를 처리
+            # Process each split data
             for split in ['test', 'validation']:
                 if split not in dataset:
                     print(f"Warning: {split} split not found in dataset")
@@ -61,14 +61,14 @@ class MMLUProDataset:
                 
                 split_data = dataset[split]
                 
-                # 카테고리별로 데이터 그룹화
+                # Group data by category
                 category_data = {}
                 for item in split_data:
                     category = item['category'].lower()
                     if category not in category_data:
                         category_data[category] = []
                     
-                    # split에 따라 answer에 저장할 값 결정
+                    # Determine value to store in answer based on split
                     if split == 'test':
                         answer_value = item['answer']
                     else:  # validation
@@ -80,14 +80,14 @@ class MMLUProDataset:
                     }
                     category_data[category].append(question_data)
                 
-                # 각 카테고리의 데이터를 CSV로 저장
+                # Save each category's data as CSV
                 for category, questions in category_data.items():
                     category_dir = os.path.join(self.base_dir, category)
                     os.makedirs(category_dir, exist_ok=True)
                     
-                    # DataFrame 생성 및 CSV 저장
+                    # Create DataFrame and save as CSV
                     df = pd.DataFrame(questions)
-                    print(df.head())  # 2단계
+                    print(df.head())  # Step 2
                     csv_path = os.path.join(category_dir, f"{split}.csv")
                     df.to_csv(csv_path, index=False, quoting=csv.QUOTE_ALL)
                     print(f"Saved {category}'s {split} data with {len(questions)} questions")
@@ -97,9 +97,9 @@ class MMLUProDataset:
             raise
     
     def get_subject_data(self, subject: str) -> Dict[str, List[Dict]]:
-        """특정 과목의 데이터를 가져옴"""
+        """Get data for a specific subject"""
         if subject not in self.subjects:
-            raise ValueError(f"MMLU Pro 데이터셋에서 {subject} 과목을 찾을 수 없습니다")
+            raise ValueError(f"Subject {subject} not found in MMLU Pro dataset")
         
         subject_dir = os.path.join(self.base_dir, subject)
         data = {}
@@ -109,23 +109,23 @@ class MMLUProDataset:
             if not os.path.exists(csv_path):
                 raise FileNotFoundError(f"Data file not found: {csv_path}")
             
-            # CSV 파일에서 데이터 로드
+            # Load data from CSV file
             df = pd.read_csv(csv_path, dtype=str)
             data[split] = []
             
             for _, row in df.iterrows():
-                # choices 문자열을 리스트로 변환
+                # Convert choices string to list
                 choices = eval(row['choices']) if isinstance(row['choices'], str) else row['choices']
                 data[split].append({
                     'question': row['question'],
                     'choices': choices,
-                    'answer': row['answer']  # cot_content가 answer에 들어감
+                    'answer': row['answer']  # cot_content goes into answer
                 })
         
         return data
 
     def get_all_subjects_data(self) -> Dict[str, Dict[str, List[Dict]]]:
-        """모든 과목의 데이터를 가져옴"""
+        """Get data for all subjects"""
         all_data = {}
         for subject in self.subjects:
             try:
@@ -137,24 +137,24 @@ class MMLUProDataset:
         return all_data
 
 if __name__ == "__main__":
-    # 사용 예시
+    # Usage example
     dataset = MMLUProDataset()
     
-    # 특정 과목 데이터 접근 예시
+    # Example of accessing specific subject data
     try:
         subject_data = dataset.get_subject_data("computer science")
         for split in ['test', 'validation']:
             if split in subject_data:
-                print(f"{split} 예제 수: {len(subject_data[split])}")
+                print(f"Number of {split} examples: {len(subject_data[split])}")
         
-        # 첫 번째 예제 출력
+        # Print first example
         if subject_data['test']:
             first_example = subject_data['test'][0]
-            print("\n첫 번째 테스트 예제:")
-            print(f"질문: {first_example['question']}")
-            print("선택지:")
+            print("\nFirst test example:")
+            print(f"Question: {first_example['question']}")
+            print("Choices:")
             for i, choice in enumerate(first_example['choices'], 1):
                 print(f"{i}. {choice}")
-            print(f"정답: {first_example['answer']}")  # cot_content가 answer에 들어감
+            print(f"Answer: {first_example['answer']}")  # cot_content goes into answer
     except ValueError as e:
         print(e) 

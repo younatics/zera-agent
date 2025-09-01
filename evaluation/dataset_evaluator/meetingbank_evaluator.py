@@ -16,14 +16,14 @@ class MeetingBankEvaluator(BaseEvaluator):
         self.samples_dir.mkdir(exist_ok=True)
 
     def load_dataset(self, dataset_path: str = "meetingbank", num_samples: Optional[int] = None) -> List[Dict[str, Any]]:
-        """MeetingBank 데이터셋을 로드합니다. 샘플 파일(json) 관리 방식."""
+        """Load MeetingBank dataset. Sample file (json) management method."""
         if num_samples:
             sample_file = self.samples_dir / f"meetingbank_samples_{num_samples}.json"
             if sample_file.exists():
                 print(f"[INFO] Loading existing samples from {sample_file}")
                 with open(sample_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            # 샘플 파일이 없으면 새로 생성
+            # Create new sample file if it doesn't exist
             print(f"[INFO] Creating new samples file: {sample_file}")
             meetingbank_dataset = MeetingBankDataset()
             all_data = meetingbank_dataset.get_split_data("test")
@@ -32,7 +32,7 @@ class MeetingBankEvaluator(BaseEvaluator):
                 json.dump(sampled_data, f, ensure_ascii=False, indent=2)
             return sampled_data
         else:
-            # 전체 데이터셋 로드
+            # Load entire dataset
             meetingbank_dataset = MeetingBankDataset()
             return meetingbank_dataset.get_split_data("test")
 
@@ -44,11 +44,11 @@ class MeetingBankEvaluator(BaseEvaluator):
         return random.sample(range(total_samples), num_samples)
 
     def format_question(self, item: Dict[str, Any]) -> str:
-        """MeetingBank 대화(transcript)을 입력으로 사용합니다."""
+        """Use MeetingBank dialogue (transcript) as input."""
         return item['transcript']
 
     def evaluate_response(self, response: str, ground_truth: Dict[str, Any]) -> Dict[str, Any]:
-        """MeetingBank 요약을 평가합니다 (ROUGE-L 기준 없이, 항상 정답 처리)."""
+        """Evaluate MeetingBank summary (always treat as correct without ROUGE-L criteria)."""
         try:
             scores = self.rouge.get_scores(response, ground_truth['summary'])
             is_passed = True
@@ -57,7 +57,7 @@ class MeetingBankEvaluator(BaseEvaluator):
                 'rouge_scores': scores[0]
             }
         except Exception as e:
-            print(f"ROUGE 평가 중 오류 발생: {str(e)}")
+            print(f"Error during ROUGE evaluation: {str(e)}")
             return {
                 'is_passed': True,
                 'rouge_scores': None,
@@ -73,14 +73,14 @@ class MeetingBankEvaluator(BaseEvaluator):
                       is_zera: Optional[bool] = None,
                       num_shots: Optional[int] = None,
                       dataset_display_name: Optional[str] = None) -> Dict[str, Any]:
-        """전체 평가를 실행하는 메서드"""
+        """Method to execute the entire evaluation"""
         dataset = self.load_dataset(dataset_name, num_samples)
         if sample_indices is not None:
             dataset_len = len(dataset)
             sample_indices = [i for i in sample_indices if i < dataset_len]
             dataset = [dataset[i] for i in sample_indices]
         if len(dataset) == 0:
-            print("[경고] 평가할 샘플이 없습니다. 데이터셋 경로와 num_samples, sample_indices 값을 확인하세요.")
+            print("[WARNING] No samples to evaluate. Please check the dataset path, num_samples, and sample_indices values.")
             return {
                 "total": 0,
                 "correct": 0,
@@ -109,19 +109,19 @@ class MeetingBankEvaluator(BaseEvaluator):
         for idx, item in enumerate(dataset):
             try:
                 question = self.format_question(item)
-                # 모델 응답에서 텍스트 부분만 추출 (메타데이터 제외)
+                # Extract only text part from model response (exclude metadata)
                 response_data = self.model.ask(question, system_prompt, user_prompt)
                 if isinstance(response_data, tuple):
-                    response = response_data[0]  # 텍스트 부분만 사용
+                    response = response_data[0]  # Use only text part
                 else:
-                    response = response_data  # 이미 텍스트인 경우
-                # 응답이 에러(예: Exception 객체이거나, 'Error:'로 시작하거나, 'error' 포함)인 경우 평가에서 제외
+                    response = response_data  # Already text
+                # Exclude from evaluation if response is an error (e.g., Exception object, starts with 'Error:', or contains 'error')
                 if isinstance(response, Exception) or (
                     isinstance(response, str) and (
                         response.strip().lower().startswith('error:') or 'error' in response.strip().lower()
                     )
                 ):
-                    print(f"[SKIP] 샘플 {idx+1}: 모델 응답이 에러로 평가에서 제외합니다. 응답: {response}")
+                    print(f"[SKIP] Sample {idx+1}: Model response is excluded from evaluation due to error. Response: {response}")
                     continue
                 eval_result = self.evaluate_response(response, item)
                 is_correct = eval_result['is_passed']
@@ -137,13 +137,13 @@ class MeetingBankEvaluator(BaseEvaluator):
                     "rouge_scores": eval_result['rouge_scores']
                 }
                 results["samples"].append(sample_info)
-                print(f"\n샘플 {idx+1}/{len(dataset)}:")
-                print(f"문제: {question}")
-                print(f"모델 답변: {response}")
-                print(f"실제 답변: {sample_info['actual_answer']}")
-                print(f"정답 여부: {'정답' if is_correct else '오답'}")
+                print(f"\nSample {idx+1}/{len(dataset)}:")
+                print(f"Question: {question}")
+                print(f"Model response: {response}")
+                print(f"Actual answer: {sample_info['actual_answer']}")
+                print(f"Correctness: {'Correct' if is_correct else 'Incorrect'}")
                 if eval_result['rouge_scores']:
-                    print("ROUGE 점수:")
+                    print("ROUGE scores:")
                     for metric, scores in eval_result['rouge_scores'].items():
                         print(f"  {metric}: F1={scores['f']:.3f}")
                 print("-" * 50)
@@ -162,9 +162,9 @@ class MeetingBankEvaluator(BaseEvaluator):
         result_file = self.results_dir / f"{self.__class__.__name__}_{timestamp}.json"
         self.save_results(results, str(result_file))
         rouge_scores = results["rouge_scores"]
-        rouge_msg = "\nROUGE 점수:"
+        rouge_msg = "\nROUGE scores:"
         for metric, scores in rouge_scores.items():
             rouge_msg += f"\n{metric}: F1={scores['f']:.3f}"
-        msg = f"MeetingBank 평가 완료!\n정확도: {results['accuracy']:.2%}{rouge_msg}"
+        msg = f"MeetingBank evaluation completed!\nAccuracy: {results['accuracy']:.2%}{rouge_msg}"
         self.send_slack_notification(msg)
         return results 

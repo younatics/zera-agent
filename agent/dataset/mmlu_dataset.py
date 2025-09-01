@@ -30,10 +30,10 @@ class MMLUDataset:
             "virology", "world_religions"
         ]
         
-        # 기본 디렉토리 생성
+        # Create base directory
         Path(self.base_dir).mkdir(parents=True, exist_ok=True)
         
-        # 데이터셋이 이미 다운로드되어 있는지 확인
+        # Check if dataset is already downloaded
         if not self._check_dataset_exists():
             print("Dataset not found. Downloading and processing dataset...")
             try:
@@ -43,7 +43,7 @@ class MMLUDataset:
                 raise
     
     def _check_dataset_exists(self) -> bool:
-        """모든 과목의 데이터가 존재하는지 확인"""
+        """Check if data exists for all subjects"""
         for subject in self.subjects:
             subject_dir = os.path.join(self.base_dir, subject)
             if not os.path.exists(subject_dir):
@@ -54,17 +54,17 @@ class MMLUDataset:
         return True
     
     def _download_and_process_dataset(self) -> None:
-        """모든 과목의 MMLU 데이터셋을 다운로드하고 처리"""
+        """Download and process MMLU dataset for all subjects"""
         for subject in self.subjects:
             print(f"Processing {subject} subject...")
             subject_dir = os.path.join(self.base_dir, subject)
             os.makedirs(subject_dir, exist_ok=True)
             
             try:
-                # Hugging Face에서 데이터셋 로드
+                # Load dataset from Hugging Face
                 dataset = load_dataset("cais/mmlu", subject)
                 
-                # 각 분할 데이터를 저장
+                # Save each split data
                 for split in ['test', 'validation']:
                     data = []
                     for item in dataset[split]:
@@ -74,7 +74,7 @@ class MMLUDataset:
                             'answer': item['answer']
                         })
                     
-                    # 데이터를 CSV로 저장
+                    # Save data as CSV
                     df = pd.DataFrame(data)
                     df.to_csv(os.path.join(subject_dir, f"{split}.csv"), index=False)
                     print(f"Saved {subject}'s {split} data")
@@ -83,9 +83,9 @@ class MMLUDataset:
                 print(f"Error processing {subject} subject: {str(e)}")
     
     def get_subject_data(self, subject: str) -> Dict[str, List[Dict]]:
-        """특정 과목의 데이터를 가져옴"""
+        """Get data for a specific subject"""
         if subject not in self.subjects:
-            raise ValueError(f"MMLU 데이터셋에서 {subject} 과목을 찾을 수 없습니다")
+            raise ValueError(f"Subject {subject} not found in MMLU dataset")
         
         subject_dir = os.path.join(self.base_dir, subject)
         data = {}
@@ -95,12 +95,12 @@ class MMLUDataset:
             if not os.path.exists(csv_path):
                 raise FileNotFoundError(f"Data file not found: {csv_path}")
             
-            # CSV 파일에서 데이터 로드
+            # Load data from CSV file
             df = pd.read_csv(csv_path)
             data[split] = []
             
             for _, row in df.iterrows():
-                # choices 문자열을 리스트로 변환
+                # Convert choices string to list
                 choices = eval(row['choices']) if isinstance(row['choices'], str) else row['choices']
                 data[split].append({
                     'question': row['question'],
@@ -111,7 +111,7 @@ class MMLUDataset:
         return data
 
     def get_all_subjects_data(self) -> Dict[str, Dict[str, List[Dict]]]:
-        """모든 과목의 데이터를 가져옴"""
+        """Get data for all subjects"""
         all_data = {}
         for subject in self.subjects:
             try:
@@ -123,23 +123,23 @@ class MMLUDataset:
         return all_data
 
 if __name__ == "__main__":
-    # 사용 예시
+    # Usage example
     dataset = MMLUDataset()
     
-    # 특정 과목 데이터 접근 예시
+    # Example of accessing specific subject data
     try:
         subject_data = dataset.get_subject_data("high_school_physics")
-        print(f"테스트 예제 수: {len(subject_data['test'])}")
-        print(f"검증 예제 수: {len(subject_data['validation'])}")
+        print(f"Number of test examples: {len(subject_data['test'])}")
+        print(f"Number of validation examples: {len(subject_data['validation'])}")
         
-        # 첫 번째 예제 출력
+        # Output first example
         if subject_data['test']:
             first_example = subject_data['test'][0]
-            print("\n첫 번째 테스트 예제:")
-            print(f"질문: {first_example['question']}")
-            print("선택지:")
+            print("\nFirst test example:")
+            print(f"Question: {first_example['question']}")
+            print("Choices:")
             for i, choice in enumerate(first_example['choices'], 1):
                 print(f"{i}. {choice}")
-            print(f"정답: {first_example['answer'] + 1}")  # 0-based를 1-based로 변환
+            print(f"Answer: {first_example['answer'] + 1}")  # Convert 0-based to 1-based
     except ValueError as e:
         print(e) 

@@ -19,11 +19,11 @@ from datetime import datetime
 import json
 from pathlib import Path
 
-# set_page_config은 반드시 첫 번째 Streamlit 명령어여야 함
+# set_page_config must be the first Streamlit command
 st.set_page_config(page_title="Prompt Auto Tuning Agent", layout="wide")
 
 def setup_environment():
-    # 이미 환경이 로드되었는지 확인
+    # Check if environment is already loaded
     if hasattr(setup_environment, 'loaded'):
         return
     
@@ -56,13 +56,13 @@ def setup_environment():
         st.error("Please ensure these variables are set in your .env file or environment")
         st.stop()
     
-    # 환경이 로드되었음을 표시
+    # Mark that environment is loaded
     setup_environment.loaded = True
 
 # Call setup at the start
 setup_environment()
 
-# 프로젝트 루트 디렉토리를 Python 경로에 추가
+# Add project root directory to Python path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(project_root)
 
@@ -79,16 +79,16 @@ from agent.dataset.humaneval_dataset import HumanEvalDataset
 from agent.dataset.samsum_dataset import SamsumDataset
 from agent.dataset.meetingbank_dataset import MeetingBankDataset
 
-# 로깅 설정
+# Logging configuration
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 st.title("Prompt Tuning Dashboard")
 
-# 모델 정보 정의
+# Define model information
 MODEL_INFO = Model.get_all_model_info()
 
-# 프롬프트 파일 로드
+# Load prompt files
 prompts_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'prompts')
 with open(os.path.join(prompts_dir, 'initial_system_prompt.txt'), 'r', encoding='utf-8') as f:
     DEFAULT_SYSTEM_PROMPT = f.read()
@@ -103,22 +103,22 @@ with open(os.path.join(prompts_dir, 'meta_system_prompt.txt'), 'r', encoding='ut
 with open(os.path.join(prompts_dir, 'meta_user_prompt.txt'), 'r', encoding='utf-8') as f:
     DEFAULT_META_USER_PROMPT = f.read()
 
-# MMLU 데이터셋 인스턴스 생성
+# Create MMLU dataset instance
 mmlu_dataset = MMLUDataset()
-# MMLU Pro 데이터셋 인스턴스 생성
+# Create MMLU Pro dataset instance
 mmlu_pro_dataset = MMLUProDataset()
 
-# HellaSwag 데이터셋 인스턴스 생성
+# Create HellaSwag dataset instance
 hellaswag_dataset = HellaSwagDataset()
 
-# HumanEval 데이터셋 인스턴스 생성
+# Create HumanEval dataset instance
 humaneval_dataset = HumanEvalDataset()
 
-# XSum 데이터셋 인스턴스 생성 (한 번만 생성)
+# Create XSum dataset instance (create only once)
 xsum_dataset = XSumDataset()
-# BBH 데이터셋 인스턴스 생성 (한 번만 생성)
+# Create BBH dataset instance (create only once)
 bbh_dataset = BBHDataset()
-# TruthfulQA 데이터셋 인스턴스 생성 (한 번만 생성)
+# Create TruthfulQA dataset instance (create only once)
 truthfulqa_dataset = TruthfulQADataset()
 
 # 사이드바에서 파라미터 설정

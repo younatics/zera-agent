@@ -217,22 +217,22 @@ def main():
             print(f"Baseline wins: {baseline_wins} ({baseline_wins/total_comparisons*100:.1f}%)")
             print(f"p-value: {p_value:.4f}")
         
-        # API 호출 제한을 고려하여 적절한 대기 시간 설정
+        # Set appropriate wait time considering API call limits
         time.sleep(1)
     
-    # 최종 결과 출력
+    # Output final results
     total_comparisons = len(wins)
     zera_wins = sum(wins)
     baseline_wins = total_comparisons - zera_wins
     p_value = calculate_statistical_significance(wins, total_comparisons)
     
-    print("\n최종 A/B 테스트 결과 (100개 샘플):")
-    print(f"총 비교 횟수: {total_comparisons}")
-    print(f"ZERA 승리: {zera_wins} ({zera_wins/total_comparisons*100:.1f}%)")
-    print(f"Baseline 승리: {baseline_wins} ({baseline_wins/total_comparisons*100:.1f}%)")
+    print("\nFinal A/B Test Results (100 samples):")
+    print(f"Total comparisons: {total_comparisons}")
+    print(f"ZERA wins: {zera_wins} ({zera_wins/total_comparisons*100:.1f}%)")
+    print(f"Baseline wins: {baseline_wins} ({baseline_wins/total_comparisons*100:.1f}%)")
     print(f"p-value: {p_value:.4f}")
     
-    print(f"\n결과가 {output_path}에 저장되었습니다.")
+    print(f"\nResults saved to {output_path}.")
 
 if __name__ == "__main__":
     main() 
