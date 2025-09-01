@@ -51,16 +51,16 @@ def evaluate_sample(sample: Dict[str, Any]) -> Dict[str, Any]:
     try:
         stdout, stderr, exec_success = run_safely(code_to_run, timeout=10)
         if not exec_success:
-            reason = f"[실행실패] stderr: {stderr.strip()} stdout: {stdout.strip()}"
+            reason = f"[Execution Failed] stderr: {stderr.strip()} stdout: {stdout.strip()}"
             return {"is_correct_eval": False, "exec_success": False, "reason": reason}
         # If all asserts pass, it's correct
         if 'assert' in test_cases:
             if 'AssertionError' in stderr or 'Traceback' in stderr:
-                reason = f"[테스트실패] stderr: {stderr.strip()}"
+                reason = f"[Test Failed] stderr: {stderr.strip()}"
                 return {"is_correct_eval": False, "exec_success": True, "reason": reason}
         return {"is_correct_eval": True, "exec_success": True, "reason": "PASS"}
     except Exception as e:
-        return {"is_correct_eval": False, "exec_success": False, "reason": f"[예외] {e}"}
+        return {"is_correct_eval": False, "exec_success": False, "reason": f"[Exception] {e}"}
 
 def find_latest_humaneval_json():
     files = glob.glob("HumanEvalEvaluator_*.json")
@@ -90,18 +90,18 @@ def main():
             "actual_answer": sample["actual_answer"],
             **res
         })
-        print(f"[{idx}] {'O' if res['is_correct_eval'] else 'X'} | 실행: {'O' if res['exec_success'] else 'X'} | {res['reason']}")
-    # 통계
+        print(f"[{idx}] {'O' if res['is_correct_eval'] else 'X'} | Execution: {'O' if res['exec_success'] else 'X'} | {res['reason']}")
+    # Statistics
     total = len(results)
     correct = sum(1 for r in results if r["is_correct_eval"])
     exec_success = [r for r in results if r["exec_success"]]
     exec_success_total = len(exec_success)
     exec_success_correct = sum(1 for r in exec_success if r["is_correct_eval"])
     exec_success_fail = exec_success_total - exec_success_correct
-    # 실패 예시
+    # Failure examples
     fail_exec = [r for r in results if not r["exec_success"]][:3]
     fail_test = [r for r in exec_success if not r["is_correct_eval"]][:3]
-    # 저장
+    # Save
     output_path = input_path.replace('.json', '_analysis.json')
     output = {
         "input_path": input_path,
@@ -116,15 +116,15 @@ def main():
     }
     with open(output_path, "w") as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
-    print(f"\n분석 결과 저장: {output_path}")
-    print(f"전체: {total}, 정답: {correct}, 정확도: {output['accuracy']:.3f}")
-    print(f"실행 성공: {exec_success_total}, 실행 성공 중 정답: {exec_success_correct}, 실행 성공 중 오답: {exec_success_fail}, 실행 성공 내 정확도: {output['exec_success_accuracy']:.3f}")
+    print(f"\nAnalysis results saved: {output_path}")
+    print(f"Total: {total}, Correct: {correct}, Accuracy: {output['accuracy']:.3f}")
+    print(f"Execution Success: {exec_success_total}, Correct in Success: {exec_success_correct}, Wrong in Success: {exec_success_fail}, Accuracy in Success: {output['exec_success_accuracy']:.3f}")
     if fail_exec:
-        print(f"\n[실행 실패 예시]")
+        print(f"\n[Execution Failure Examples]")
         for r in fail_exec:
             print(f"  - idx {r['idx']}: {r['reason']}")
     if fail_test:
-        print(f"\n[테스트 실패 예시]")
+        print(f"\n[Test Failure Examples]")
         for r in fail_test:
             print(f"  - idx {r['idx']}: {r['reason']}")
 

@@ -75,46 +75,46 @@ class CNNDataset:
     
     def split_and_save_chunks(self, chunk_size: int = 200):
         """
-        데이터셋을 지정된 크기(chunk_size)로 나누어 저장합니다.
+        Split and save the dataset into chunks of specified size (chunk_size).
         
         Args:
-            chunk_size (int): 각 청크의 크기 (기본값: 200)
+            chunk_size (int): Size of each chunk (default: 200)
         """
-        # 각 split에 대해 처리
+        # Process each split
         for split in ['train', 'validation', 'test']:
-            # 원본 CSV 파일 경로
+            # Original CSV file path
             csv_path = os.path.join(self.data_dir, f"{split}.csv")
             
             if not os.path.exists(csv_path):
-                print(f"{split} split 파일이 존재하지 않습니다: {csv_path}")
+                print(f"{split} split file does not exist: {csv_path}")
                 continue
                 
-            # 청크를 저장할 디렉토리
+            # Directory to save chunks
             chunk_dir = os.path.join(self.data_dir, f"{split}_chunks")
             if os.path.exists(chunk_dir):
-                shutil.rmtree(chunk_dir)  # 기존 디렉토리 삭제
+                shutil.rmtree(chunk_dir)  # Remove existing directory
             os.makedirs(chunk_dir)
             
-            # 데이터 로드
+            # Load data
             df = pd.read_csv(csv_path)
             total_examples = len(df)
             
-            # 청크로 나누기
+            # Split into chunks
             for i in range(0, total_examples, chunk_size):
                 chunk = df.iloc[i:i+chunk_size]
                 chunk_path = os.path.join(chunk_dir, f"{split}_chunk_{i//chunk_size}.csv")
                 chunk.to_csv(chunk_path, index=False)
-                print(f"{split} split의 {i//chunk_size}번째 청크 저장 완료: {len(chunk)}개 예제")
+                print(f"{split} split {i//chunk_size}th chunk saved: {len(chunk)} examples")
             
-            print(f"\n{split} split 처리 완료:")
-            print(f"- 총 예제 수: {total_examples}")
-            print(f"- 청크 크기: {chunk_size}")
-            print(f"- 총 청크 수: {(total_examples + chunk_size - 1) // chunk_size}")
-            print(f"- 저장 위치: {chunk_dir}")
+            print(f"\n{split} split processing completed:")
+            print(f"- Total examples: {total_examples}")
+            print(f"- Chunk size: {chunk_size}")
+            print(f"- Total chunks: {(total_examples + chunk_size - 1) // chunk_size}")
+            print(f"- Save location: {chunk_dir}")
             
-            # 원본 CSV 파일 삭제
+            # Delete original CSV file
             os.remove(csv_path)
-            print(f"원본 {split}.csv 파일 삭제 완료")
+            print(f"Original {split}.csv file deletion completed")
 
     def load_data(self, split: str, chunk_index: int = None) -> List[Dict]:
         """

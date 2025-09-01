@@ -12,20 +12,20 @@ import os
 from dotenv import load_dotenv
 import requests
 
-# 환경 변수 로드
+# Load environment variables
 load_dotenv()
 
-# 로깅 설정
+# Logging setup
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# API 클라이언트 설정
+# API client setup
 openai_api_key = os.getenv("OPENAI_API_KEY")
 anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
 solar_api_key = os.getenv("SOLAR_API_KEY")
 
 if not openai_api_key and not anthropic_api_key and not solar_api_key:
-    raise ValueError("API 키가 설정되지 않았습니다.")
+    raise ValueError("API key is not set.")
 
 openai_client = OpenAI(api_key=openai_api_key) if openai_api_key else None
 anthropic_client = anthropic.Anthropic(api_key=anthropic_api_key) if anthropic_api_key else None
@@ -38,7 +38,7 @@ class LLMJudge:
     def __init__(self, model_type: str = "openai"):
         """
         Args:
-            model_type (str): 사용할 모델 타입 ("openai", "anthropic", "solar")
+            model_type (str): Model type to use ("openai", "anthropic", "solar")
         """
         self.model_type = model_type
         self.openai_client = openai_client
@@ -122,7 +122,7 @@ Your response should clearly indicate the winner (A or B) and provide a detailed
             else:
                 raise ValueError(f"Unsupported model type: {self.model_type} or API client not initialized")
             
-            # 첫 줄에서 Winner 정보 파싱
+            # Parse Winner information from first line
             first_line = result.split('\n')[0].strip()
             if first_line.startswith('Winner:'):
                 winner = first_line.split(':')[1].strip()
@@ -134,12 +134,12 @@ Your response should clearly indicate the winner (A or B) and provide a detailed
             return None, str(e)
 
 def load_results(file_path: str) -> dict:
-    """JSON 파일에서 결과를 로드합니다."""
+    """Load results from JSON file."""
     with open(file_path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
 def extract_responses(results: dict) -> List[Dict]:
-    """결과에서 질문과 응답을 추출합니다."""
+    """Extract questions and responses from results."""
     samples = []
     for sample in results['samples']:
         samples.append({
@@ -150,37 +150,37 @@ def extract_responses(results: dict) -> List[Dict]:
     return samples
 
 def calculate_statistical_significance(wins: List[int], total: int) -> float:
-    """통계적 유의성을 계산합니다."""
+    """Calculate statistical significance."""
     if total == 0:
         return 1.0
     p_value = stats.binomtest(sum(wins), total, p=0.5).pvalue
     return p_value
 
 def main():
-    # 결과 파일 경로
+    # Result file paths
     zera_path = "evaluation/results/zera_score.json"
     baseline_path = "evaluation/results/base_score.json"
     
-    # 결과 로드
+    # Load results
     zera_results = load_results(zera_path)
     baseline_results = load_results(baseline_path)
     
-    # 응답 추출
-    zera_samples = extract_responses(zera_results)[:10]  # 100개로 제한
-    baseline_samples = extract_responses(baseline_results)[:10]  # 100개로 제한
+    # Extract responses
+    zera_samples = extract_responses(zera_results)[:10]  # Limit to 10
+    baseline_samples = extract_responses(baseline_results)[:10]  # Limit to 10
     
-    # LLM Judge 초기화 (Claude 사용)
+    # Initialize LLM Judge (using Claude)
     judge = LLMJudge()
     
-    # 비교 결과 저장
+    # Store comparison results
     comparison_results = []
     wins = []
     
-    # 중간 결과 저장을 위한 변수
-    batch_size = 50  # 50개마다 결과 저장
+    # Variables for intermediate result saving
+    batch_size = 50  # Save results every 50
     output_path = Path("evaluation/llm_judge/comparison_results_10.csv")
     
-    # 각 샘플 비교
+    # Compare each sample
     for i, (zera, baseline) in enumerate(zip(zera_samples, baseline_samples)):
         logger.info(f"Comparing sample {i+1}/{len(zera_samples)}")
         
@@ -200,21 +200,21 @@ def main():
                 'reason': reason
             })
         
-        # 중간 결과 저장
+        # Save intermediate results
         if (i + 1) % batch_size == 0 or (i + 1) == len(zera_samples):
             results_df = pd.DataFrame(comparison_results)
             results_df.to_csv(output_path, index=False)
             logger.info(f"Saved intermediate results after {i+1} samples")
             
-            # 중간 통계 출력
+            # Output intermediate statistics
             total_comparisons = len(wins)
             zera_wins = sum(wins)
             baseline_wins = total_comparisons - zera_wins
             p_value = calculate_statistical_significance(wins, total_comparisons)
             
             print(f"\nProgress: {i+1}/{len(zera_samples)} samples")
-            print(f"ZERA 승리: {zera_wins} ({zera_wins/total_comparisons*100:.1f}%)")
-            print(f"Baseline 승리: {baseline_wins} ({baseline_wins/total_comparisons*100:.1f}%)")
+            print(f"ZERA wins: {zera_wins} ({zera_wins/total_comparisons*100:.1f}%)")
+            print(f"Baseline wins: {baseline_wins} ({baseline_wins/total_comparisons*100:.1f}%)")
             print(f"p-value: {p_value:.4f}")
         
         # API 호출 제한을 고려하여 적절한 대기 시간 설정

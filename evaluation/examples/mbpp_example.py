@@ -1,8 +1,8 @@
 """
-MBPP 데이터셋 평가 예제
+MBPP Dataset Evaluation Example
 
-이 예제는 MBPP 데이터셋을 사용하여 모델의 프로그래밍 문제 풀이 능력을 평가합니다.
-기존 프롬프트와 제라 프롬프트를 동일한 샘플에 대해 비교 평가합니다.
+This example evaluates the model's programming problem-solving ability using the MBPP dataset.
+It compares the existing prompt and Zera prompt on the same samples.
 """
 
 import sys
@@ -37,7 +37,7 @@ def run_mbpp_example(model="gpt4o", model_version="gpt-3.5-turbo"):
         "--num_samples", "500",
     ]
     
-    # 평가 실행
+    # Execute evaluation
     main()
 
 def get_sample_indices(self, num_samples: int) -> List[int]:

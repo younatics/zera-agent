@@ -1,8 +1,8 @@
 """
-SamSum 데이터셋 평가 예제
+SamSum Dataset Evaluation Example
 
-이 예제는 SamSum 데이터셋을 사용하여 모델의 대화 요약 능력을 평가합니다.
-기존 프롬프트와 제라 프롬프트를 동일한 샘플에 대해 비교 평가합니다.
+This example evaluates the model's dialogue summarization ability using the SamSum dataset.
+It compares the existing prompt and Zera prompt on the same samples.
 """
 
 from evaluation.base.main import main
@@ -35,12 +35,12 @@ def run_samsum_example(model="claude", model_version="claude-3-sonnet-20240229")
         "--num_samples", "500",
         "--base_num_shots", "5"
 
-        # # 모델 파라미터
-        # "--temperature", "0.2",  # 더 결정적인 응답을 위해 낮은 temperature 사용
+        # # Model parameters
+        # "--temperature", "0.2",  # Use low temperature for more deterministic responses
         # "--top_p", "0.9"
     ]
     
-    # 평가 실행
+    # Execute evaluation
     main()
 
 if __name__ == "__main__":

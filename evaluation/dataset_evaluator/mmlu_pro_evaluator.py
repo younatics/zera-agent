@@ -7,18 +7,18 @@ import random
 
 class MMLUProEvaluator(BaseEvaluator):
     def __init__(self, model_name: str, model_version: str, temperature: float = 0.7, top_p: float = 0.9):
-        """MMLU Pro 평가기를 초기화합니다."""
+        """Initialize MMLU Pro evaluator."""
         super().__init__(model_name, model_version, temperature, top_p)
         self.dataset_cache = None
 
     def load_dataset(self, dataset_path: str) -> List[Dict[str, Any]]:
-        """MMLU Pro 데이터셋을 로드합니다."""
+        """Load MMLU Pro dataset."""
         if self.dataset_cache is None:
-            # Hugging Face에서 MMLU 데이터셋 로드
+            # Load MMLU dataset from Hugging Face
             dataset = load_dataset("TIGER-Lab/MMLU-Pro", "default")
             test_data = dataset["test"]
             
-            # 필요한 형식으로 변환
+            # Convert to required format
             formatted_data = []
             for item in test_data:
                 formatted_item = {
@@ -33,43 +33,43 @@ class MMLUProEvaluator(BaseEvaluator):
         return self.dataset_cache
     
     def get_sample_indices(self, num_samples: int) -> List[int]:
-        """평가에 사용할 샘플의 인덱스를 반환합니다."""
+        """Return indices of samples to use for evaluation."""
         if self.dataset_cache is None:
             self.load_dataset("")
         
         total_samples = len(self.dataset_cache)
-        # 중복 없이 랜덤하게 인덱스 선택
+        # Randomly select indices without duplication
         indices = random.sample(range(total_samples), min(num_samples, total_samples))
         return indices
 
     def format_question(self, item: Dict[str, Any]) -> str:
-        """MMLU Pro 질문을 포맷팅합니다."""
+        """Format MMLU Pro question."""
         question = item['question']
         choices = "\n".join([f"{chr(65+i)}. {choice}" for i, choice in enumerate(item['choices'])])
         return f"{question}\n\n{choices}\n\nAnswer:"
     
     def evaluate_response(self, response: str, ground_truth: Dict[str, Any]) -> bool:
-        """MMLU Pro 응답을 평가합니다."""
+        """Evaluate MMLU Pro response."""
         response_clean = response.strip().upper()
-        # 0. 괄호 안에 있는 알파벳(A~J) 추출 (맨 뒤의 것 우선)
+        # 0. Extract alphabet (A~J) in parentheses (prioritize the last one)
         matches = re.findall(r'\(([A-J])\)', response_clean)
         if matches:
-            model_answer = matches[-1]  # 맨 뒤의 괄호 안 알파벳 사용
+            model_answer = matches[-1]  # Use the last alphabet in parentheses
         else:
-            # 1. '**J. ...**' 또는 '**J**' 또는 'J. ...' 또는 'J ...' 등 다양한 패턴
-            match = re.search(r'\*\*?([A-J])\*\*?[\s\.]', response_clean)  # '**J. ...' '**J**' 등
+            # 1. Various patterns like '**J. ...**' or '**J**' or 'J. ...' or 'J ...'
+            match = re.search(r'\*\*?([A-J])\*\*?[\s\.]', response_clean)  # '**J. ...' '**J**' etc.
             if not match:
                 match = re.search(r'([A-J])\.[\s]', response_clean)  # 'J. ...'
             if not match:
                 match = re.search(r'([A-J])[\s]', response_clean)  # 'J ...'
             if not match:
-                # 2. "the answer is X" 또는 "the answer is (X)" 패턴
+                # 2. "the answer is X" or "the answer is (X)" pattern
                 match = re.search(r'answer is[\s:]*\(?([A-J])\)?', response_clean)
             if not match:
-                # 3. "정답은 X" 또는 "정답은 (X)" 등 한글 패턴도 추가
+                # 3. Korean patterns like "정답은 X" or "정답은 (X)" also added
                 match = re.search(r'정답[은는]?[\s:]*\(?([A-J])\)?', response_clean)
             if not match:
-                # 4. 마지막에 등장하는 한 글자 알파벳 추출 (A~J)
+                # 4. Extract the last single alphabet (A~J)
                 matches = re.findall(r'([A-J])', response_clean)
                 if matches:
                     model_answer = matches[-1]
@@ -77,14 +77,14 @@ class MMLUProEvaluator(BaseEvaluator):
                     return False
             else:
                 model_answer = match.group(1)
-        # 정답 인덱스와 비교 (타입에 따라 분기)
+        # Compare with correct answer index (branch by type)
         correct_answer = ground_truth['answer']
         if isinstance(correct_answer, int):
             model_answer_idx = ord(model_answer) - 65
-            print(f"모델 답변: {model_answer_idx}, 정답: {correct_answer}")  # 디버깅용
+            print(f"Model answer: {model_answer_idx}, Correct answer: {correct_answer}")  # For debugging
             return model_answer_idx == correct_answer
         elif isinstance(correct_answer, str) and len(correct_answer) == 1 and correct_answer.isalpha():
-            print(f"모델 답변: {model_answer}, 정답: {correct_answer}")  # 디버깅용
+            print(f"Model answer: {model_answer}, Correct answer: {correct_answer}")  # For debugging
             return model_answer == correct_answer.upper()
         else:
             return False 

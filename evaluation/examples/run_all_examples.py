@@ -18,39 +18,39 @@ def main():
     model = "local1"
     model_version = "/data/project/private/kyle/hf_models/Meta-Llama-3-70B-Instruct"
     
-    # print("\n===== mmlu_example.py 실행 =====")
+    # print("\n===== Executing mmlu_example.py =====")
     # run_mmlu_example(model, model_version)
 
-    # print("\n===== mmlu_pro_example.py 실행 =====")
+    # print("\n===== Executing mmlu_pro_example.py =====")
     # run_mmlu_pro_example(model, model_version)
 
-    # print("\n===== gsm8k_example.py 실행 =====")
+    # print("\n===== Executing gsm8k_example.py =====")
     # run_gsm8k_example(model, model_version)
     # run_gsm8k_example(model, model_version)
 
-    print("\n===== cnn_dailymail_example.py 실행 =====")
+    print("\n===== Executing cnn_dailymail_example.py =====")
     run_cnn_dailymail_example(model, model_version)
 
-    print("\n===== samsum_example.py 실행 =====")
+    print("\n===== Executing samsum_example.py =====")
     run_samsum_example(model, model_version)
 
-    # print("\n===== meetingbank_example.py 실행 =====")
+    # print("\n===== Executing meetingbank_example.py =====")
     # run_meetingbank_example(model, model_version)
 
-    # print("\n===== mbpp_example.py 실행 =====")
+    # print("\n===== Executing mbpp_example.py =====")
     # run_mbpp_example(model, model_version)
 
-    # print("\n===== humaneval_example.py 실행 =====")
+    # print("\n===== Executing humaneval_example.py =====")
     # run_humaneval_example(model, model_version)
 
-    # print("\n===== bbh_example.py 실행 =====")
+    # print("\n===== Executing bbh_example.py =====")
     # run_bbh_example(model, model_version)
     
-    # print("\n===== hellaswag_example.py 실행 =====")
+    # print("\n===== Executing hellaswag_example.py =====")
     # run_hellaswag_example(model, model_version)
 
-    # 모든 평가 완료 후 슬랙 알림 전송
-    # notify_slack(f"[모델 버전: {model_version}] 모든 평가가 완료되었습니다.", webhook_url)
+    # Send Slack notification after all evaluations complete
+    # notify_slack(f"[Model version: {model_version}] All evaluations completed.", webhook_url)
 
 if __name__ == "__main__":
     main() 

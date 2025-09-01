@@ -1,8 +1,8 @@
 """
-MMLU 데이터셋 평가 예제
+MMLU Dataset Evaluation Example
 
-이 예제는 MMLU 데이터셋을 사용하여 모델의 다중 선택형 문제 풀이 능력을 평가합니다.
-기존 프롬프트와 제라 프롬프트를 동일한 샘플에 대해 비교 평가합니다.
+This example evaluates the model's multiple-choice problem-solving ability using the MMLU dataset.
+It compares the existing prompt and Zera prompt on the same samples.
 """
 
 import sys

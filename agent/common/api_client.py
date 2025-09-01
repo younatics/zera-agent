@@ -23,10 +23,10 @@ def create_messages(question, system_prompt, user_prompt):
 
 
 class Model:
-    # 모델별 가격 정보 (입력 토큰당, 출력 토큰당 USD)
+    # Model-specific pricing information (USD per input token, per output token)
     token_prices = {
         "solar": {
-            "input_price_per_1k": 0.0002,  # 예시 가격
+            "input_price_per_1k": 0.0002,  # Example price
             "output_price_per_1k": 0.0004
         },
         "gpt4o": {
@@ -38,15 +38,15 @@ class Model:
             "output_price_per_1k": 0.015
         },
         "local1": {
-            "input_price_per_1k": 0.0,  # 로컬 모델은 무료
+            "input_price_per_1k": 0.0,  # Local models are free
             "output_price_per_1k": 0.0
         },
         "local2": {
-            "input_price_per_1k": 0.0,  # 로컬 모델은 무료
+            "input_price_per_1k": 0.0,  # Local models are free
             "output_price_per_1k": 0.0
         },
         "solar_strawberry": {
-            "input_price_per_1k": 0.0002,  # 예시 가격
+            "input_price_per_1k": 0.0002,  # Example price
             "output_price_per_1k": 0.0004
         }
     }
@@ -54,37 +54,37 @@ class Model:
     model_info = {
         "solar": {
             "name": "Solar",
-            "description": "Upstage의 Solar 모델",
+            "description": "Upstage's Solar model",
             "default_version": "solar-pro",
             "base_url": "https://api.upstage.ai/v1"
         },
         "gpt4o": {
             "name": "GPT-4",
-            "description": "OpenAI의 GPT-4 모델",
+            "description": "OpenAI's GPT-4 model",
             "default_version": "gpt-4o",
             "base_url": None
         },
         "claude": {
             "name": "Claude",
-            "description": "Anthropic의 Claude 3.5 Sonnet",
+            "description": "Anthropic's Claude 3.5 Sonnet",
             "default_version": "claude-3-5-sonnet-20240620",
             "base_url": None
         },
         "local1": {
             "name": "Local Model 1",
-            "description": "로컬 서버에서 실행되는 첫 번째 미스트랄 모델",
+            "description": "First Mistral model running on local server",
             "default_version": "/data/project/private/kyle/hf_models/Meta-Llama-3-70B-Instruct",
             "base_url": "http://localhost:8001/v1"
         },
         "local2": {
             "name": "Local Model 2",
-            "description": "로컬 서버에서 실행되는 두 번째 미스트랄 모델",
+            "description": "Second Mistral model running on local server",
             "default_version": "/data/project/private/kyle/hf_models/Mistral-7B-Instruct-v0.3",
             "base_url": "http://localhost:8002/v1"
         },
         "solar_strawberry": {
             "name": "Solar-Strawberry",
-            "description": "Upstage의 Solar-Strawberry 모델",
+            "description": "Upstage's Solar-Strawberry model",
             "default_version": "Solar-Strawberry",
             "base_url": "https://r-api.toy.x.upstage.ai/v1/"
         },
@@ -99,7 +99,7 @@ class Model:
         return cls.model_info
 
     def __init__(self, model_name: str, version: Optional[str] = None):
-        """모델 초기화"""
+        """Initialize model"""
         if model_name not in self.model_info:
             raise ValueError(f"Model {model_name} not found. Available models: {list(self.model_info.keys())}")
         
@@ -134,26 +134,26 @@ class Model:
         self.handler = self._create_handler()
 
     def set_version(self, version: str):
-        """모델 버전을 설정합니다."""
+        """Set model version."""
         self.model_id = version
         return self
 
     def set_temperature(self, temperature: float):
-        """temperature 값을 설정합니다. (0.0 ~ 1.0)"""
+        """Set temperature value. (0.0 ~ 1.0)"""
         if not 0.0 <= temperature <= 1.0:
             raise ValueError("Temperature must be between 0.0 and 1.0")
         self.temperature = temperature
         return self
 
     def set_top_p(self, top_p: float):
-        """top_p 값을 설정합니다. (0.0 ~ 1.0)"""
+        """Set top_p value. (0.0 ~ 1.0)"""
         if not 0.0 <= top_p <= 1.0:
             raise ValueError("Top_p must be between 0.0 and 1.0")
         self.top_p = top_p
         return self
 
     def _calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        """토큰 사용량을 기반으로 비용을 계산합니다."""
+        """Calculate cost based on token usage."""
         prices = self.token_prices.get(self.name, {"input_price_per_1k": 0, "output_price_per_1k": 0})
         input_cost = (input_tokens / 1000) * prices["input_price_per_1k"]
         output_cost = (output_tokens / 1000) * prices["output_price_per_1k"]
@@ -184,7 +184,7 @@ class Model:
                         messages=[messages[1]]
                     )
                     
-                    # Claude API에서 토큰 사용량 정보 추출
+                    # Extract token usage information from Claude API
                     metadata["input_tokens"] = response.usage.input_tokens
                     metadata["output_tokens"] = response.usage.output_tokens
                     metadata["total_tokens"] = metadata["input_tokens"] + metadata["output_tokens"]
@@ -193,27 +193,27 @@ class Model:
                     
                     return response.content[0].text, metadata
                 else:
-                    # API 파라미터 준비
+                    # Prepare API parameters
                     api_params = {
                         "model": self.model_id,
                         "messages": messages,
                     }
                     
-                    # temperature가 설정된 경우에만 추가
+                    # Add only if temperature is set
                     if self.temperature is not None:
                         api_params["temperature"] = self.temperature
                     
-                    # top_p가 설정된 경우에만 추가
+                    # Add only if top_p is set
                     if self.top_p is not None:
                         api_params["top_p"] = self.top_p
                     
-                    # Solar 모델의 경우 stream=False 설정
+                    # Set stream=False for Solar models
                     if "solar" in self.model_id:
                         api_params["stream"] = False
                     
                     response = self.client.chat.completions.create(**api_params)
                     
-                    # OpenAI 호환 API에서 토큰 사용량 정보 추출
+                    # Extract token usage information from OpenAI-compatible API
                     if response.usage:
                         metadata["input_tokens"] = response.usage.prompt_tokens if hasattr(response.usage, 'prompt_tokens') else 0
                         metadata["output_tokens"] = response.usage.completion_tokens if hasattr(response.usage, 'completion_tokens') else 0
@@ -230,13 +230,13 @@ class Model:
         return handler
 
     def ask(self, question, system_prompt=None, user_prompt=None) -> Tuple[str, Dict[str, Any]]:
-        """모델에게 질문하고 응답과 메타데이터를 반환합니다."""
+        """Ask the model a question and return the response and metadata."""
         answer, metadata = self.handler(question, system_prompt, user_prompt)
         print("Done.")
         return answer, metadata
 
     def ask_simple(self, question, system_prompt=None, user_prompt=None) -> str:
-        """기존 호환성을 위한 간단한 응답만 반환하는 메서드"""
+        """Method that returns only simple response for backward compatibility"""
         answer, _ = self.ask(question, system_prompt, user_prompt)
         return answer
 
@@ -245,6 +245,6 @@ class Model:
         return list(cls.model_info.keys())
 
 
-# 사용 예시:
+# Usage example:
 # model = Model("gpt4o")
 # answer = model.ask(input_prompt)

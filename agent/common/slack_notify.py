@@ -10,10 +10,10 @@ def notify_slack(message: str, webhook_url: str):
 
 def send_file_to_slack(filepath: str, channels: str, message: str, bot_token: str):
     """
-    슬랙 채널로 파일을 업로드합니다.
-    :param filepath: 업로드할 파일 경로
-    :param channels: 업로드할 채널명(예: '#general')
-    :param message: 파일과 함께 보낼 메시지
+    Upload a file to a Slack channel.
+    :param filepath: Path to the file to upload
+    :param channels: Channel name to upload to (e.g., '#general')
+    :param message: Message to send with the file
     :param bot_token: Bot User OAuth Token
     """
     with open(filepath, "rb") as file_content:
