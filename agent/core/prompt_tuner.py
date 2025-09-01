@@ -603,7 +603,7 @@ class PromptTuner:
         return self.iteration_results
 
     def _get_recent_prompts(self, num_prompts: int = 5) -> List[IterationResult]:
-        """최근 프롬프트 결과를 반환합니다."""
+        """Return recent prompt results."""
         recent_results = self.iteration_results[-num_prompts:] if len(self.iteration_results) >= num_prompts else self.iteration_results
         return [{
             'iteration': result.iteration,
@@ -614,7 +614,7 @@ class PromptTuner:
         } for result in recent_results]
 
     def _get_best_prompt(self) -> Dict:
-        """최고 성능의 프롬프트를 반환합니다."""
+        """Return the best performing prompt."""
         if not self.iteration_results:
             return None
         
@@ -627,23 +627,23 @@ class PromptTuner:
 
     def _generate_meta_prompt(self, system_prompt: str, user_prompt: str, recent_prompts: List[Dict], valid_outputs: List[TestCaseResult], task_type: str, task_description: str) -> str:
         """
-        메타프롬프트 템플릿을 생성합니다.
+        Generate meta prompt template.
         
         Args:
-            system_prompt (str): 현재 시스템 프롬프트
-            user_prompt (str): 현재 유저 프롬프트
-            recent_prompts (List[Dict]): 최근 프롬프트 히스토리
-            valid_outputs (List[TestCaseResult]): 전체 평가 케이스
-            task_type (str): 현재 테스크 타입
-            task_description (str): 현재 테스크 설명
+            system_prompt (str): Current system prompt
+            user_prompt (str): Current user prompt
+            recent_prompts (List[Dict]): Recent prompt history
+            valid_outputs (List[TestCaseResult]): All evaluation cases
+            task_type (str): Current task type
+            task_description (str): Current task description
             
         Returns:
-            str: 생성된 메타프롬프트 템플릿
+            str: Generated meta prompt template
         """
-        # 케이스를 점수순으로 정렬
+        # Sort cases by score
         sorted_cases = sorted(valid_outputs, key=lambda x: x.score)
         
-        # 상위 3개 케이스 포맷팅
+        # Format top 3 cases
         formatted_top3_cases = "\n\n".join([
             f"[Top Case {i+1}]\n"
             f"Question: {case.question}\n"
@@ -651,10 +651,10 @@ class PromptTuner:
             f"Actual Output: {case.actual_output}\n"
             f"Score: {case.score:.2f}\n"
             f"Evaluation Details: {case.evaluation_details}"
-            for i, case in enumerate(reversed(sorted_cases[-3:]))  # 상위 3개를 역순으로
+            for i, case in enumerate(reversed(sorted_cases[-3:]))  # Top 3 in reverse order
         ])
         
-        # 하위 3개 케이스 포맷팅
+        # Format bottom 2 cases
         formatted_bottom2_cases = "\n\n".join([
             f"[Bottom Case {i+1}]\n"
             f"Question: {case.question}\n"
@@ -662,16 +662,16 @@ class PromptTuner:
             f"Actual Output: {case.actual_output}\n"
             f"Score: {case.score:.2f}\n"
             f"Evaluation Details: {case.evaluation_details}"
-            for i, case in enumerate(sorted_cases[:2])  # 하위 2개
+            for i, case in enumerate(sorted_cases[:2])  # Bottom 2
         ])
         
-        # 최근 프롬프트 포맷팅
+        # Format recent prompts
         formatted_recent_prompts = chr(10).join([
             f"Iteration {p['iteration']} (Average Score: {p['avg_score']:.2f}):{chr(10)}"
             f"System Prompt: {p['system_prompt']}{chr(10)}"
             f"User Prompt: {p['user_prompt']}{chr(10)}"
             f"Evaluation Details: {p.get('evaluation_details', 'No evaluation details available')}"
-            for p in recent_prompts[:-1]  # 현재 프롬프트를 제외한 최근 3개
+            for p in recent_prompts[:-1]  # Recent 3 excluding current prompt
         ])
         
         # Format best performing prompt
@@ -685,11 +685,11 @@ Average Score: {best_prompt['avg_score']:.2f}
         else:
             formatted_best_prompt = "No best performing prompt available yet."
         
-        # 메타프롬프트 템플릿 생성
+        # Generate meta prompt template
         improvement_prompt = self.meta_user_prompt_template.format(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            random_cases=formatted_top3_cases + "\n\n" + formatted_bottom2_cases,  # 상위/하위 케이스 결합
+            random_cases=formatted_top3_cases + "\n\n" + formatted_bottom2_cases,  # Combine top/bottom cases
             recent_prompts=formatted_recent_prompts,
             formatted_best_prompt=formatted_best_prompt,
             task_type=task_type,
@@ -699,17 +699,17 @@ Average Score: {best_prompt['avg_score']:.2f}
         return improvement_prompt
 
     def save_results_to_csv(self):
-        """결과를 CSV 형식의 문자열로 반환합니다."""
+        """Return results as CSV formatted string."""
         data = []
         
-        # 비용 분석 데이터
+        # Cost analysis data
         try:
             cost_breakdown = self.get_iteration_cost_breakdown()
             cost_summary = self.get_cost_summary()
-            self.logger.info(f"비용 요약 생성 완료: 총 비용 ${cost_summary.get('total_cost', 0.0):.4f}")
-            self.logger.info(f"이터레이션별 비용 분석: {len(cost_breakdown)}개 이터레이션")
+            self.logger.info(f"Cost summary generation completed: Total cost ${cost_summary.get('total_cost', 0.0):.4f}")
+            self.logger.info(f"Iteration cost analysis: {len(cost_breakdown)} iterations")
         except Exception as e:
-            self.logger.error(f"비용 분석 데이터 생성 중 오류: {str(e)}")
+            self.logger.error(f"Error generating cost analysis data: {str(e)}")
             cost_breakdown = {}
             cost_summary = {
                 'model_stats': {
@@ -742,7 +742,7 @@ Average Score: {best_prompt['avg_score']:.2f}
                 'total_calls': 0
             }
         
-        # 각 이터레이션과 테스트 케이스의 결과를 데이터로 변환
+        # Convert each iteration and test case results to data
         for iteration_result in self.iteration_results:
             iteration_cost_info = cost_breakdown.get(f"iteration_{iteration_result.iteration}", {}) if cost_breakdown else {}
             
@@ -765,7 +765,7 @@ Average Score: {best_prompt['avg_score']:.2f}
                     'User Prompt': iteration_result.user_prompt,
                     'Created At': iteration_result.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                     
-                    # 비용 정보 추가 (안전한 접근 방식)
+                    # Add cost information (safe access method)
                     'Iteration_Model_Cost': iteration_cost_info.get('model_cost', 0.0),
                     'Iteration_Evaluator_Cost': iteration_cost_info.get('evaluator_cost', 0.0),
                     'Iteration_Meta_Prompt_Cost': iteration_cost_info.get('meta_prompt_cost', 0.0),
@@ -785,7 +785,7 @@ Average Score: {best_prompt['avg_score']:.2f}
                     'Total_Meta_Prompt_Calls': cost_summary.get('meta_prompt_stats', {}).get('total_calls', 0)
                 }
                 
-                # 카테고리별 점수와 피드백 추가
+                # Add category scores and feedback
                 if test_case.evaluation_details and 'category_scores' in test_case.evaluation_details:
                     for category, details in test_case.evaluation_details['category_scores'].items():
                         row[f"{category}_Score"] = details['score']
@@ -795,12 +795,12 @@ Average Score: {best_prompt['avg_score']:.2f}
                 
                 data.append(row)
         
-        # DataFrame 생성 및 CSV 변환
+        # Create DataFrame and convert to CSV
         df = pd.DataFrame(data)
         return df.to_csv(index=False, encoding='utf-8')
 
     def get_cost_summary(self) -> Dict:
-        """전체 비용 요약을 반환합니다."""
+        """Return overall cost summary."""
         return {
             "model_stats": self.model_stats.copy(),
             "evaluator_stats": self.evaluator_stats.copy(),
@@ -812,15 +812,15 @@ Average Score: {best_prompt['avg_score']:.2f}
         }
 
     def get_model_stats(self) -> Dict:
-        """모델 호출 통계를 반환합니다."""
+        """Return model call statistics."""
         return self.model_stats.copy()
 
     def get_evaluator_stats(self) -> Dict:
-        """평가자 호출 통계를 반환합니다."""
+        """Return evaluator call statistics."""
         return self.evaluator_stats.copy()
 
     def get_meta_prompt_stats(self) -> Dict:
-        """메타 프롬프트 생성 통계를 반환합니다."""
+        """Return meta prompt generation statistics."""
         return self.meta_prompt_stats.copy()
 
     def print_cost_summary(self):
