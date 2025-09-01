@@ -86,12 +86,12 @@ if __name__ == "__main__":
     dataset = SamsumDataset()
     try:
         test_data = dataset.get_split_data("test")
-        print(f"테스트 예제 수: {len(test_data)}")
+        print(f"Number of test examples: {len(test_data)}")
         if test_data:
             first_example = test_data[0]
-            print("\n첫 번째 테스트 예제:")
+            print("\nFirst test example:")
             print(f"ID: {first_example['id']}")
-            print(f"대화:\n{first_example['dialogue'][:200]}...")
-            print(f"요약문:\n{first_example['summary']}")
+            print(f"Dialogue:\n{first_example['dialogue'][:200]}...")
+            print(f"Summary:\n{first_example['summary']}")
     except ValueError as e:
         print(e) 

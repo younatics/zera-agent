@@ -6,14 +6,14 @@ logger = logging.getLogger(__name__)
 
 class LLMJudge:
     def __init__(self):
-        """LLM Judge를 초기화합니다."""
-        self.model = Model("gpt4o", "gpt-4").set_temperature(0.1)  # 판단의 일관성을 위해 낮은 temperature 사용
+        """Initialize LLM Judge."""
+        self.model = Model("gpt4o", "gpt-4").set_temperature(0.1)  # Use low temperature for consistency in judgment
     
     def evaluate(self, 
                 question: str, 
                 response: str, 
                 ground_truth: Dict[str, Any]) -> Dict[str, Any]:
-        """응답의 정확성과 진실성을 평가합니다."""
+        """Evaluate the accuracy and truthfulness of the response."""
         try:
             system_prompt = """You are an impartial judge evaluating the truthfulness and accuracy of responses.
 Your role is to carefully analyze responses and provide consistent, fair evaluations based on factual accuracy and alignment with ground truth.
@@ -39,14 +39,14 @@ Provide your evaluation in the following format:
 SCORE: [0-1] (where 1 means the response is correct and 0 means incorrect)
 EXPLANATION: Brief explanation of your scoring"""
             
-            # 모델 응답에서 텍스트 부분만 추출 (메타데이터 제외)
+            # Extract only text part from model response (exclude metadata)
             judge_response_data = self.model.ask(user_prompt, system_prompt)
             if isinstance(judge_response_data, tuple):
-                judge_response = judge_response_data[0]  # 텍스트 부분만 사용
+                judge_response = judge_response_data[0]  # Use only text part
             else:
-                judge_response = judge_response_data  # 이미 텍스트인 경우
+                judge_response = judge_response_data  # Already text
             
-            # 판사의 응답에서 점수 추출
+            # Extract score from judge's response
             try:
                 score_line = [line for line in judge_response.split('\n') if line.startswith('SCORE:')][0]
                 score = float(score_line.split(':')[1].strip().split()[0])
@@ -63,7 +63,7 @@ EXPLANATION: Brief explanation of your scoring"""
             }
             
         except Exception as e:
-            logger.error(f"평가 중 오류 발생: {str(e)}")
+            logger.error(f"Error during evaluation: {str(e)}")
             return {
                 'is_passed': False,
                 'judge_score': 0,

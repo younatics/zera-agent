@@ -1,14 +1,14 @@
 import json
 from evaluation.dataset_evaluator.bbh_evaluator import BBHEvaluator
 
-# 원본 파일 읽기
+# Read original file
 with open('evaluation/results/BBHEvaluator_gpt-3.5-turbo_20250520_090406.json', 'r') as f:
     data = json.load(f)
 
-# BBH 평가기 초기화 (등록된 모델명 사용)
+# Initialize BBH evaluator (using registered model name)
 evaluator = BBHEvaluator(model_name="gpt4o", model_version="gpt4o")
 
-# 각 샘플 재평가
+# Re-evaluate each sample
 correct = 0
 for sample in data['samples']:
     is_correct = evaluator.evaluate_response(sample['model_response'], {'answer': sample['actual_answer']})
@@ -16,9 +16,9 @@ for sample in data['samples']:
     if is_correct:
         correct += 1
 
-# 전체 정답 수 업데이트
+# Update total correct count
 data['correct'] = correct
 
-# 새로운 파일로 저장
+# Save to new file
 with open('evaluation/results/BBHEvaluator_gpt-3.5-turbo_20250520_090406_new.json', 'w') as f:
     json.dump(data, f, indent=2) 

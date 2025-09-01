@@ -11,10 +11,10 @@ class MBPPDataset:
             base_dir = os.path.join(current_dir, 'mbpp_data')
         self.base_dir = base_dir
         
-        # 기본 디렉토리 생성
+        # Create base directory
         Path(self.base_dir).mkdir(parents=True, exist_ok=True)
         
-        # 데이터셋이 이미 다운로드되어 있는지 확인
+        # Check if dataset is already downloaded
         if not self._check_dataset_exists():
             print("Dataset not found. Downloading and processing dataset...")
             try:
@@ -24,19 +24,19 @@ class MBPPDataset:
                 raise
 
     def _check_dataset_exists(self) -> bool:
-        """데이터셋 파일들이 존재하는지 확인"""
+        """Check if dataset files exist"""
         for split in ['train', 'test', 'validation']:
             if not os.path.exists(os.path.join(self.base_dir, f"{split}.csv")):
                 return False
         return True
 
     def _download_and_process_dataset(self) -> None:
-        """MBPP 데이터셋을 다운로드하고 처리"""
+        """Download and process MBPP dataset"""
         try:
-            # Hugging Face에서 데이터셋 로드
+            # Load dataset from Hugging Face
             dataset = load_dataset("mbpp")
             
-            # 각 분할 데이터를 저장
+            # Save each split data
             for split in ['train', 'test', 'validation']:
                 data = []
                 split_name = 'prompt' if split == 'validation' else split
@@ -44,14 +44,14 @@ class MBPPDataset:
                 for item in dataset[split_name]:
                     data.append({
                         'task_id': item['task_id'],
-                        'text': item['text'],  # 문제 설명
-                        'code': item['code'],  # 정답 코드
-                        'test_list': item['test_list'],  # 테스트 케이스 목록
+                        'text': item['text'],  # Problem description
+                        'code': item['code'],  # Correct code
+                        'test_list': item['test_list'],  # Test case list
                         'test_setup_code': item['test_setup_code'] if 'test_setup_code' in item else '',
                         'challenge_test_list': item['challenge_test_list'] if 'challenge_test_list' in item else []
                     })
                 
-                # 데이터를 CSV로 저장
+                # Save data as CSV
                 df = pd.DataFrame(data)
                 df.to_csv(os.path.join(self.base_dir, f"{split}.csv"), index=False)
                 print(f"Saved {split} data")
@@ -60,7 +60,7 @@ class MBPPDataset:
             print(f"Error processing MBPP dataset: {str(e)}")
 
     def get_split_data(self, split: str) -> List[Dict]:
-        """특정 분할의 데이터를 가져옴"""
+        """Get data for specific split"""
         if split not in ['train', 'test', 'validation']:
             raise ValueError(f"Invalid split name: {split}")
         
@@ -68,12 +68,12 @@ class MBPPDataset:
         if not os.path.exists(csv_path):
             raise FileNotFoundError(f"Data file not found: {csv_path}")
         
-        # CSV 파일에서 데이터 로드
+        # Load data from CSV file
         df = pd.read_csv(csv_path)
         data = []
         
         for _, row in df.iterrows():
-            # 리스트 형태의 문자열을 실제 리스트로 변환
+            # Convert string representations of lists to actual lists
             test_list = eval(row['test_list']) if isinstance(row['test_list'], str) else row['test_list']
             challenge_test_list = eval(row['challenge_test_list']) if isinstance(row['challenge_test_list'], str) else row['challenge_test_list']
             
@@ -89,7 +89,7 @@ class MBPPDataset:
         return data
 
     def get_all_data(self) -> Dict[str, List[Dict]]:
-        """모든 분할의 데이터를 가져옴"""
+        """Get data for all splits"""
         all_data = {}
         for split in ['train', 'test', 'validation']:
             try:
@@ -98,25 +98,38 @@ class MBPPDataset:
             except Exception as e:
                 print(f"Error loading data for {split} split: {str(e)}")
                 continue
+        
         return all_data
 
+    def get_validation_data(self) -> List[Dict]:
+        """Get validation data (alias for get_split_data)"""
+        return self.get_split_data('validation')
+
+    def get_test_data(self) -> List[Dict]:
+        """Get test data (alias for get_split_data)"""
+        return self.get_split_data('test')
+
+    def get_train_data(self) -> List[Dict]:
+        """Get train data (alias for get_split_data)"""
+        return self.get_split_data('train')
+
 if __name__ == "__main__":
-    # 사용 예시
+    # Example usage
     dataset = MBPPDataset()
     
-    # 특정 분할 데이터 접근 예시
+    # Example access to specific split data
     try:
         test_data = dataset.get_split_data("test")
-        print(f"테스트 예제 수: {len(test_data)}")
+        print(f"Number of test examples: {len(test_data)}")
         
-        # 첫 번째 예제 출력
+        # Print the first example
         if test_data:
             first_example = test_data[0]
-            print("\n첫 번째 테스트 예제:")
+            print("\nFirst test example:")
             print(f"Task ID: {first_example['task_id']}")
-            print(f"문제: {first_example['text']}")
-            print(f"정답 코드:\n{first_example['code']}")
-            print("\n테스트 케이스:")
+            print(f"Problem: {first_example['text']}")
+            print(f"Correct code:\n{first_example['code']}")
+            print("\nTest cases:")
             for test in first_example['test_list']:
                 print(f"- {test}")
     except ValueError as e:

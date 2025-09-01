@@ -18,24 +18,24 @@ logger = logging.getLogger(__name__)
 class BaseEvaluator(ABC):
     def __init__(self, model_name: str, model_version: str, temperature: float = None, top_p: float = None):
         """
-        평가기를 초기화합니다.
+        Initialize the evaluator.
         
         Args:
-            model_name: 사용할 모델의 이름
-            model_version: 사용할 모델의 버전
-            temperature: 모델의 temperature 값 (선택사항)
-            top_p: 모델의 top_p 값 (선택사항)
+            model_name: Name of the model to use
+            model_version: Version of the model to use
+            temperature: Temperature value for the model (optional)
+            top_p: Top-p value for the model (optional)
         """
         self.model_name = model_name
         self.model_version = model_version or "unknown"
         
-        # model_version이 None이면 Model 클래스에서 기본값 사용
+        # If model_version is None, use default value from Model class
         if model_version:
             self.model = Model(model_name).set_version(model_version)
         else:
-            self.model = Model(model_name)  # 기본 버전 사용
+            self.model = Model(model_name)  # Use default version
         
-        # temperature와 top_p가 제공된 경우에만 설정
+        # Set temperature and top_p only if provided
         if temperature is not None:
             self.model.set_temperature(temperature)
             self.temperature = temperature
@@ -47,7 +47,7 @@ class BaseEvaluator(ABC):
         self.results_dir.mkdir(parents=True, exist_ok=True)
         
     def load_dataset(self, dataset_name: str, num_samples: Optional[int] = None) -> List[Dict[str, Any]]:
-        """데이터셋을 로드하는 메서드"""
+        """Method to load the dataset"""
         dataset_path = f"data/{dataset_name}/test.json"
         with open(dataset_path, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -59,12 +59,12 @@ class BaseEvaluator(ABC):
         
     @abstractmethod
     def format_question(self, item: Dict[str, Any]) -> str:
-        """각 데이터셋의 질문을 모델 입력 형식으로 변환"""
+        """Convert each dataset question to model input format"""
         pass
         
     @abstractmethod
     def evaluate_response(self, response: str, ground_truth: Dict[str, Any]) -> bool:
-        """모델의 응답을 평가하는 메서드"""
+        """Method to evaluate model response"""
         pass
         
     def send_slack_notification(self, message: str):
@@ -72,7 +72,7 @@ class BaseEvaluator(ABC):
         if webhook_url:
             notify_slack(message, webhook_url)
         else:
-            print("슬랙 웹훅 알림을 위해 SLACK_WEBHOOK_URL 환경변수가 필요합니다.")
+            print("SLACK_WEBHOOK_URL environment variable is required for Slack webhook notifications.")
 
     def run_evaluation(self, 
                       dataset_name, 
@@ -83,24 +83,24 @@ class BaseEvaluator(ABC):
                       is_zera: Optional[bool] = None,
                       num_shots: Optional[int] = None,
                       dataset_display_name: Optional[str] = None) -> Dict[str, Any]:
-        """전체 평가를 실행하는 메서드"""
-        # --- 평가 시작 슬랙 알림 ---
+        """Method to execute the complete evaluation"""
+        # --- Slack notification for evaluation start ---
         model_version = getattr(self, 'model_version', 'unknown')
         if is_zera is True:
-            prompt_type = "🧬 제라 프롬프트"
+            prompt_type = "🧬 Zera Prompt"
         elif is_zera is False:
-            prompt_type = "📝 베이스 프롬프트"
+            prompt_type = "📝 Base Prompt"
         else:
-            prompt_type = "🤖 프롬프트"
+            prompt_type = "🤖 Prompt"
         if dataset_display_name:
             dataset_desc = dataset_display_name
         elif isinstance(dataset_name, list):
             dataset_desc = f"Loaded dataset (size={len(dataset_name)})"
         else:
             dataset_desc = str(dataset_name)
-        start_msg = f"{prompt_type} 평가 시작!\n모델 버전: {model_version}\n데이터셋: {dataset_desc}"
+        start_msg = f"{prompt_type} evaluation started!\nModel version: {model_version}\nDataset: {dataset_desc}"
         self.send_slack_notification(start_msg)
-        # dataset_name이 이미 list면 그대로 사용, 아니면 load_dataset 호출
+        # If dataset_name is already a list, use it as is, otherwise call load_dataset
         if isinstance(dataset_name, list):
             dataset = dataset_name
         else:
@@ -117,10 +117,10 @@ class BaseEvaluator(ABC):
             "user_prompt": user_prompt,
             "num_shots": num_shots
         }
-        # few-shot 예시 생성
+        # Generate few-shot examples
         few_shot_examples = []
         if num_shots is not None and num_shots > 0:
-            # 평가에 사용되는 샘플과 겹치지 않게 예시를 뽑음
+            # Select examples that don't overlap with samples used for evaluation
             available_indices = set(range(len(dataset)))
             if len(dataset) > num_shots:
                 few_shot_indices = random.sample(list(available_indices), num_shots)
@@ -137,17 +137,17 @@ class BaseEvaluator(ABC):
         for idx, item in enumerate(dataset):
             try:
                 question = self.format_question(item)
-                # user_prompt는 그대로, question 위에만 few-shot 예시 추가
+                # user_prompt remains the same, only add few-shot examples above the question
                 full_question = ""
                 if few_shot_prompt:
-                    full_question += few_shot_prompt + "---\n"  # 예시와 질문 사이에 구분자 추가
+                    full_question += few_shot_prompt + "---\n"  # Add separator between examples and question
                 full_question += question
-                # 모델 응답에서 텍스트 부분만 추출 (메타데이터 제외)
+                # Extract only text part from model response (exclude metadata)
                 response_data = self.model.ask(full_question, system_prompt, user_prompt)
                 if isinstance(response_data, tuple):
-                    response = response_data[0]  # 텍스트 부분만 사용
+                    response = response_data[0]  # Use only text part
                 else:
-                    response = response_data  # 이미 텍스트인 경우
+                    response = response_data  # Already text
                 
                 is_correct = self.evaluate_response(response, item)
                 results["correct"] += 1 if is_correct else 0
@@ -158,13 +158,13 @@ class BaseEvaluator(ABC):
                     "is_correct": is_correct
                 }
                 results["samples"].append(sample_info)
-                print(f"\n샘플 {idx+1}/{len(dataset)}:")
-                print(f"시스템 프롬프트: {system_prompt}")
-                print(f"사용자 프롬프트: {user_prompt}")
-                print(f"문제: {full_question}")
-                print(f"모델 답변: {response}")
-                print(f"실제 답변: {sample_info['actual_answer']}")
-                print(f"정답 여부: {'정답' if is_correct else '오답'}")
+                print(f"\nSample {idx+1}/{len(dataset)}:")
+                print(f"System prompt: {system_prompt}")
+                print(f"User prompt: {user_prompt}")
+                print(f"Question: {full_question}")
+                print(f"Model answer: {response}")
+                print(f"Actual answer: {sample_info['actual_answer']}")
+                print(f"Correct: {'Yes' if is_correct else 'No'}")
                 print("-" * 50)
                 logger.info(f"Processed {idx+1}/{len(dataset)} samples")
                 time.sleep(1)
@@ -180,22 +180,22 @@ class BaseEvaluator(ABC):
         return results
 
     def save_results(self, results: List[Dict[str, Any]], output_path: str, slack_file_upload: bool = True, is_zera: bool = None):
-        """결과를 저장합니다. slack_file_upload가 True면 슬랙 웹훅으로 간단한 메시지를 전송합니다."""
+        """Save the results. If slack_file_upload is True, send a simple message via Slack webhook."""
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w') as f:
             json.dump(results, f, indent=2)
-        # MBPP 평가 결과라면 추가 분석 파일 생성
+        # If it's MBPP evaluation result, create additional analysis file
         if 'MBPPEvaluator' in os.path.basename(output_path):
             try:
-                # 분석 파일명 결정
+                # Determine analysis filename
                 analysis_path = output_path.replace('.json', '_analysis.json')
-                # analyze_mbpp_json_eval.py 실행
+                # Execute analyze_mbpp_json_eval.py
                 subprocess.run([
                     sys.executable, 'evaluation/code_analysis/analyze_mbpp_json_eval.py', output_path
                 ], check=True)
-                print(f"MBPP 추가 분석 파일 생성: {analysis_path}")
+                print(f"MBPP additional analysis file created: {analysis_path}")
             except Exception as e:
-                print(f"MBPP 분석 파일 생성 실패: {e}")
+                print(f"Failed to create MBPP analysis file: {e}")
         if slack_file_upload:
             model_version = getattr(self, 'model_version', 'unknown')
             accuracy = results.get("accuracy", 'N/A')
@@ -204,10 +204,10 @@ class BaseEvaluator(ABC):
             else:
                 accuracy_str = str(accuracy)
             if is_zera is True:
-                prompt_type = "🧬 제라 프롬프트"
+                prompt_type = "🧬 Zera Prompt"
             elif is_zera is False:
-                prompt_type = "📝 베이스 프롬프트"
+                prompt_type = "📝 Base Prompt"
             else:
-                prompt_type = "🤖 프롬프트"
-            msg = f"{prompt_type} 평가 결과\n모델 버전: {model_version}\n정확도: {accuracy_str}\n결과 파일: {os.path.basename(output_path)}\n🎉 수고하셨습니다!"
+                prompt_type = "🤖 Prompt"
+            msg = f"{prompt_type} evaluation result\nModel version: {model_version}\nAccuracy: {accuracy_str}\nResult file: {os.path.basename(output_path)}\n🎉 Great job!"
             self.send_slack_notification(msg) 

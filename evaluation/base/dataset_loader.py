@@ -48,30 +48,30 @@ class DatasetLoader:
     
     @staticmethod
     def load_dataset(dataset_name: str, num_samples: Optional[int] = None) -> List[Dict[str, Any]]:
-        """허깅페이스에서 데이터셋을 로드하거나 로컬 파일에서 로드합니다."""
+        """Load dataset from Hugging Face or local file."""
         if dataset_name not in DatasetLoader.DATASET_INFO:
             raise ValueError(f"Unknown dataset: {dataset_name}")
             
         info = DatasetLoader.DATASET_INFO[dataset_name]
         local_path = Path(info["local_path"])
         
-        # 로컬 파일이 있으면 로컬에서 로드
+        # Load from local file if exists
         if local_path.exists():
             logger.info(f"Loading {dataset_name} from local file: {local_path}")
             with open(local_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
         else:
-            # 허깅페이스에서 다운로드
+            # Download from Hugging Face
             logger.info(f"Downloading {dataset_name} from Hugging Face")
             dataset = load_dataset(info["path"], split=info["split"])
             data = [item for item in dataset]
             
-            # 로컬에 저장
+            # Save locally
             local_path.parent.mkdir(parents=True, exist_ok=True)
             with open(local_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
                 
-        # 샘플링
+        # Sampling
         if num_samples:
             data = data[:num_samples]
             

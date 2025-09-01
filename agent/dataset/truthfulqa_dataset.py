@@ -16,13 +16,13 @@ class TruthfulQADataset:
             print("Dataset already exists, skipping download")
 
     def _ensure_data_dir(self):
-        """데이터 디렉토리가 존재하는지 확인하고 없으면 생성"""
+        """Check if data directory exists and create if not"""
         os.makedirs(self.data_dir, exist_ok=True)
         print(f"Ensured data directory exists at: {self.data_dir}")
 
     def _check_dataset_exists(self) -> bool:
-        """데이터셋 파일이 존재하는지 확인"""
-        splits = ['test']  # TruthfulQA는 test 데이터만 있음
+        """Check if dataset file exists"""
+        splits = ['test']  # TruthfulQA only has test data
         for split in splits:
             file_path = os.path.join(self.data_dir, f"{split}.csv")
             print(f"Checking file: {file_path}")
@@ -36,23 +36,23 @@ class TruthfulQADataset:
         return True
 
     def _download_and_process_dataset(self) -> None:
-        """TruthfulQA 데이터셋을 다운로드하고 처리"""
+        """Download and process TruthfulQA dataset"""
         try:
-            # Hugging Face에서 데이터셋 로드
+            # Load dataset from Hugging Face
             dataset = load_dataset("truthful_qa", "generation", trust_remote_code=True)
             
-            # 데이터를 CSV로 저장
+            # Save data as CSV
             data = []
-            for item in dataset['validation']:  # TruthfulQA는 validation을 test로 사용
+            for item in dataset['validation']:  # TruthfulQA uses validation as test
                 data.append({
-                    'question': item['question'],  # 질문
-                    'best_answer': item['best_answer'],  # 가장 좋은 정답
-                    'correct_answers': item['correct_answers'],  # 모든 정답 목록
-                    'incorrect_answers': item['incorrect_answers']  # 오답 목록
+                    'question': item['question'],  # Question
+                    'best_answer': item['best_answer'],  # Best answer
+                    'correct_answers': item['correct_answers'],  # All correct answers list
+                    'incorrect_answers': item['incorrect_answers']  # Incorrect answers list
                 })
             
             df = pd.DataFrame(data)
-            # 리스트 형태의 데이터를 문자열로 변환하여 저장
+            # Convert list data to strings for storage
             df['correct_answers'] = df['correct_answers'].apply(str)
             df['incorrect_answers'] = df['incorrect_answers'].apply(str)
             df.to_csv(os.path.join(self.data_dir, "test.csv"), index=False)
@@ -62,7 +62,7 @@ class TruthfulQADataset:
             print(f"Error processing TruthfulQA dataset: {str(e)}")
 
     def get_split_data(self, split: str) -> List[Dict]:
-        """특정 분할의 데이터를 가져옴"""
+        """Get data for specific split"""
         if split not in ['test']:
             raise ValueError(f"Invalid split name: {split}")
         
@@ -70,7 +70,7 @@ class TruthfulQADataset:
         if not os.path.exists(csv_path):
             raise FileNotFoundError(f"Data file not found: {csv_path}")
         
-        # CSV 파일에서 데이터 로드 (데이터 타입 명시)
+        # Load data from CSV file (with data type specification)
         df = pd.read_csv(csv_path, dtype={
             'question': str,
             'best_answer': str,
@@ -80,7 +80,7 @@ class TruthfulQADataset:
         data = []
         
         for _, row in df.iterrows():
-            # 문자열로 저장된 리스트를 다시 리스트로 변환
+            # Convert string-stored lists back to lists
             correct_answers = eval(row['correct_answers'])
             incorrect_answers = eval(row['incorrect_answers'])
             
@@ -94,7 +94,7 @@ class TruthfulQADataset:
         return data
 
     def get_all_data(self) -> Dict[str, List[Dict]]:
-        """모든 분할의 데이터를 가져옴"""
+        """Get data for all splits"""
         all_data = {}
         for split in ['test']:
             try:
@@ -106,24 +106,24 @@ class TruthfulQADataset:
         return all_data
 
 if __name__ == "__main__":
-    # 사용 예시
+    # Example usage
     dataset = TruthfulQADataset()
     
-    # 특정 분할 데이터 접근 예시
+    # Example access to specific split data
     try:
         test_data = dataset.get_split_data("test")
-        print(f"테스트 예제 수: {len(test_data)}")
+        print(f"Number of test examples: {len(test_data)}")
         
-        # 첫 번째 예제 출력
+        # Print the first example
         if test_data:
             first_example = test_data[0]
-            print("\n첫 번째 테스트 예제:")
-            print(f"질문: {first_example['question']}")
-            print(f"가장 좋은 정답: {first_example['best_answer']}")
-            print("정답 목록:")
+            print("\nFirst test example:")
+            print(f"Question: {first_example['question']}")
+            print(f"Best answer: {first_example['best_answer']}")
+            print("Correct answers:")
             for i, answer in enumerate(first_example['correct_answers'], 1):
                 print(f"{i}. {answer}")
-            print("\n오답 목록:")
+            print("\nIncorrect answers:")
             for i, answer in enumerate(first_example['incorrect_answers'], 1):
                 print(f"{i}. {answer}")
     except ValueError as e:

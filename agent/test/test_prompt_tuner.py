@@ -15,9 +15,9 @@ def load_test_cases_from_csv(csv_file):
     return test_cases
 
 def test_prompt_tuner():
-    print("프롬프트 튜너 테스트 시작")
+    print("Starting prompt tuner test")
     
-    # CSV 파일에서 테스트 케이스 로드
+    # Load test cases from CSV file
     csv_file = "input.csv"  # 프로젝트 루트의 input.csv
     if not os.path.exists(csv_file):
         print(f"Error: {csv_file} not found")

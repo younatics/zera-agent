@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
-# 표 데이터 입력
+# Table data input
 DATA = [
     [0.15, 0.075, 0.075, 0.1, 0.1, 0.25, 0.2, 0.175],
     [0.1, 0.1, 0.05, 0.1, 0.05, 0.25, 0.1, 0.25],
@@ -40,9 +40,9 @@ ax = sns.heatmap(
     annot=False,
     square=True
 )
-# colorbar(옆 숫자) 폰트 크기 2배로 키우기
+# Increase colorbar (side numbers) font size by 2x
 cbar = ax.collections[0].colorbar
-cbar.ax.tick_params(labelsize=16)  # 기본값이 12라면 24로
+cbar.ax.tick_params(labelsize=16)  # If default is 12, then 24
 plt.xticks(fontsize=12, rotation=45, ha='right')
 plt.yticks(fontsize=12, rotation=0)
 plt.xlabel("")

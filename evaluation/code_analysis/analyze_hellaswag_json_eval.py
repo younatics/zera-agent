@@ -43,7 +43,7 @@ def main():
         model_response = sample["model_response"]
         actual_answer = sample["actual_answer"]
         original_judgement = sample.get("is_correct", None)
-        # 공식 방식으로 재체점
+        # Re-score using official method
         pred_idx = extract_hellaswag_official_choice(model_response)
         official_judgement = (pred_idx == actual_answer)
         if official_judgement:
@@ -61,11 +61,11 @@ def main():
     total = len(results)
     original_accuracy = original_correct / total if total else 0.0
     official_accuracy = official_correct / total if total else 0.0
-    print(f"\n[HellaSwag 공식 체점 방식 재체점 결과]")
-    print(f"전체 문항 수: {total}")
-    print(f"원래 점수: {original_accuracy:.3f} (즉, {original_correct}/{total})")
-    print(f"공식 체점 방식 재체점 결과: {official_accuracy:.3f} (즉, {official_correct}/{total})")
-    # 결과 저장
+    print(f"\n[HellaSwag Official Scoring Method Re-scoring Results]")
+    print(f"Total questions: {total}")
+    print(f"Original score: {original_accuracy:.3f} (i.e., {original_correct}/{total})")
+    print(f"Official scoring method re-scoring result: {official_accuracy:.3f} (i.e., {official_correct}/{total})")
+    # Save results
     output_path = input_path.replace('.json', '_official_analysis.json')
     output = {
         "input_path": input_path,
@@ -78,7 +78,7 @@ def main():
     }
     with open(output_path, "w") as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
-    print(f"분석 결과 저장: {output_path}")
+    print(f"Analysis results saved: {output_path}")
 
 if __name__ == "__main__":
     main() 

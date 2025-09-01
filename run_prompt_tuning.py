@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-프롬프트 자동 튜닝 실행 스크립트
+Prompt Auto-tuning Execution Script
 
 Usage:
     python run_prompt_tuning.py --dataset bbh --total_samples 20 --iteration_samples 5 --iterations 10 --model solar --evaluator solar --meta_model solar --output_dir ./results
@@ -15,7 +15,7 @@ from pathlib import Path
 import json
 import random
 
-# 프로젝트 루트 디렉토리를 Python 경로에 추가
+# Add project root directory to Python path
 project_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(project_root)
 
@@ -35,10 +35,10 @@ from agent.dataset.samsum_dataset import SamsumDataset
 from agent.dataset.meetingbank_dataset import MeetingBankDataset
 
 def setup_logging(output_dir):
-    """로깅 설정"""
+    """Setup logging configuration"""
     log_file = os.path.join(output_dir, f"prompt_tuning_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
     
-    # 콘솔과 파일 모두에 로깅
+    # Log to both console and file
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -49,12 +49,12 @@ def setup_logging(output_dir):
     )
     
     logger = logging.getLogger(__name__)
-    logger.info(f"로그 파일: {log_file}")
+    logger.info(f"Log file: {log_file}")
     return logger
 
 def load_dataset(dataset_name, total_samples, logger):
-    """데이터셋 로드"""
-    logger.info(f"데이터셋 로드 중: {dataset_name}")
+    """Load dataset"""
+    logger.info(f"Loading dataset: {dataset_name}")
     
     test_cases = []
     
@@ -98,143 +98,157 @@ def load_dataset(dataset_name, total_samples, logger):
             data.extend(split_data)
         
         for item in data:
+            question = item['question']
+            expected = item['answer']
             test_cases.append({
-                'question': item['input'],
-                'expected': item['target']
+                'question': question,
+                'expected': expected
             })
     
     elif dataset_name.lower() == "cnn":
         dataset = CNNDataset()
-        data = dataset.load_all_data("validation")
+        data = dataset.get_validation_data()
         
         for item in data:
-            normalized_expected = ' '.join(
-                line.strip()
-                for line in item['expected_answer'].split('\n')
-                if line.strip() and not line.strip().startswith(('-', '*'))
-            )
+            question = f"Summarize the following article:\n\n{item['article']}"
+            expected = item['summary']
             test_cases.append({
-                'question': item['input'],
-                'expected': normalized_expected
+                'question': question,
+                'expected': expected
             })
     
     elif dataset_name.lower() == "gsm8k":
         dataset = GSM8KDataset()
-        data = dataset.load_data("test")
+        data = dataset.get_validation_data()
         
         for item in data:
+            question = f"Solve the following math problem step by step:\n\n{item['question']}"
+            expected = item['answer']
             test_cases.append({
-                'question': item['question'],
-                'expected': item['answer']
+                'question': question,
+                'expected': expected
             })
     
     elif dataset_name.lower() == "mbpp":
         dataset = MBPPDataset()
-        data = dataset.get_split_data("test")
+        data = dataset.get_validation_data()
         
         for item in data:
+            question = f"Write a Python function to solve the following problem:\n\n{item['prompt']}"
+            expected = item['code']
             test_cases.append({
-                'question': item['text'],
-                'expected': item['code']
+                'question': question,
+                'expected': expected
             })
     
     elif dataset_name.lower() == "xsum":
         dataset = XSumDataset()
-        data = dataset.get_split_data("validation")
+        data = dataset.get_validation_data()
         
         for item in data:
+            question = f"Summarize the following article in one sentence:\n\n{item['document']}"
+            expected = item['summary']
             test_cases.append({
-                'question': item['document'],
-                'expected': item['summary']
+                'question': question,
+                'expected': expected
             })
     
     elif dataset_name.lower() == "truthfulqa":
         dataset = TruthfulQADataset()
-        data = dataset.get_split_data("test")
+        data = dataset.get_validation_data()
         
         for item in data:
+            question = f"Answer the following question truthfully:\n\n{item['question']}"
+            expected = item['answer']
             test_cases.append({
-                'question': item['input'],
-                'expected': item['target']
+                'question': question,
+                'expected': expected
             })
     
     elif dataset_name.lower() == "hellaswag":
         dataset = HellaSwagDataset()
-        data = dataset.get_split_data("validation")
+        data = dataset.get_validation_data()
         
         for item in data:
             choices_str = "\n".join([f"{chr(65+i)}. {choice}" for i, choice in enumerate(item['choices'])])
-            question = f"Activity: {item['activity_label']}\nContext: {item['context']}\n\nComplete the context with the most appropriate ending:\n{choices_str}"
+            question = f"Complete the following sentence:\n\n{item['context']}\n\nChoices:\n{choices_str}"
+            expected = chr(65 + item['answer']) if isinstance(item['answer'], int) else item['answer']
             test_cases.append({
                 'question': question,
-                'expected': chr(65 + item['answer'])
+                'expected': expected
             })
     
     elif dataset_name.lower() == "humaneval":
         dataset = HumanEvalDataset()
-        data = dataset.get_split_data("test")
+        data = dataset.get_validation_data()
         
         for item in data:
+            question = f"Complete the following Python function:\n\n{item['prompt']}"
+            expected = item['canonical_solution']
             test_cases.append({
-                'question': item['prompt'],
-                'expected': item['canonical_solution']
+                'question': question,
+                'expected': expected
             })
     
     elif dataset_name.lower() == "samsum":
         dataset = SamsumDataset()
-        data = dataset.get_split_data("validation")
+        data = dataset.get_validation_data()
         
         for item in data:
+            question = f"Summarize the following conversation:\n\n{item['dialogue']}"
+            expected = item['summary']
             test_cases.append({
-                'question': item['dialogue'],
-                'expected': item['summary']
+                'question': question,
+                'expected': expected
             })
     
     elif dataset_name.lower() == "meetingbank":
         dataset = MeetingBankDataset()
-        data = dataset.get_split_data("validation")
+        data = dataset.get_validation_data()
         
         for item in data:
+            question = f"Summarize the following meeting transcript:\n\n{item['transcript']}"
+            expected = item['summary']
             test_cases.append({
-                'question': item['transcript'],
-                'expected': item['summary']
+                'question': question,
+                'expected': expected
             })
     
     else:
-        raise ValueError(f"지원되지 않는 데이터셋: {dataset_name}")
+        raise ValueError(f"Unsupported dataset: {dataset_name}")
     
-    # 전체 데이터에서 샘플링
+    # Sample from entire dataset
     if total_samples > 0 and total_samples < len(test_cases):
         test_cases = random.sample(test_cases, total_samples)
     
-    logger.info(f"데이터셋 로드 완료: {len(test_cases)}개 샘플")
+    logger.info(f"Dataset loading completed: {len(test_cases)} samples")
     return test_cases
 
 def save_results(tuner, output_dir, dataset_name, config, logger):
-    """결과 저장"""
+    """Save results"""
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     
-    # 설정 정보 저장
+    # Save configuration information
     config_file = os.path.join(output_dir, f"config_{dataset_name}_{timestamp}.json")
     with open(config_file, 'w', encoding='utf-8') as f:
         json.dump(config, f, ensure_ascii=False, indent=2)
-    logger.info(f"설정 저장: {config_file}")
+    logger.info(f"Configuration saved: {config_file}")
     
-    # 전체 결과 CSV 저장
+    # Save complete results CSV
     csv_data = tuner.save_results_to_csv()
     csv_file = os.path.join(output_dir, f"results_{dataset_name}_{timestamp}.csv")
     with open(csv_file, 'w', encoding='utf-8') as f:
         f.write(csv_data)
-    logger.info(f"전체 결과 저장: {csv_file}")
+    logger.info(f"Complete results saved: {csv_file}")
     
-    # 비용 요약 CSV 저장
+    # Save cost summary CSV
     cost_csv_data = tuner.export_cost_summary_to_csv()
     cost_file = os.path.join(output_dir, f"cost_summary_{dataset_name}_{timestamp}.csv")
     with open(cost_file, 'w', encoding='utf-8') as f:
         f.write(cost_csv_data)
-    logger.info(f"비용 요약 저장: {cost_file}")
+    logger.info(f"Cost summary saved: {cost_file}")
     
-    # 최고 성능 프롬프트 저장
+    # Save best performance prompt
     if tuner.iteration_results:
         best_result = max(tuner.iteration_results, key=lambda x: x.avg_score)
         best_prompt_file = os.path.join(output_dir, f"best_prompt_{dataset_name}_{timestamp}.json")
@@ -254,89 +268,89 @@ def save_results(tuner, output_dir, dataset_name, config, logger):
         
         with open(best_prompt_file, 'w', encoding='utf-8') as f:
             json.dump(best_prompt_data, f, ensure_ascii=False, indent=2)
-        logger.info(f"최고 성능 프롬프트 저장: {best_prompt_file}")
-        logger.info(f"최고 성능: 평균 점수 {best_result.avg_score:.3f}")
+        logger.info(f"Best performance prompt saved: {best_prompt_file}")
+        logger.info(f"Best performance: Average score {best_result.avg_score:.3f}")
 
 def main():
-    parser = argparse.ArgumentParser(description="프롬프트 자동 튜닝 실행")
+    parser = argparse.ArgumentParser(description="Prompt Auto-tuning Execution")
     
-    # 데이터셋 설정
+    # Dataset configuration
     parser.add_argument("--dataset", type=str, required=True,
                        choices=["mmlu", "mmlu_pro", "bbh", "cnn", "gsm8k", "mbpp", "xsum", 
                                "truthfulqa", "hellaswag", "humaneval", "samsum", "meetingbank"],
-                       help="사용할 데이터셋")
+                       help="Dataset to use")
     
-    # 샘플링 설정
+    # Sampling configuration
     parser.add_argument("--total_samples", type=int, 
                        choices=[5, 20, 50, 100, 200], default=20,
-                       help="전체 데이터에서 샘플링할 개수 (5, 20, 50, 100, 200)")
+                       help="Number of samples to sample from entire data (5, 20, 50, 100, 200)")
     
     parser.add_argument("--iteration_samples", type=int, default=5,
-                       help="매 이터레이션마다 사용할 샘플 수")
+                       help="Number of samples to use per iteration")
     
     parser.add_argument("--iterations", type=int, default=10,
-                       help="이터레이션 수")
+                       help="Number of iterations")
     
-    # 모델 설정
+    # Model configuration
     parser.add_argument("--model", type=str, default="solar",
                        choices=["solar", "gpt4o", "claude", "local1", "local2", "solar_strawberry"],
-                       help="메인 모델")
+                       help="Main model")
     
     parser.add_argument("--evaluator", type=str, default="solar",
                        choices=["solar", "gpt4o", "claude", "local1", "local2", "solar_strawberry"],
-                       help="평가 모델")
+                       help="Evaluation model")
     
     parser.add_argument("--meta_model", type=str, default="solar",
                        choices=["solar", "gpt4o", "claude", "local1", "local2", "solar_strawberry"],
-                       help="메타 프롬프트 생성 모델")
+                       help="Meta prompt generation model")
     
-    # 튜닝 설정
+    # Tuning configuration
     parser.add_argument("--use_meta_prompt", action="store_true", default=True,
-                       help="메타 프롬프트 사용 여부")
+                       help="Whether to use meta prompt")
     
     parser.add_argument("--evaluation_threshold", type=float, default=0.8,
-                       help="평가 프롬프트 점수 임계값")
+                       help="Evaluation prompt score threshold")
     
     parser.add_argument("--score_threshold", type=float, default=None,
-                       help="평균 점수 임계값 (None이면 사용 안함)")
+                       help="Average score threshold (None if not used)")
     
-    # 출력 설정
+    # Output configuration
     parser.add_argument("--output_dir", type=str, default="./results",
-                       help="결과 저장 디렉토리")
+                       help="Result storage directory")
     
     parser.add_argument("--seed", type=int, default=42,
-                       help="랜덤 시드")
+                       help="Random seed")
     
     args = parser.parse_args()
     
-    # 출력 디렉토리 생성
+    # Create output directory
     os.makedirs(args.output_dir, exist_ok=True)
     
-    # 로깅 설정
+    # Setup logging
     logger = setup_logging(args.output_dir)
     
-    # 랜덤 시드 설정
+    # Set random seed
     random.seed(args.seed)
-    logger.info(f"랜덤 시드 설정: {args.seed}")
+    logger.info(f"Random seed set: {args.seed}")
     
-    # api_client의 모델 정보 활용
+    # Utilize model information from api_client
     from agent.common.api_client import Model
     
-    # 설정 정보 (모델 버전 정보 추가)
+    # Configuration information (add model version information)
     config = vars(args).copy()
     config["model_version"] = Model.get_model_info(args.model)["default_version"]
     config["evaluator_version"] = Model.get_model_info(args.evaluator)["default_version"]
     config["meta_model_version"] = Model.get_model_info(args.meta_model)["default_version"]
     
-    logger.info("=== 프롬프트 튜닝 시작 ===")
-    logger.info(f"설정: {json.dumps(config, ensure_ascii=False, indent=2)}")
+    logger.info("=== Prompt Tuning Started ===")
+    logger.info(f"Configuration: {json.dumps(config, ensure_ascii=False, indent=2)}")
     
     try:
-        # 데이터셋 로드
+        # Load dataset
         test_cases = load_dataset(args.dataset, args.total_samples, logger)
         
-        # PromptTuner 초기화
-        logger.info("PromptTuner 초기화 중...")
+        # Initialize PromptTuner
+        logger.info("Initializing PromptTuner...")
         tuner = PromptTuner(
             model_name=args.model,
             model_version=config["model_version"],
@@ -346,7 +360,7 @@ def main():
             meta_prompt_model_version=config["meta_model_version"]
         )
         
-        # 프롬프트 파일 로드
+        # Load prompt files
         prompts_dir = os.path.join(os.path.dirname(__file__), 'agent', 'prompts')
         
         with open(os.path.join(prompts_dir, 'initial_system_prompt.txt'), 'r', encoding='utf-8') as f:
@@ -354,29 +368,29 @@ def main():
         with open(os.path.join(prompts_dir, 'initial_user_prompt.txt'), 'r', encoding='utf-8') as f:
             initial_user_prompt = f.read()
         
-        # 메타프롬프트 파일 로드 및 설정 (Streamlit 앱과 동일하게)
+        # Load and configure metaprompt files (same as Streamlit app)
         with open(os.path.join(prompts_dir, 'meta_system_prompt.txt'), 'r', encoding='utf-8') as f:
             meta_system_prompt = f.read()
         with open(os.path.join(prompts_dir, 'meta_user_prompt.txt'), 'r', encoding='utf-8') as f:
             meta_user_prompt = f.read()
         
-        # 메타프롬프트 설정 (Streamlit 앱과 동일한 로직)
+        # Metaprompt configuration (same logic as Streamlit app)
         if meta_system_prompt.strip() and meta_user_prompt.strip():
             tuner.set_meta_prompt(meta_system_prompt, meta_user_prompt)
-            logger.info("✅ 메타프롬프트 설정 완료")
+            logger.info("✅ Metaprompt configuration completed")
         else:
-            logger.warning("⚠️ 메타프롬프트가 비어있습니다.")
+            logger.warning("⚠️ Metaprompt is empty.")
         
-        # 프로그레스 콜백 설정
+        # Progress callback configuration
         def progress_callback(iteration, test_case_index):
             progress = ((iteration - 1) * args.iteration_samples + test_case_index) / (args.iterations * args.iteration_samples)
-            logger.info(f"진행도: {progress*100:.1f}% - Iteration {iteration}/{args.iterations}, Test Case {test_case_index}/{args.iteration_samples}")
+            logger.info(f"Progress: {progress*100:.1f}% - Iteration {iteration}/{args.iterations}, Test Case {test_case_index}/{args.iteration_samples}")
         
         def iteration_callback(result):
-            logger.info(f"Iteration {result.iteration} 완료 - 평균 점수: {result.avg_score:.3f}, 표준편차: {result.std_dev:.3f}")
+            logger.info(f"Iteration {result.iteration} completed - Average score: {result.avg_score:.3f}, Standard deviation: {result.std_dev:.3f}")
         
         def best_prompt_callback(iteration, avg_score, system_prompt, user_prompt):
-            """새로운 베스트 프롬프트가 발견될 때마다 실시간으로 저장"""
+            """Save in real-time whenever a new best prompt is discovered"""
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             best_prompt_file = os.path.join(args.output_dir, f"best_prompt_{args.dataset}_{timestamp}.json")
             
@@ -386,57 +400,57 @@ def main():
                 "system_prompt": system_prompt,
                 "user_prompt": user_prompt,
                 "updated_at": datetime.now().isoformat(),
-                "note": "실시간 업데이트된 베스트 프롬프트"
+                "note": "Real-time updated best prompt"
             }
             
             with open(best_prompt_file, 'w', encoding='utf-8') as f:
                 json.dump(best_prompt_data, f, ensure_ascii=False, indent=2)
             
-            logger.info(f"🏆 새로운 베스트 프롬프트 저장: {best_prompt_file} (Iteration {iteration}, 점수: {avg_score:.3f})")
+            logger.info(f"🏆 New best prompt saved: {best_prompt_file} (Iteration {iteration}, Score: {avg_score:.3f})")
         
-        # 프롬프트 변화 과정 트랙킹 콜백들
+        # Prompt change process tracking callbacks
         def prompt_improvement_start_callback(iteration, avg_score, current_system_prompt, current_user_prompt):
-            """프롬프트 개선 시작 시점 콜백"""
-            logger.info(f"\n🔄 [Iteration {iteration}] 프롬프트 개선 시작 (현재 점수: {avg_score:.3f})")
-            logger.info(f"   📋 현재 시스템 프롬프트: {current_system_prompt[:100]}{'...' if len(current_system_prompt) > 100 else ''}")
-            logger.info(f"   📝 현재 유저 프롬프트: {current_user_prompt[:100]}{'...' if len(current_user_prompt) > 100 else ''}")
+            """Callback when prompt improvement starts"""
+            logger.info(f"\n🔄 [Iteration {iteration}] Prompt improvement started (Current score: {avg_score:.3f})")
+            logger.info(f"   📋 Current system prompt: {current_system_prompt[:100]}{'...' if len(current_system_prompt) > 100 else ''}")
+            logger.info(f"   📝 Current user prompt: {current_user_prompt[:100]}{'...' if len(current_user_prompt) > 100 else ''}")
         
         def meta_prompt_generated_callback(iteration, meta_prompt):
-            """메타프롬프트 생성 완료 시점 콜백"""
-            logger.info(f"\n📊 [Iteration {iteration}] 메타프롬프트 생성 완료")
-            logger.info(f"   🧠 메타프롬프트 길이: {len(meta_prompt)} 문자")
-            # 메타프롬프트의 일부만 표시 (너무 길 수 있음)
+            """Callback when metaprompt generation is completed"""
+            logger.info(f"\n📊 [Iteration {iteration}] Metaprompt generation completed")
+            logger.info(f"   🧠 Metaprompt length: {len(meta_prompt)} characters")
+            # Show only part of metaprompt (may be too long)
             meta_preview = meta_prompt[:200] + "..." if len(meta_prompt) > 200 else meta_prompt
-            logger.info(f"   📜 메타프롬프트 미리보기: {meta_preview}")
+            logger.info(f"   📜 Metaprompt preview: {meta_preview}")
         
         def prompt_updated_callback(iteration, previous_system_prompt, previous_user_prompt, 
                                   previous_task_type, previous_task_description,
                                   new_system_prompt, new_user_prompt, 
                                   new_task_type, new_task_description, raw_improved_prompts):
-            """프롬프트 업데이트 완료 시점 콜백"""
-            logger.info(f"\n✨ [Iteration {iteration}] 프롬프트 업데이트 완료!")
+            """Callback when prompt update is completed"""
+            logger.info(f"\n✨ [Iteration {iteration}] Prompt update completed!")
             
-            # 태스크 정보 변화
+            # Task information changes
             if previous_task_type != new_task_type:
-                logger.info(f"   🎯 태스크 타입 변경: '{previous_task_type}' → '{new_task_type}'")
+                logger.info(f"   🎯 Task type changed: '{previous_task_type}' → '{new_task_type}'")
             if previous_task_description != new_task_description:
-                logger.info(f"   📖 태스크 설명 변경: '{previous_task_description[:50]}...' → '{new_task_description[:50]}...'")
+                logger.info(f"   📖 Task description changed: '{previous_task_description[:50]}...' → '{new_task_description[:50]}...'")
             
-            # 시스템 프롬프트 변화
+            # System prompt changes
             if previous_system_prompt != new_system_prompt:
-                logger.info(f"   🔧 시스템 프롬프트 변경:")
-                logger.info(f"      이전: {previous_system_prompt[:100]}{'...' if len(previous_system_prompt) > 100 else ''}")
-                logger.info(f"      신규: {new_system_prompt[:100]}{'...' if len(new_system_prompt) > 100 else ''}")
+                logger.info(f"   🔧 System prompt changed:")
+                logger.info(f"      Previous: {previous_system_prompt[:100]}{'...' if len(previous_system_prompt) > 100 else ''}")
+                logger.info(f"      New: {new_system_prompt[:100]}{'...' if len(new_system_prompt) > 100 else ''}")
             else:
-                logger.info(f"   🔧 시스템 프롬프트: 변경 없음")
+                logger.info(f"   🔧 System prompt: No changes")
             
-            # 유저 프롬프트 변화  
+            # User prompt changes  
             if previous_user_prompt != new_user_prompt:
-                logger.info(f"   📝 유저 프롬프트 변경:")
-                logger.info(f"      이전: {previous_user_prompt[:100]}{'...' if len(previous_user_prompt) > 100 else ''}")
-                logger.info(f"      신규: {new_user_prompt[:100]}{'...' if len(new_user_prompt) > 100 else ''}")
+                logger.info(f"   📝 User prompt changed:")
+                logger.info(f"      Previous: {previous_user_prompt[:100]}{'...' if len(previous_user_prompt) > 100 else ''}")
+                logger.info(f"      New: {new_user_prompt[:100]}{'...' if len(new_user_prompt) > 100 else ''}")
             else:
-                logger.info(f"   📝 유저 프롬프트: 변경 없음")
+                logger.info(f"   📝 User prompt: No changes")
         
         tuner.progress_callback = progress_callback
         tuner.iteration_callback = iteration_callback
@@ -445,8 +459,8 @@ def main():
         tuner.meta_prompt_generated_callback = meta_prompt_generated_callback
         tuner.prompt_updated_callback = prompt_updated_callback
         
-        # 프롬프트 튜닝 실행
-        logger.info("프롬프트 튜닝 실행 중...")
+        # Execute prompt tuning
+        logger.info("Executing prompt tuning...")
         results = tuner.tune_prompt(
             initial_system_prompt=initial_system_prompt,
             initial_user_prompt=initial_user_prompt,
@@ -458,22 +472,22 @@ def main():
             num_samples=args.iteration_samples
         )
         
-        # 결과 저장
-        logger.info("결과 저장 중...")
+        # Save results
+        logger.info("Saving results...")
         save_results(tuner, args.output_dir, args.dataset, config, logger)
         
-        # 비용 요약 출력
+        # Output cost summary
         cost_summary = tuner.get_cost_summary()
-        logger.info("=== 비용 요약 ===")
-        logger.info(f"총 비용: ${cost_summary['total_cost']:.4f}")
-        logger.info(f"총 토큰: {cost_summary['total_tokens']:,}")
-        logger.info(f"총 시간: {cost_summary['total_duration']:.1f}초")
-        logger.info(f"총 호출: {cost_summary['total_calls']}")
+        logger.info("=== Cost Summary ===")
+        logger.info(f"Total cost: ${cost_summary['total_cost']:.4f}")
+        logger.info(f"Total tokens: {cost_summary['total_tokens']:,}")
+        logger.info(f"Total time: {cost_summary['total_duration']:.1f} seconds")
+        logger.info(f"Total calls: {cost_summary['total_calls']}")
         
-        logger.info("=== 프롬프트 튜닝 완료 ===")
+        logger.info("=== Prompt Tuning Completed ===")
         
     except Exception as e:
-        logger.error(f"프롬프트 튜닝 중 오류 발생: {str(e)}", exc_info=True)
+        logger.error(f"Error occurred during prompt tuning: {str(e)}", exc_info=True)
         sys.exit(1)
 
 if __name__ == "__main__":

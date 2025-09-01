@@ -1,22 +1,22 @@
-# 프롬프트 자동 튜닝 CLI 가이드
+# Prompt Auto-tuning CLI Guide
 
-이 가이드는 명령줄에서 프롬프트 자동 튜닝을 실행하는 방법을 설명합니다.
+This guide explains how to execute prompt auto-tuning from the command line.
 
-## 주요 파일
+## Key Files
 
-- `run_prompt_tuning.py`: 메인 CLI 스크립트
-- `run_background.sh`: 백그라운드 실행용 bash 스크립트  
-- `run_batch_experiments.py`: 여러 실험을 배치로 실행하는 스크립트
+- `run_prompt_tuning.py`: Main CLI script
+- `run_background.sh`: Bash script for background execution  
+- `run_batch_experiments.py`: Script to run multiple experiments in batch
 
-## 기본 사용법
+## Basic Usage
 
-### 1. 단일 실험 실행
+### 1. Single Experiment Execution
 
 ```bash
-# 기본 설정으로 BBH 데이터셋 실행
+# Run BBH dataset with default settings
 python run_prompt_tuning.py --dataset bbh --total_samples 20 --iteration_samples 5 --iterations 10
 
-# 다양한 옵션 사용
+# Use various options
 python run_prompt_tuning.py \
     --dataset mmlu \
     --total_samples 50 \
@@ -30,81 +30,81 @@ python run_prompt_tuning.py \
     --evaluation_threshold 0.8
 ```
 
-### 2. 백그라운드에서 실행
+### 2. Background Execution
 
 ```bash
-# 기본 설정 (BBH, 20 샘플)
+# Default settings (BBH, 20 samples)
 ./run_background.sh
 
-# 커스텀 설정
+# Custom settings
 ./run_background.sh gsm8k 100
 
-# 로그 실시간 모니터링
+# Real-time log monitoring
 tail -f ./results/background_bbh_YYYYMMDD_HHMMSS.log
 
-# 프로세스 상태 확인
+# Check process status
 ps -p $(cat ./results/process_bbh_YYYYMMDD_HHMMSS.pid)
 ```
 
-### 3. 배치 실험 실행
+### 3. Batch Experiment Execution
 
 ```bash
-# 기본 설정 파일 생성
+# Create default configuration file
 python run_batch_experiments.py --create_config
 
-# 설정 확인 (실제 실행 없이)
+# Check configuration (without actual execution)
 python run_batch_experiments.py --dry_run
 
-# 배치 실험 실행
+# Execute batch experiments
 python run_batch_experiments.py --config experiments_config.json
 ```
 
-## 파라미터 설명
+## Parameter Description
 
-### 필수 파라미터
-- `--dataset`: 사용할 데이터셋 (bbh, mmlu, gsm8k, cnn, mbpp, xsum, etc.)
+### Required Parameters
+- `--dataset`: Dataset to use (bbh, mmlu, gsm8k, cnn, mbpp, xsum, etc.)
 
-### 샘플링 설정
-- `--total_samples`: 전체 데이터에서 샘플링할 개수 (5, 20, 50, 100, 200)
-- `--iteration_samples`: 매 이터레이션마다 사용할 샘플 수 (기본값: 5)
-- `--iterations`: 이터레이션 수 (기본값: 10)
+### Sampling Settings
+- `--total_samples`: Number of samples to sample from entire data (5, 20, 50, 100, 200)
+- `--iteration_samples`: Number of samples to use per iteration (default: 5)
+- `--iterations`: Number of iterations (default: 10)
 
-### 모델 설정
-- `--model`: 메인 모델 (solar, gpt4o, claude, local1, local2, solar_strawberry)
-- `--evaluator`: 평가 모델 (기본값: solar)
-- `--meta_model`: 메타 프롬프트 생성 모델 (기본값: solar)
+### Model Settings
+- `--model`: Main model (solar, gpt4o, claude, local1, local2, solar_strawberry)
+- `--evaluator`: Evaluation model (default: solar)
+- `--meta_model`: Meta prompt generation model (default: solar)
 
-### 튜닝 설정
-- `--use_meta_prompt`: 메타 프롬프트 사용 (기본값: True)
-- `--evaluation_threshold`: 평가 점수 임계값 (기본값: 0.8)
-- `--score_threshold`: 평균 점수 임계값 (기본값: None)
+### Tuning Settings
+- `--use_meta_prompt`: Use meta prompt (default: True)
+- `--evaluation_threshold`: Evaluation score threshold (default: 0.8)
+- `--score_threshold`: Average score threshold (default: None)
 
-### 출력 설정
-- `--output_dir`: 결과 저장 디렉토리 (기본값: ./results)
-- `--seed`: 랜덤 시드 (기본값: 42)
+### Output Settings
+- `--output_dir`: Result storage directory (default: ./results)
+- `--seed`: Random seed (default: 42)
 
-## 지원 데이터셋
+## Supported Datasets
 
-| 데이터셋 | 설명 | 샘플 형태 |
-|---------|------|----------|
-| `bbh` | Big-Bench Hard | 추론 문제 |
-| `mmlu` | Massive Multitask Language Understanding | 객관식 |
-| `mmlu_pro` | MMLU Pro | 고급 객관식 |
-| `gsm8k` | Grade School Math 8K | 수학 문제 |
-| `cnn` | CNN/DailyMail | 요약 |
-| `mbpp` | Mostly Basic Python Programming | 코딩 |
-| `xsum` | Extreme Summarization | 요약 |
-| `truthfulqa` | TruthfulQA | 진실성 평가 |
-| `hellaswag` | HellaSwag | 상식 추론 |
-| `humaneval` | HumanEval | 코딩 평가 |
-| `samsum` | Samsung Summary | 대화 요약 |
-| `meetingbank` | MeetingBank | 회의 요약 |
+| Dataset | Description | Sample Type |
+|---------|-------------|-------------|
+| `bbh` | Big-Bench Hard | Reasoning problems |
+| `mmlu` | Massive Multitask Language Understanding | Multiple choice |
+| `mmlu_pro` | MMLU Pro | Advanced multiple choice |
+| `gsm8k` | Grade School Math 8K | Math problems |
+| `cnn` | CNN/DailyMail | Summarization |
+| `mbpp` | Mostly Basic Python Programming | Coding |
+| `xsum` | Extreme Summarization | Summarization |
+| `truthfulqa` | TruthfulQA | Truthfulness evaluation |
+| `hellaswag` | HellaSwag | Common sense reasoning |
+| `humaneval` | HumanEval | Coding evaluation |
+| `samsum` | Samsung Summary | Conversation summarization |
+| `meetingbank` | MeetingBank | Meeting summarization |
 
-## 실행 예시
+## Execution Examples
 
-### 예시 1: 소규모 테스트
+### Example 1: Small-scale Test
 ```bash
-# BBH 데이터셋으로 빠른 테스트
+# Quick test with BBH dataset
 python run_prompt_tuning.py \
     --dataset bbh \
     --total_samples 5 \
@@ -113,9 +113,9 @@ python run_prompt_tuning.py \
     --output_dir ./results/quick_test
 ```
 
-### 예시 2: 중간 규모 실험
+### Example 2: Medium-scale Experiment
 ```bash
-# MMLU 데이터셋으로 표준 실험
+# Standard experiment with MMLU dataset
 python run_prompt_tuning.py \
     --dataset mmlu \
     --total_samples 50 \
@@ -127,9 +127,9 @@ python run_prompt_tuning.py \
     --output_dir ./results/mmlu_standard
 ```
 
-### 예시 3: 대규모 실험 (백그라운드)
+### Example 3: Large-scale Experiment (Background)
 ```bash
-# GSM8K 데이터셋으로 대규모 실험
+# Large-scale experiment with GSM8K dataset
 nohup python run_prompt_tuning.py \
     --dataset gsm8k \
     --total_samples 200 \
@@ -139,19 +139,19 @@ nohup python run_prompt_tuning.py \
     > gsm8k_large.log 2>&1 &
 ```
 
-## 결과 파일
+## Result Files
 
-실행 후 다음 파일들이 생성됩니다:
+After execution, the following files are generated:
 
-- `results_DATASET_TIMESTAMP.csv`: 전체 결과 데이터
-- `cost_summary_DATASET_TIMESTAMP.csv`: 비용 요약
-- `best_prompt_DATASET_TIMESTAMP.json`: 최고 성능 프롬프트
-- `config_DATASET_TIMESTAMP.json`: 실험 설정
-- `prompt_tuning_TIMESTAMP.log`: 실행 로그
+- `results_DATASET_TIMESTAMP.csv`: Complete result data
+- `cost_summary_DATASET_TIMESTAMP.csv`: Cost summary
+- `best_prompt_DATASET_TIMESTAMP.json`: Best performance prompt
+- `config_DATASET_TIMESTAMP.json`: Experiment configuration
+- `prompt_tuning_TIMESTAMP.log`: Execution log
 
-## 배치 실험 설정 예시
+## Batch Experiment Configuration Example
 
-`experiments_config.json` 파일 예시:
+`experiments_config.json` file example:
 
 ```json
 {
@@ -191,33 +191,33 @@ nohup python run_prompt_tuning.py \
 }
 ```
 
-## 주의사항
+## Precautions
 
-1. **API 키 설정**: 사용하는 모델에 맞는 API 키가 `.env` 파일에 설정되어 있어야 합니다.
+1. **API Key Setup**: API keys for the models you use must be configured in the `.env` file.
    - `SOLAR_API_KEY`
    - `OPENAI_API_KEY`
    - `ANTHROPIC_API_KEY`
    - `SOLAR_STRAWBERRY_API_KEY`
 
-2. **메모리 사용량**: 큰 데이터셋이나 많은 샘플을 사용할 때는 충분한 메모리가 필요합니다.
+2. **Memory Usage**: Sufficient memory is required when using large datasets or many samples.
 
-3. **실행 시간**: 이터레이션 수와 샘플 수에 따라 실행 시간이 크게 달라집니다.
+3. **Execution Time**: Execution time varies greatly depending on the number of iterations and samples.
 
-4. **비용 관리**: API 기반 모델을 사용할 때는 토큰 사용량과 비용을 주의깊게 모니터링하세요.
+4. **Cost Management**: When using API-based models, carefully monitor token usage and costs.
 
-## 문제 해결
+## Troubleshooting
 
-### 일반적인 오류
-- **ModuleNotFoundError**: `pip install -r requirements.txt`로 의존성 설치
-- **API 키 오류**: `.env` 파일에서 API 키 확인
-- **메모리 부족**: 샘플 수 줄이거나 더 작은 데이터셋 사용
-- **권한 오류**: `chmod +x run_background.sh`로 실행 권한 부여
+### Common Errors
+- **ModuleNotFoundError**: Install dependencies with `pip install -r requirements.txt`
+- **API Key Error**: Check API keys in `.env` file
+- **Insufficient Memory**: Reduce sample count or use smaller datasets
+- **Permission Error**: Grant execution permission with `chmod +x run_background.sh`
 
-### 로그 확인
+### Log Checking
 ```bash
-# 실시간 로그 모니터링
+# Real-time log monitoring
 tail -f ./results/*.log
 
-# 에러 로그만 확인
+# Check only error logs
 grep -i error ./results/*.log
 ``` 
