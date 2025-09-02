@@ -824,28 +824,28 @@ Average Score: {best_prompt['avg_score']:.2f}
         return self.meta_prompt_stats.copy()
 
     def print_cost_summary(self):
-        """비용 요약을 콘솔에 출력합니다."""
+        """Print cost summary to console."""
         summary = self.get_cost_summary()
         
-        print("\n=== 비용 및 사용량 요약 ===")
-        print(f"총 비용: ${summary['total_cost']:.4f}")
-        print(f"총 토큰: {summary['total_tokens']:,}")
-        print(f"총 시간: {summary['total_duration']:.2f}초")
-        print(f"총 호출: {summary['total_calls']}")
+        print("\n=== Cost and Usage Summary ===")
+        print(f"Total Cost: ${summary['total_cost']:.4f}")
+        print(f"Total Tokens: {summary['total_tokens']:,}")
+        print(f"Total Time: {summary['total_duration']:.2f} seconds")
+        print(f"Total Calls: {summary['total_calls']}")
         
-        print("\n--- 모델별 상세 정보 ---")
+        print("\n--- Model-specific Details ---")
         for model_type in ["model_stats", "evaluator_stats", "meta_prompt_stats"]:
             stats = summary[model_type]
             print(f"\n{stats['type']}:")
-            print(f"  호출 횟수: {stats['total_calls']}")
-            print(f"  입력 토큰: {stats['total_input_tokens']:,}")
-            print(f"  출력 토큰: {stats['total_output_tokens']:,}")
-            print(f"  총 토큰: {stats['total_tokens']:,}")
-            print(f"  비용: ${stats['total_cost']:.4f}")
-            print(f"  시간: {stats['total_duration']:.2f}초")
+            print(f"  Call Count: {stats['total_calls']}")
+            print(f"  Input Tokens: {stats['total_input_tokens']:,}")
+            print(f"  Output Tokens: {stats['total_output_tokens']:,}")
+            print(f"  Total Tokens: {stats['total_tokens']:,}")
+            print(f"  Cost: ${stats['total_cost']:.4f}")
+            print(f"  Time: {stats['total_duration']:.2f} seconds")
 
     def get_iteration_cost_breakdown(self) -> Dict:
-        """이터레이션별 비용 분석을 반환합니다."""
+        """Return cost breakdown by iteration."""
         breakdown = {}
         
         try:
@@ -864,7 +864,7 @@ Average Score: {best_prompt['avg_score']:.2f}
                     "total_calls": 0
                 }
                 
-                # 각 모델별 이터레이션 통계 수집
+                # Collect iteration statistics for each model type
                 for stats_name, stats in [("model", self.model_stats), ("evaluator", self.evaluator_stats), ("meta_prompt", self.meta_prompt_stats)]:
                     if stats and "calls_by_iteration" in stats and iteration in stats["calls_by_iteration"]:
                         iter_stats = stats["calls_by_iteration"][iteration]
@@ -875,25 +875,25 @@ Average Score: {best_prompt['avg_score']:.2f}
                 
                 breakdown[f"iteration_{iteration}"] = iteration_cost
         except Exception as e:
-            self.logger.error(f"이터레이션별 비용 분석 중 오류: {str(e)}")
+            self.logger.error(f"Error during iteration cost breakdown: {str(e)}")
             return {}
         
         return breakdown 
 
     def reset_stats(self):
-        """모든 통계를 초기화합니다."""
-        self.model_stats = self._initialize_stats("모델 호출")
-        self.evaluator_stats = self._initialize_stats("평가자 호출")
-        self.meta_prompt_stats = self._initialize_stats("메타 프롬프트 생성")
+        """Reset all statistics."""
+        self.model_stats = self._initialize_stats("Model calls")
+        self.evaluator_stats = self._initialize_stats("Evaluator calls")
+        self.meta_prompt_stats = self._initialize_stats("Meta prompt generation")
         self.iteration_results = []
-        self.logger.info("모든 통계가 초기화되었습니다.")
+        self.logger.info("All statistics have been reset.")
 
     def export_cost_summary_to_csv(self) -> str:
-        """비용 요약을 CSV 형식으로 내보냅니다."""
+        """Export cost summary to CSV format."""
         summary = self.get_cost_summary()
         breakdown = self.get_iteration_cost_breakdown()
         
-        # 전체 요약 데이터
+        # Overall summary data
         summary_data = [{
             'Type': 'Total Summary',
             'Total_Cost': summary['total_cost'],
@@ -911,13 +911,13 @@ Average Score: {best_prompt['avg_score']:.2f}
             'Meta_Prompt_Tokens': summary['meta_prompt_stats']['total_tokens']
         }]
         
-        # 이터레이션별 데이터 추가
+        # Add iteration-wise data
         for iteration_key, iteration_data in breakdown.items():
             summary_data.append({
                 'Type': iteration_key.replace('_', ' ').title(),
                 'Total_Cost': iteration_data['total_cost'],
-                'Total_Tokens': 0,  # 이터레이션별 토큰 정보는 별도로 계산 필요
-                'Total_Duration': 0,  # 이터레이션별 시간 정보는 별도로 계산 필요
+                'Total_Tokens': 0,  # Token information per iteration needs separate calculation
+                'Total_Duration': 0,  # Time information per iteration needs separate calculation
                 'Total_Calls': iteration_data['total_calls'],
                 'Model_Cost': iteration_data['model_cost'],
                 'Model_Calls': iteration_data['model_calls'],

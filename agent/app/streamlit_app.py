@@ -121,147 +121,147 @@ bbh_dataset = BBHDataset()
 # Create TruthfulQA dataset instance (create only once)
 truthfulqa_dataset = TruthfulQADataset()
 
-# 사이드바에서 파라미터 설정
+# Parameter settings in sidebar
 with st.sidebar:
-    st.header("튜닝 설정")
+    st.header("Tuning Settings")
     
-    # 반복 설정 그룹
-    with st.expander("반복 설정", expanded=True):
+    # Iteration settings group
+    with st.expander("Iteration Settings", expanded=True):
         iterations = st.slider(
-            "반복 횟수", 
+            "Number of Iterations", 
             min_value=1, 
             max_value=100, 
             value=3,
-            help="프롬프트 튜닝을 수행할 반복 횟수를 설정합니다."
+            help="Set the number of iterations for prompt tuning."
         )
     
-    # 프롬프트 개선 설정 그룹
-    with st.expander("프롬프트 개선 설정", expanded=True):
-        # 프롬프트 개선 사용 토글
+    # Prompt improvement settings group
+    with st.expander("Prompt Improvement Settings", expanded=True):
+        # Toggle for using prompt improvement
         use_meta_prompt = st.toggle(
-            "프롬프트 개선 사용", 
+            "Use Prompt Improvement", 
             value=True, 
-            help="메타 프롬프트를 사용하여 프롬프트를 개선합니다. 비활성화하면 초기 프롬프트를 사용합니다."
+            help="Use meta prompt to improve the prompt. Disable to use initial prompt."
         )
         
-        # 평가 프롬프트 점수 임계값 설정 (프롬프트 개선이 켜져있을 때만 활성화)
+        # Evaluation prompt score threshold setting (only active when prompt improvement is enabled)
         evaluation_threshold = st.slider(
-            "평가 프롬프트 점수 임계값",
+            "Evaluation Prompt Score Threshold",
             min_value=0.0,
             max_value=1.0,
             value=0.8,
             step=0.1,
             disabled=not use_meta_prompt,
-            help="이 점수 미만이면 프롬프트를 개선합니다. 프롬프트 개선이 켜져있을 때만 사용 가능합니다."
+            help="Improve the prompt if the score is below this threshold. Only available when prompt improvement is enabled."
         )
         
-        # 평균 점수 임계값 적용 여부 토글 (프롬프트 개선이 켜져있을 때만 활성화)
+        # Toggle for applying average score threshold (only active when prompt improvement is enabled)
         use_threshold = st.toggle(
-            "평균 점수 임계값 적용",
+            "Apply Average Score Threshold",
             value=True,
             disabled=not use_meta_prompt,
-            help="이 옵션이 켜져있으면 평균 점수가 임계값 이상일 때 반복을 중단합니다. 프롬프트 개선이 켜져있을 때만 사용 가능합니다."
+            help="Stop the iteration if the average score is above the threshold. Only available when prompt improvement is enabled."
         )
         
-        # 평균 점수 임계값 슬라이더 (평균 점수 임계값 적용이 꺼져있거나 프롬프트 개선이 꺼져있을 때는 비활성화)
+        # Average score threshold slider (disabled when average score threshold is off or prompt improvement is off)
         score_threshold = st.slider(
-            "평균 점수 임계값",
+            "Average Score Threshold",
             min_value=0.0,
             max_value=1.0,
             value=0.9,
             step=0.05,
             disabled=not (use_threshold and use_meta_prompt),
-            help="이 점수 이상이면 반복을 중단합니다. 평균 점수 임계값 적용과 프롬프트 개선이 모두 켜져있을 때만 사용 가능합니다."
+            help="Stop the iteration if the average score is above this threshold. Available only when average score threshold is enabled and prompt improvement is enabled."
         )
     
-    # 모델 설정 섹션 구분을 위한 디바이더
+    # Divider for model settings section
     st.divider()
     
-    # 모델 설정 그룹
-    with st.expander("튜닝 모델 설정", expanded=True):
-        # 모델 선택
+    # Model settings group
+    with st.expander("Tuning Model Settings", expanded=True):
+        # Model selection
         model_name = st.selectbox(
-            "모델 선택",
+            "Model Selection",
             options=list(MODEL_INFO.keys()),
             format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
-            index=list(MODEL_INFO.keys()).index("local1") if "local1" in MODEL_INFO else 0,  # local1이 있으면 기본값, 없으면 첫 번째
-            help="프롬프트 튜닝에 사용할 모델을 선택하세요. (solar_strawberry: Upstage Solar-Strawberry API)"
+            index=list(MODEL_INFO.keys()).index("local1") if "local1" in MODEL_INFO else 0,  # Use local1 as default if available, otherwise first
+            help="Select the model to use for prompt tuning. (solar_strawberry: Upstage Solar-Strawberry API)"
         )
         st.caption(MODEL_INFO[model_name]['description'])
         
-        # 튜닝 모델 버전 선택
+        # Tuning model version selection
         use_custom_tuning_version = st.toggle(
-            "커스텀 버전 사용",
-            value=False,  # 기본값을 False로 변경
-            help="튜닝 모델의 기본 버전 대신 커스텀 버전을 사용합니다."
+            "Use Custom Version",
+            value=False,  # Changed default value to False
+            help="Use a custom version instead of the default version for the tuning model."
         )
         
         if use_custom_tuning_version:
             tuning_model_version = st.text_input(
-                "모델 버전",
+                "Model Version",
                 value=MODEL_INFO[model_name]['default_version'],
-                help="튜닝에 사용할 모델 버전을 입력하세요."
+                help="Enter the model version to use for tuning."
             )
         else:
-            tuning_model_version = None  # 기본 버전을 사용하도록 None으로 설정
+            tuning_model_version = None  # Use default version by setting to None
     
-    # 메타 프롬프트 모델 설정 그룹
-    with st.expander("메타 프롬프트 모델 설정", expanded=True):
-        # 메타 프롬프트 모델 선택
+    # Meta prompt model settings group
+    with st.expander("Meta Prompt Model Settings", expanded=True):
+        # Meta prompt model selection
         meta_prompt_model = st.selectbox(
-            "모델 선택",
+            "Model Selection",
             options=list(MODEL_INFO.keys()),
             format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
             # index=list(MODEL_INFO.keys()).index("local1") if "local1" in MODEL_INFO else 0,
-            help="메타 프롬프트 생성에 사용할 모델을 선택하세요. (solar_strawberry: Upstage Solar-Strawberry API)"
+            help="Select the model to use for meta prompt generation. (solar_strawberry: Upstage Solar-Strawberry API)"
         )
         st.caption(MODEL_INFO[meta_prompt_model]['description'])
         
-        # 메타 프롬프트 모델 버전 선택
+        # Meta prompt model version selection
         use_custom_meta_version = st.toggle(
-            "커스텀 버전 사용",
-            value=False,  # 기본값을 False로 변경
-            help="메타 프롬프트 모델의 기본 버전 대신 커스텀 버전을 사용합니다."
+            "Use Custom Version",
+            value=False,  # Changed default value to False
+            help="Use a custom version instead of the default version for the meta prompt model."
         )
         
         if use_custom_meta_version:
             meta_model_version = st.text_input(
-                "모델 버전",
+                "Model Version",
                 value=MODEL_INFO[meta_prompt_model]['default_version'],
-                help="메타 프롬프트 생성에 사용할 모델 버전을 입력하세요."
+                help="Enter the model version to use for meta prompt generation."
             )
         else:
-            meta_model_version = None  # 기본 버전을 사용하도록 None으로 설정
+            meta_model_version = None  # Use default version by setting to None
     
-    # 평가 모델 설정 그룹
-    with st.expander("평가 모델 설정", expanded=True):
-        # 평가 모델 선택
+    # Evaluation model settings group
+    with st.expander("Evaluation Model Settings", expanded=True):
+        # Evaluation model selection
         evaluator_model = st.selectbox(
-            "모델 선택",
+            "Model Selection",
             options=list(MODEL_INFO.keys()),
             format_func=lambda x: f"{MODEL_INFO[x]['name']} ({MODEL_INFO[x]['default_version']})",
             index=list(MODEL_INFO.keys()).index("local1") if "local1" in MODEL_INFO else 0,
-            help="출력 평가에 사용할 모델을 선택하세요. (solar_strawberry: Upstage Solar-Strawberry API)"
+            help="Select the model to use for output evaluation. (solar_strawberry: Upstage Solar-Strawberry API)"
         )
         st.caption(MODEL_INFO[evaluator_model]['description'])
         
-        # 평가 모델 버전 선택
+        # Evaluation model version selection
         use_custom_evaluator_version = st.toggle(
-            "커스텀 버전 사용",
+            "Use Custom Version",
             value=False,
-            help="평가 모델의 기본 버전 대신 커스텀 버전을 사용합니다."
+            help="Use a custom version instead of the default version for the evaluation model."
         )
         
         if use_custom_evaluator_version:
             evaluator_model_version = st.text_input(
-                "모델 버전",
+                "Model Version",
                 value=MODEL_INFO[evaluator_model]['default_version'],
-                help="평가에 사용할 모델 버전을 입력하세요."
+                help="Enter the model version to use for evaluation."
             )
         else:
-            evaluator_model_version = None  # 기본 버전을 사용하도록 None으로 설정
+            evaluator_model_version = None  # Use default version by setting to None
 
-# PromptTuner 객체 생성
+# Create PromptTuner object
 tuner = PromptTuner(
     model_name=model_name,
     evaluator_model_name=evaluator_model,
@@ -271,88 +271,88 @@ tuner = PromptTuner(
     meta_prompt_model_version=meta_model_version
 )
 
-# 프롬프트 설정
-with st.expander("초기 프롬프트 설정", expanded=False):
+# Prompt settings
+with st.expander("Initial Prompt Settings", expanded=False):
     col1, col2 = st.columns(2)
     with col1:
         system_prompt = st.text_area(
-            "시스템 프롬프트",
+            "System Prompt",
             value=DEFAULT_SYSTEM_PROMPT,
             height=100,
-            help="튜닝을 시작할 초기 시스템 프롬프트를 입력하세요."
+            help="Enter the initial system prompt to start tuning."
         )
     with col2:
         user_prompt = st.text_area(
-            "사용자 프롬프트",
+            "User Prompt",
             value=DEFAULT_USER_PROMPT,
             height=100,
-            help="튜닝을 시작할 초기 사용자 프롬프트를 입력하세요."
+            help="Enter the initial user prompt to start tuning."
         )
     
-    if st.button("초기 프롬프트 업데이트", key="initial_prompt_update"):
+    if st.button("Update Initial Prompt", key="initial_prompt_update"):
         tuner.set_initial_prompt(system_prompt, user_prompt)
-        st.success("초기 프롬프트가 업데이트되었습니다.")
+        st.success("Initial prompt updated.")
 
-# 메타프롬프트 설정
-with st.expander("메타프롬프트 설정", expanded=False):
+# Meta prompt settings
+with st.expander("Meta Prompt Settings", expanded=False):
     col1, col2 = st.columns(2)
     with col1:
         meta_system_prompt = st.text_area(
-            "메타 시스템 프롬프트",
+            "Meta System Prompt",
             value=DEFAULT_META_SYSTEM_PROMPT,
             height=300,
-            help="프롬프트 엔지니어의 역할과 책임을 정의하는 시스템 프롬프트를 입력하세요."
+            help="Enter the system prompt that defines the role and responsibility of the prompt engineer."
         )
     with col2:
         meta_user_prompt = st.text_area(
-            "메타 유저 프롬프트",
+            "Meta User Prompt",
             value=DEFAULT_META_USER_PROMPT,
             height=300,
-            help="프롬프트 개선을 위한 입력 데이터와 출력 형식을 정의하는 유저 프롬프트를 입력하세요."
+            help="Enter the user prompt that defines the input data and output format for prompt improvement."
         )
     
-    if st.button("메타 프롬프트 업데이트", key="meta_prompt_update"):
+    if st.button("Update Meta Prompt", key="meta_prompt_update"):
         tuner.set_meta_prompt(meta_system_prompt, meta_user_prompt)
-        st.success("메타 프롬프트가 업데이트되었습니다.")
+        st.success("Meta prompt updated.")
 
-# 평가 프롬프트 설정
-with st.expander("평가 프롬프트 설정", expanded=False):
+# Evaluation prompt settings
+with st.expander("Evaluation Prompt Settings", expanded=False):
     col1, col2 = st.columns(2)
     with col1:
         evaluation_system_prompt = st.text_area(
-            "평가 시스템 프롬프트",
+            "Evaluation System Prompt",
             value=DEFAULT_EVALUATION_SYSTEM_PROMPT,
             height=200,
-            help="평가 모델의 시스템 프롬프트를 설정합니다."
+            help="Set the system prompt for the evaluation model."
         )
     with col2:
         evaluation_user_prompt = st.text_area(
-            "평가 유저 프롬프트",
+            "Evaluation User Prompt",
             value=DEFAULT_EVALUATION_USER_PROMPT,
             height=200,
-            help="평가 모델의 유저 프롬프트를 설정합니다. {question}, {output}, {expected}를 포함해야 합니다."
+            help="Set the user prompt for the evaluation model. It must include {question}, {output}, {expected}."
         )
     
-    if st.button("평가 프롬프트 업데이트", key="eval_prompt_update"):
+    if st.button("Update Evaluation Prompt", key="eval_prompt_update"):
         tuner.set_evaluation_prompt(evaluation_system_prompt, evaluation_user_prompt)
-        st.success("평가 프롬프트가 업데이트되었습니다.")
+        st.success("Evaluation prompt updated.")
 
-# 데이터셋 처리 공통 함수
+# Common dataset processing function
 def process_dataset(data, dataset_type):
-    # 데이터 표시
+    # Display data
     total_examples = len(data)
-    st.write(f"총 예제 수: {total_examples}")
+    st.write(f"Total examples: {total_examples}")
     
-    # 샘플 수 선택
+    # Sample count selection
     num_samples = st.slider(
         "Number of random samples to evaluate per iteration",
         min_value=1,
-        max_value=min(100, total_examples),  # 최대 샘플 수를 100으로 제한
+        max_value=min(100, total_examples),  # Limit maximum sample count to 100
         value=min(5, total_examples),
-        help="각 iteration마다 평가할 랜덤 샘플의 개수를 선택하세요."
+        help="Select the number of random samples to evaluate per iteration."
     )
     
-    # 테스트 케이스 생성 및 데이터프레임 생성
+    # Create test cases and dataframe
     test_cases = []
     display_data = []
     
@@ -385,7 +385,7 @@ def process_dataset(data, dataset_type):
                 'expected': item['target']
             })
             
-            if len(display_data) < 2000:  # display_data를 2000개로 제한
+            if len(display_data) < 2000:  # Limit display_data to 2000 items
                 display_data.append({
                     'question': item['input'],
                     'expected_answer': item['target']
@@ -397,7 +397,7 @@ def process_dataset(data, dataset_type):
                 'expected': item['code']
             })
             
-            if len(display_data) < 2000:  # display_data를 2000개로 제한
+            if len(display_data) < 2000:  # Limit display_data to 2000 items
                 display_data.append({
                     'question': item['text'],
                     'expected_answer': f"```python\n{item['code']}\n```"
@@ -409,42 +409,42 @@ def process_dataset(data, dataset_type):
                 'expected': item['summary']
             })
             
-            if len(display_data) < 2000:  # display_data를 2000개로 제한
+            if len(display_data) < 2000:  # Limit display_data to 2000 items
                 display_data.append({
-                    'question': item['document'],  # 처음 200자만 표시
+                    'question': item['document'],  # Show only first 200 characters
                     'expected_answer': item['summary']
                 })
     elif dataset_type in ["MMLU", "MMLU Pro"]:
         for item in data:
-            # 선택지를 문자열로 변환
+                        # Convert choices to string
             choices_str = "\n".join([f"{chr(65+i)}. {choice}" for i, choice in enumerate(item['choices'])])
             question = f"{item['question']}\n\nChoices:\n{choices_str}"
-            # answer 타입에 따라 expected 처리
+            # Process expected based on answer type
             if isinstance(item['answer'], int):
                 expected = chr(65 + item['answer'])
             elif isinstance(item['answer'], str) and len(item['answer']) == 1 and item['answer'].isalpha():
                 expected = item['answer']
             else:
-                expected = item['answer']  # 해설 등 기타 문자열
+                expected = item['answer']  # Explanation and other strings
             test_cases.append({
                 'question': question,
                 'expected': expected
             })
-            if len(display_data) < 2000:  # display_data를 2000개로 제한
+            if len(display_data) < 2000:  # Limit display_data to 2000 items
                 display_data.append({
                     'question': question,
                     'expected_answer': expected
                 })
     elif dataset_type == "CSV":
-        # 컬럼 이름 확인 및 매핑
+        # Check column names and mapping
         required_columns = ['question', 'expected_answer']
         available_columns = data.columns.tolist()
         
-        # 필수 컬럼이 있는지 확인
+        # Check if required columns exist
         missing_columns = [col for col in required_columns if col not in available_columns]
         if missing_columns:
-            st.error(f"CSV 파일에 다음 컬럼이 필요합니다: {', '.join(missing_columns)}")
-            st.info("CSV 파일은 'question'과 'expected_answer' 컬럼을 포함해야 합니다.")
+            st.error(f"CSV file requires the following columns: {', '.join(missing_columns)}")
+            st.info("CSV file must include 'question' and 'expected_answer' columns.")
             st.stop()
         
         for _, row in data.iterrows():
@@ -453,7 +453,7 @@ def process_dataset(data, dataset_type):
                 'expected': row['expected_answer']
             })
             
-            if len(display_data) < 2000:  # display_data를 2000개로 제한
+            if len(display_data) < 2000:  # Limit display_data to 2000 items
                 display_data.append({
                     'question': row['question'],
                     'expected_answer': row['expected_answer']
@@ -470,7 +470,7 @@ def process_dataset(data, dataset_type):
                 'expected': normalized_expected
             })
             
-            if len(display_data) < 2000:  # display_data를 2000개로 제한
+            if len(display_data) < 2000:  # Limit display_data to 2000 items
                 display_data.append({
                     'question': item['input'],
                     'expected_answer': normalized_expected
@@ -482,7 +482,7 @@ def process_dataset(data, dataset_type):
                 'expected': item['answer']
             })
             
-            if len(display_data) < 2000:  # display_data를 2000개로 제한
+            if len(display_data) < 2000:  # Limit display_data to 2000 items
                 display_data.append({
                     'question': item['question'],
                     'expected_answer': item['answer']
@@ -494,23 +494,23 @@ def process_dataset(data, dataset_type):
                 'expected': item['target']
             })
             
-            if len(display_data) < 2000:  # display_data를 2000개로 제한
+            if len(display_data) < 2000:  # Limit display_data to 2000 items
                 display_data.append({
                     'question': item['input'],
                     'expected_answer': item['target']
                 })
     elif dataset_type == "HellaSwag":
         for item in data:
-            # 선택지를 문자열로 변환
+            # Convert choices to string
             choices_str = "\n".join([f"{chr(65+i)}. {choice}" for i, choice in enumerate(item['choices'])])
             question = f"Activity: {item['activity_label']}\nContext: {item['context']}\n\nComplete the context with the most appropriate ending:\n{choices_str}"
             
             test_cases.append({
                 'question': question,
-                'expected': chr(65 + item['answer'])  # 0-based index를 A, B, C, D로 변환
+                'expected': chr(65 + item['answer'])  # Convert 0-based index to A, B, C, D
             })
             
-            if len(display_data) < 2000:  # display_data를 2000개로 제한
+            if len(display_data) < 2000:  # Limit display_data to 2000 items
                 display_data.append({
                     'question': question,
                     'expected_answer': chr(65 + item['answer'])
@@ -522,13 +522,13 @@ def process_dataset(data, dataset_type):
                 'expected': item['canonical_solution']
             })
             
-            if len(display_data) < 2000:  # display_data를 2000개로 제한
+            if len(display_data) < 2000:  # Limit display_data to 2000 items
                 display_data.append({
                     'question': item['prompt'],
                     'expected_answer': item['canonical_solution']
                 })
     elif dataset_type in ["MMLU", "MMLU Pro"]:
-        # 선택된 데이터셋에 따라 적절한 데이터셋 인스턴스와 과목 리스트 선택
+        # Select appropriate dataset instance and subject list based on selected dataset
         if dataset_type == "MMLU":
             dataset = mmlu_dataset
             dataset_name = "MMLU"
@@ -536,8 +536,8 @@ def process_dataset(data, dataset_type):
             dataset = mmlu_pro_dataset
             dataset_name = "MMLU Pro"
         
-        # 데이터셋 선택에 '모든 과목' 옵션 추가
-        subject_options = ["모든 과목"] + dataset.subjects
+        # Add 'All Subjects' option to dataset selection
+        subject_options = ["All Subjects"] + dataset.subjects
         subject = st.selectbox(
             f"Select {dataset_name} Subject",
             subject_options,
@@ -549,30 +549,30 @@ def process_dataset(data, dataset_type):
             index=0
         )
         try:
-            if subject == "모든 과목":
-                # 모든 과목의 데이터 로드
+            if subject == "All Subjects":
+                # Load data from all subjects
                 all_subjects_data = dataset.get_all_subjects_data()
-                # 모든 과목의 데이터를 하나의 리스트로 합치기
+                # Combine data from all subjects into one list
                 data = []
                 for subject_data in all_subjects_data.values():
                     data.extend(subject_data[split])
             else:
-                # 특정 과목의 데이터 로드
+                # Load data from specific subject
                 subject_data = dataset.get_subject_data(subject)
                 data = subject_data[split]
             
             test_cases, num_samples = process_dataset(data, dataset_type)
         except Exception as e:
-            st.error(f"{dataset_name} 데이터셋 로드 중 오류 발생: {str(e)}")
+            st.error(f"{dataset_name} dataset loading error: {str(e)}")
             st.stop()
 
-    # 전체 데이터 표시
-    st.write("데이터셋 내용:")
+    # Display full dataset
+    st.write("Dataset Content:")
     st.dataframe(pd.DataFrame(display_data))
     
     return test_cases, num_samples
 
-# 데이터셋 선택
+    # Dataset selection
 st.header("Dataset Selection")
 dataset_type = st.radio(
     "Select Dataset Type",
@@ -584,227 +584,227 @@ if dataset_type == "CSV":
     csv_file = st.file_uploader("Upload CSV file", type=['csv'])
     if csv_file is not None:
         try:
-            # CSV 파일을 읽을 때 더 유연한 파싱 옵션 사용
+            # Use more flexible parsing options when reading CSV file
             df = pd.read_csv(csv_file, 
                             encoding='utf-8',
-                            on_bad_lines='skip',  # 문제가 있는 줄은 건너뛰기
-                            quoting=1,  # 모든 필드를 따옴표로 감싸기
-                            escapechar='\\')  # 이스케이프 문자 설정
+                            on_bad_lines='skip',  # Skip problematic lines
+                            quoting=1,  # Wrap all fields in quotes
+                            escapechar='\\')  # Set escape character
             
-            # 데이터프레임이 비어있는지 확인
+            # Check if dataframe is empty
             if df.empty:
-                st.error("CSV 파일이 비어있습니다. 올바른 데이터가 포함된 CSV 파일을 업로드하세요.")
+                st.error("CSV file is empty. Please upload a CSV file with correct data.")
                 st.stop()
             
             test_cases, num_samples = process_dataset(df, "CSV")
         except Exception as e:
-            st.error(f"CSV 파일 로드 중 오류 발생: {str(e)}")
-            st.info("CSV 파일이 올바른 형식인지 확인하세요. 파일이 비어있거나, 인코딩이 UTF-8이 아닐 수 있습니다.")
+            st.error(f"CSV file loading error: {str(e)}")
+            st.info("Please check if the CSV file is in the correct format. It might be empty or have incorrect encoding.")
             st.stop()
     else:
-        st.info("CSV 파일을 업로드하거나 다른 데이터셋을 선택하세요.")
+        st.info("Please upload a CSV file or select another dataset.")
         st.stop()
 elif dataset_type == "CNN":
-    # CNN 데이터셋 인스턴스 생성
+    # Create CNN dataset instance
     cnn_dataset = CNNDataset()
     
-    # 데이터셋 선택
+    # Dataset selection
     split = st.selectbox(
-        "데이터셋 선택",
+        "Dataset Selection",
         ["train", "validation", "test"],
         index=0
     )
     
-    # 청크 수 확인
+    # Check chunk count
     total_chunks = cnn_dataset.get_num_chunks(split)
     
     if total_chunks == 0:
-        st.error(f"{split} 데이터셋에 청크 파일이 없습니다.")
+        st.error(f"No chunk files found for {split} dataset.")
         st.stop()
     
-    # 전체 청크 선택 옵션 추가
+    # Add option to select all chunks
     use_all_chunks = st.toggle(
-        "전체 청크 사용",
+        "Use All Chunks",
         value=False,
-        help="모든 청크의 데이터를 로드합니다. 처리 시간이 오래 걸릴 수 있습니다."
+        help="Load data from all chunks. This may take a long time to process."
     )
     
     try:
         if use_all_chunks:
-            # 모든 청크 로드
+            # Load all chunks
             data = cnn_dataset.load_all_data(split)
             test_cases, num_samples = process_dataset(data, "CNN")
             
-            # 선택된 청크 정보 표시
-            st.info(f"전체 청크 로드 완료 ({len(data):,}개 예제)")
+            # Display selected chunk information
+            st.info(f"All chunks loaded ({len(data):,} examples)")
         else:
-            # 청크 선택
-            st.write(f"총 {total_chunks}개의 청크가 있습니다.")
+            # Chunk selection
+            st.write(f"Total {total_chunks} chunks available.")
             chunk_index = st.number_input(
-                "청크 선택",
+                "Select Chunk",
                 min_value=0,
                 max_value=total_chunks-1,
                 value=0,
-                help="처리할 청크의 인덱스를 선택하세요."
+                help="Select the index of the chunk to process."
             )
             
-            # 선택된 청크 로드
+            # Load selected chunk
             data = cnn_dataset.load_data(split, chunk_index)
             test_cases, num_samples = process_dataset(data, "CNN")
             
-            # 선택된 청크 정보 표시
-            st.info(f"선택된 청크: {chunk_index} ({len(data):,}개 예제)")
+            # Display selected chunk information
+            st.info(f"Selected chunk: {chunk_index} ({len(data):,} examples)")
     except Exception as e:
-        st.error(f"CNN 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.error(f"CNN dataset loading error: {str(e)}")
         st.stop()
 elif dataset_type == "GSM8K":
-    # GSM8K 데이터셋 인스턴스 생성
+    # Create GSM8K dataset instance
     gsm8k_dataset = GSM8KDataset()
     
-    # 데이터셋 선택
+    # Dataset selection
     split = st.selectbox(
-        "데이터셋 선택",
+        "Dataset Selection",
         ["train", "test"],
         index=0
     )
     
     try:
-        # 데이터 로드
+        # Load data
         data = gsm8k_dataset.load_data(split)
         test_cases, num_samples = process_dataset(data, "GSM8K")
         
-        # 데이터셋 정보 표시
-        st.info(f"GSM8K {split} 데이터셋: {len(data):,}개 예제")
+        # Display dataset information
+        st.info(f"GSM8K {split} dataset: {len(data):,} examples")
     except Exception as e:
-        st.error(f"GSM8K 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.error(f"GSM8K dataset loading error: {str(e)}")
         st.stop()
 elif dataset_type == "MBPP":
-    # MBPP 데이터셋 인스턴스 생성
+    # Create MBPP dataset instance
     mbpp_dataset = MBPPDataset()
     
-    # 데이터셋 선택
+    # Dataset selection
     split = st.selectbox(
-        "데이터셋 선택",
+        "Dataset Selection",
         ["train", "test", "validation"],
-        index=1  # test를 기본값으로 설정
+        index=1  # Set test as default
     )
     
     try:
-        # 데이터 로드
+        # Load data
         data = mbpp_dataset.get_split_data(split)
         test_cases, num_samples = process_dataset(data, "MBPP")
         
-        # 데이터셋 정보 표시
-        st.info(f"MBPP {split} 데이터셋: {len(data):,}개 예제")
+        # Display dataset information
+        st.info(f"MBPP {split} dataset: {len(data):,} examples")
     except Exception as e:
-        st.error(f"MBPP 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.error(f"MBPP dataset loading error: {str(e)}")
         st.stop()
 elif dataset_type == "BBH":
-    # 이미 생성된 BBHDataset 인스턴스를 사용
+    # Use already created BBHDataset instance
     try:
-        # 카테고리 선택 UI에 "모든 카테고리" 옵션 추가
-        bbh_categories = ["모든 카테고리"] + bbh_dataset.get_all_categories()
+        # Add "All Categories" option to category selection UI
+        bbh_categories = ["All Categories"] + bbh_dataset.get_all_categories()
         selected_category = st.selectbox(
-            "BBH 카테고리 선택",
+            "Select BBH Category",
             bbh_categories,
             index=0,
             key="bbh_category_selectbox"
         )
-        if selected_category == "모든 카테고리":
-            # 전체 데이터 로드
+        if selected_category == "All Categories":
+            # Load full dataset
             all_data_dict = bbh_dataset.get_all_data()
-            # {"test": [...]} 형태이므로 합쳐서 리스트로 변환
+            # {"test": [...]} format, so combine into list
             data = []
             for split_data in all_data_dict.values():
                 data.extend(split_data)
-            st.info(f"BBH 전체 데이터셋: {len(data):,}개 예제")
+            st.info(f"BBH full dataset: {len(data):,} examples")
         else:
-            # 카테고리별 데이터 로드
+            # Load data by category
             data = bbh_dataset.get_category_data(selected_category)
-            st.info(f"BBH {selected_category} 카테고리 데이터셋: {len(data):,}개 예제")
+            st.info(f"BBH {selected_category} category dataset: {len(data):,} examples")
         test_cases, num_samples = process_dataset(data, "BBH")
     except Exception as e:
-        st.error(f"BBH 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.error(f"BBH dataset loading error: {str(e)}")
         st.stop()
 elif dataset_type == "TruthfulQA":
-    # 이미 생성된 TruthfulQADataset 인스턴스를 사용
+    # Use already created TruthfulQADataset instance
     try:
-        # 데이터 로드
+        # Load data
         data = truthfulqa_dataset.get_split_data("test")
         test_cases, num_samples = process_dataset(data, "TruthfulQA")
         
-        # 데이터셋 정보 표시
-        st.info(f"TruthfulQA 테스트 데이터셋: {len(data):,}개 예제")
+        # Display dataset information
+        st.info(f"TruthfulQA test dataset: {len(data):,} examples")
     except Exception as e:
-        st.error(f"TruthfulQA 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.error(f"TruthfulQA dataset loading error: {str(e)}")
         st.stop()
 elif dataset_type == "HellaSwag":
     try:
-        # 데이터셋 선택
+        # Dataset selection
         split = st.selectbox(
-            "데이터셋 선택",
+            "Dataset Selection",
             ["validation", "train"],
             index=0
         )
         
-        # 데이터 로드
+        # Load data
         data = hellaswag_dataset.get_split_data(split)
         test_cases, num_samples = process_dataset(data, "HellaSwag")
         
-        # 데이터셋 정보 표시
-        st.info(f"HellaSwag {split} 데이터셋: {len(data):,}개 예제")
+        # Display dataset information
+        st.info(f"HellaSwag {split} dataset: {len(data):,} examples")
     except Exception as e:
-        st.error(f"HellaSwag 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.error(f"HellaSwag dataset loading error: {str(e)}")
         st.stop()
 elif dataset_type == "HumanEval":
     try:
-        # HumanEval은 test split만 있음
+        # HumanEval only has test split
         data = humaneval_dataset.get_split_data("test")
         test_cases, num_samples = process_dataset(data, "HumanEval")
         
-        # 데이터셋 정보 표시
-        st.info(f"HumanEval 테스트 데이터셋: {len(data):,}개 예제")
+        # Display dataset information
+        st.info(f"HumanEval test dataset: {len(data):,} examples")
     except Exception as e:
-        st.error(f"HumanEval 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.error(f"HumanEval dataset loading error: {str(e)}")
         st.stop()
 elif dataset_type == "Samsum":
     samsum_dataset = SamsumDataset()
     split = st.selectbox(
-        "데이터셋 선택",
+        "Dataset Selection",
         ["train", "validation", "test"],
         index=0
     )
     try:
         data = samsum_dataset.get_split_data(split)
         test_cases, num_samples = process_dataset(data, "Samsum")
-        st.info(f"Samsum {split} 데이터셋: {len(data):,}개 예제")
+        st.info(f"Samsum {split} dataset: {len(data):,} examples")
     except Exception as e:
-        st.error(f"Samsum 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.error(f"Samsum dataset loading error: {str(e)}")
         st.stop()
 elif dataset_type == "MeetingBank":
     meetingbank_dataset = MeetingBankDataset()
     split = st.selectbox(
-        "데이터셋 선택",
+        "Dataset Selection",
         ["validation", "test"],
         index=0
     )
     try:
         data = meetingbank_dataset.get_split_data(split)
         test_cases, num_samples = process_dataset(data, "MeetingBank")
-        st.info(f"MeetingBank {split} 데이터셋: {len(data):,}개 예제")
+        st.info(f"MeetingBank {split} dataset: {len(data):,} examples")
     except Exception as e:
-        st.error(f"MeetingBank 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.error(f"MeetingBank dataset loading error: {str(e)}")
         st.stop()
 elif dataset_type in ["MMLU", "MMLU Pro"]:
-    # 선택된 데이터셋에 따라 적절한 데이터셋 인스턴스와 과목 리스트 선택
+    # Select appropriate dataset instance and subject list based on selected dataset
     if dataset_type == "MMLU":
         dataset = mmlu_dataset
         dataset_name = "MMLU"
     else:  # MMLU Pro
         dataset = mmlu_pro_dataset
         dataset_name = "MMLU Pro"
-    # 데이터셋 선택에 '모든 과목' 옵션 추가
-    subject_options = ["모든 과목"] + dataset.subjects
+    # Add 'All Subjects' option to dataset selection
+    subject_options = ["All Subjects"] + dataset.subjects
     subject = st.selectbox(
         f"Select {dataset_name} Subject",
         subject_options,
@@ -816,29 +816,29 @@ elif dataset_type in ["MMLU", "MMLU Pro"]:
         index=0
     )
     try:
-        if subject == "모든 과목":
-            # 모든 과목의 데이터 로드
+        if subject == "All Subjects":
+            # Load data from all subjects
             all_subjects_data = dataset.get_all_subjects_data()
-            # 모든 과목의 데이터를 하나의 리스트로 합치기
+            # Combine data from all subjects into one list
             data = []
             for subject_data in all_subjects_data.values():
                 data.extend(subject_data[split])
         else:
-            # 특정 과목의 데이터 로드
+            # Load data from specific subject
             subject_data = dataset.get_subject_data(subject)
             data = subject_data[split]
         test_cases, num_samples = process_dataset(data, dataset_type)
     except Exception as e:
-        st.error(f"{dataset_name} 데이터셋 로드 중 오류 발생: {str(e)}")
+        st.error(f"{dataset_name} dataset loading error: {str(e)}")
         st.stop()
 
 class SessionState:
     """
-    Streamlit 앱의 세션 상태를 관리하는 클래스
+    Class to manage session state for Streamlit app
     """
     @staticmethod
     def init_state():
-        """세션 상태를 초기화합니다."""
+        """Initialize session state."""
         st.session_state.all_iteration_results = []
         st.session_state.current_iteration = 0
         st.session_state.show_results = False
@@ -847,7 +847,7 @@ class SessionState:
     
     @staticmethod
     def reset():
-        """상태를 초기화합니다."""
+        """Reset state."""
         st.session_state.all_iteration_results = []
         st.session_state.current_iteration = 0
         st.session_state.show_results = False
@@ -855,15 +855,15 @@ class SessionState:
     
     @staticmethod
     def update_results(result):
-        """새로운 결과를 추가합니다."""
-        # 로깅 추가
+        """Add new result."""
+        # Add logging
         logging.info(f"Updating results for iteration {result.iteration}")
         
-        # 결과가 이미 있는지 확인
+        # Check if result already exists
         if not hasattr(st.session_state, 'all_iteration_results'):
             st.session_state.all_iteration_results = []
         
-        # 같은 iteration의 결과가 있다면 업데이트, 없다면 추가
+        # Update if same iteration result exists, otherwise add new
         existing_result = next(
             (r for r in st.session_state.all_iteration_results if r.iteration == result.iteration),
             None
@@ -883,39 +883,39 @@ class SessionState:
     
     @staticmethod
     def get_results():
-        """현재 저장된 모든 결과를 반환합니다."""
+        """Return all currently saved results."""
         if not hasattr(st.session_state, 'all_iteration_results'):
             st.session_state.all_iteration_results = []
         return st.session_state.all_iteration_results
     
     @staticmethod
     def get_current_iteration():
-        """현재 선택된 이터레이션을 반환합니다."""
+        """Return currently selected iteration."""
         if not hasattr(st.session_state, 'current_iteration'):
             st.session_state.current_iteration = 0
         return st.session_state.current_iteration
     
     @staticmethod
     def set_current_iteration(iteration):
-        """현재 이터레이션을 설정합니다."""
+        """Set current iteration."""
         st.session_state.current_iteration = iteration
 
 class ResultsDisplay:
     """
-    결과 표시를 담당하는 클래스
+    Class responsible for displaying results
     """
     def __init__(self):
         SessionState.init_state()
-        # 메인 컨테이너 초기화
+        # Initialize main container
         if 'main_container' not in st.session_state:
             st.session_state.main_container = st.empty()
     
     def display_metrics(self, results, container):
-        """성능 지표를 표시합니다."""
+        """Display performance metrics."""
         if not results:
             return
         
-        # 그래프 데이터 준비
+        # Prepare graph data
         x_values = [result.iteration for result in results]
         avg_scores = [result.avg_score for result in results]
         best_sample_scores = [result.best_sample_score for result in results]
@@ -923,7 +923,7 @@ class ResultsDisplay:
         top3_scores = [result.top3_avg_score for result in results]
         
         
-        # 카테고리별 평균 점수 계산
+        # Calculate average scores by category
         category_scores = {
             'meaning_accuracy': [],
             'completeness': [],
@@ -937,16 +937,16 @@ class ResultsDisplay:
         
         for result in results:
             iteration_category_scores = {category: [] for category in category_scores.keys()}
-            iteration_category_weights = {category: [] for category in category_scores.keys()}  # 각 이터레이션의 가중치
+            iteration_category_weights = {category: [] for category in category_scores.keys()}  # Weights for each iteration
             
             for test_case in result.test_case_results:
                 if test_case.evaluation_details and 'category_scores' in test_case.evaluation_details:
                     for category, details in test_case.evaluation_details['category_scores'].items():
                         if category in iteration_category_scores:
                             iteration_category_scores[category].append(details['score'])
-                            iteration_category_weights[category].append(details.get('weight', 0.5))  # 가중치 추가
+                            iteration_category_weights[category].append(details.get('weight', 0.5))  # Add weight
             
-            # 각 카테고리의 평균 점수와 가중치 추가
+            # Add average score and weight for each category
             for category in category_scores:
                 scores = iteration_category_scores[category]
                 weights = iteration_category_weights[category]
@@ -954,10 +954,10 @@ class ResultsDisplay:
                 avg_weight = np.mean(weights) if weights else 0.5
                 category_scores[category].append(avg_score)
         
-        # 통합 그래프 생성
+        # Create integrated graph
         fig = go.Figure()
         
-        # 카테고리별 점수를 막대 그래프로 추가
+        # Add category scores as bar graph
         for category in category_scores:
             fig.add_trace(go.Bar(
                 x=x_values,
@@ -966,11 +966,11 @@ class ResultsDisplay:
                 visible=True
             ))
         
-        # 주요 성능 지표 트레이스
+        # Main performance indicator traces
         fig.add_trace(go.Scatter(
             x=x_values,
             y=avg_scores,
-            name='평균 점수',
+            name='Average Score',
             mode='lines+markers',
             line=dict(color='blue', width=2)
         ))
@@ -978,7 +978,7 @@ class ResultsDisplay:
         fig.add_trace(go.Scatter(
             x=x_values,
             y=std_devs,
-            name='표준편차',
+            name='Standard Deviation',
             mode='lines+markers',
             line=dict(color='purple', width=2, dash='dot')
         ))
@@ -986,7 +986,7 @@ class ResultsDisplay:
         fig.add_trace(go.Scatter(
             x=x_values,
             y=best_sample_scores,
-            name='최고 개별 점수',
+            name='Best Individual Score',
             mode='lines+markers',
             line=dict(color='green', width=2)
         ))
@@ -994,16 +994,16 @@ class ResultsDisplay:
         fig.add_trace(go.Scatter(
             x=x_values,
             y=top3_scores,
-            name='Top3 평균 점수',
+            name='Top3 Average Score',
             mode='lines+markers',
             line=dict(color='red', width=2)
         ))
         
-        # 그래프 레이아웃 설정
+        # Set graph layout
         fig.update_layout(
-            title='통합 성능 지표 및 카테고리 분석',
-            xaxis_title='이터레이션',
-            yaxis_title='점수',
+            title='Integrated Performance Metrics and Category Analysis',
+            xaxis_title='Iteration',
+            yaxis_title='Score',
             yaxis_range=[0, 1],
             xaxis=dict(
                 tickmode='array',
@@ -1021,41 +1021,41 @@ class ResultsDisplay:
             )
         )
         
-        # 그래프 표시
+        # Display graph
         container.plotly_chart(fig, use_container_width=True)
     
     def display_iteration_details(self, results, container):
-        """이터레이션 상세 정보를 표시합니다."""
+        """Display iteration details."""
         if not results:
-            container.info("아직 결과가 없습니다.")
+            container.info("No results yet.")
             return
         
-        # 이터레이션 선택
+        # Iteration selection
         total_iterations = len(results)
         if total_iterations > 0:
-            # 이터레이션 선택 UI
+            # Iteration selection UI
             current_iteration = SessionState.get_current_iteration()
             
-            # 이터레이션 선택을 위한 탭 생성
+            # Create tabs for iteration selection
             tabs = container.tabs([f"Iteration {i+1}" for i in range(total_iterations)])
             selected_iteration = current_iteration
             
             with tabs[selected_iteration]:
                 iteration_result = results[selected_iteration]
                 
-                # 평균 점수와 표준편차 표시
+                # Display average score and standard deviation
                 col1, col2, col3 = st.columns(3)
                 col1.metric("Average Score", f"{iteration_result.avg_score:.2f}")
                 col2.metric("Standard Deviation", f"{iteration_result.std_dev:.2f}")
                 col3.metric("Top 3 Average", f"{iteration_result.top3_avg_score:.2f}")
                 
-                # Task Type과 Description expander 추가
+                # Add Task Type and Description expander
                 with st.expander(f"Task Type ({iteration_result.task_type})", expanded=False):
                     st.markdown("### Task Description")
                     st.code(iteration_result.task_description, language="text")
                 
-                # 현재 프롬프트 expander 추가
-                with st.expander("현재 프롬프트 보기", expanded=False):
+                # Add current prompt expander
+                with st.expander("View Current Prompt", expanded=False):
                     col1, col2 = st.columns(2)
                     with col1:
                         st.markdown("### System Prompt")
@@ -1064,9 +1064,9 @@ class ResultsDisplay:
                         st.markdown("### User Prompt")
                         st.code(iteration_result.user_prompt, language="text")
                 
-                # 가중치 점수 expander 추가
-                with st.expander("현재 가중치 점수 보기", expanded=False):
-                    # 가중치 데이터 수집
+                # Add weight score expander
+                with st.expander("View Current Weight Scores", expanded=False):
+                    # Collect weight data
                     weight_data = []
                     for test_case in iteration_result.test_case_results:
                         if test_case.evaluation_details and 'category_scores' in test_case.evaluation_details:
@@ -1078,23 +1078,23 @@ class ResultsDisplay:
                                 })
                     
                     if weight_data:
-                        # 카테고리별 평균 가중치 계산
+                        # Calculate average weight by category
                         df = pd.DataFrame(weight_data)
                         avg_weights = df.groupby('Category')['Weight'].mean().round(3)
                         avg_weights = avg_weights.reset_index()
                         avg_weights.columns = ['Category', 'Average Weight']
                         
-                        # 데이터프레임 스타일링
+                        # Style dataframe
                         def highlight_weights(val):
                             color = f'background-color: rgba(255, 99, 71, {val})'
                             return color
                         
-                        # 스타일이 적용된 데이터프레임 표시
+                        # Display styled dataframe
                         st.write("Category Weights:")
                         styled_df = avg_weights.style.apply(lambda x: [highlight_weights(v) for v in x], subset=['Average Weight'])
                         st.dataframe(styled_df, use_container_width=True)
                 
-                # 출력 결과를 데이터프레임으로 변환
+                # Convert output results to dataframe
                 outputs_data = []
                 for i, test_case in enumerate(iteration_result.test_case_results):
                     row = {
@@ -1106,20 +1106,20 @@ class ResultsDisplay:
                         'Evaluation Details': json.dumps(test_case.evaluation_details, ensure_ascii=False, indent=2)
                     }
                     
-                    # 카테고리별 점수와 피드백 추가
+                    # Add category scores and feedback
                     if test_case.evaluation_details and 'category_scores' in test_case.evaluation_details:
                         for category, details in test_case.evaluation_details['category_scores'].items():
                             row[f"{category} Score"] = f"{details['score']:.2f}"
-                            row[f"{category} Weight"] = f"{details.get('weight', 1.0):.2f}"  # 가중치 표시 추가
+                            row[f"{category} Weight"] = f"{details.get('weight', 1.0):.2f}"  # Add weight display
                             row[f"{category} State"] = details['current_state']
                             row[f"{category} Action"] = details['improvement_action']
                     
                     outputs_data.append(row)
                 
-                # 데이터프레임 생성
+                # Create dataframe
                 df = pd.DataFrame(outputs_data)
                 
-                # 데이터프레임 스타일링 함수
+                # Dataframe styling function
                 def highlight_rows(df):
                     scores = df['Score'].astype(float)
                     max_score = scores.max()
@@ -1135,44 +1135,44 @@ class ResultsDisplay:
                     
                     return background_colors
                 
-                # 스타일이 적용된 데이터프레임 표시
+                # Display styled dataframe
                 st.dataframe(
                     df.style.apply(highlight_rows, axis=None),
                     use_container_width=True,
                     height=400
                 )
                 
-                # 메타프롬프트 expander 추가
+                # Add meta prompt expander
                 if iteration_result.meta_prompt:
-                    with st.expander("메타프롬프트 결과 보기", expanded=False):
+                    with st.expander("View Meta Prompt Results", expanded=False):
                         st.code(iteration_result.meta_prompt, language="text")
             
-            # 현재 선택된 이터레이션 저장
+            # Save currently selected iteration
             SessionState.set_current_iteration(selected_iteration)
     
     def update(self):
-        """결과 표시를 업데이트합니다."""
+        """Update result display."""
         results = SessionState.get_results()
         if st.session_state.show_results and results:
-            # 기존 컨테이너를 비우고 새로운 컨테이너 생성
+            # Clear existing container and create new one
             with st.session_state.main_container.container():
-                st.empty()  # 기존 내용을 지웁니다
+                st.empty()  # Clear existing content
                 
-                # 메트릭스와 상세 정보를 표시할 새로운 컨테이너 생성
+                # Create new container for metrics and details
                 metrics_container = st.container()
                 details_container = st.container()
                 
-                # 메트릭스와 상세 정보 표시
+                # Display metrics and details
                 self.display_metrics(results, metrics_container)
                 self.display_iteration_details(results, details_container)
 
 def run_tuning_process():
-    """프롬프트 튜닝 프로세스를 실행하고 결과를 시각화합니다."""
-    # UI 상태 초기화
+    """Run prompt tuning process and visualize results."""
+    # Initialize UI state
     SessionState.init_state()
     results_display = ResultsDisplay()
     
-    with st.spinner('프롬프트 튜닝 중...'):
+    with st.spinner('Tuning prompts...'):
         def iteration_callback(result):
             logging.info(f"Iteration callback called for iteration {result.iteration}")
             SessionState.update_results(result)
@@ -1180,10 +1180,10 @@ def run_tuning_process():
             results_display.update()
             logging.info("Display updated")
         
-        # iteration_callback 설정
+        # Set iteration_callback
         tuner.iteration_callback = iteration_callback
         
-        # 프롬프트 튜닝 실행
+        # Execute prompt tuning
         tuner.tune_prompt(
             initial_system_prompt=system_prompt,
             initial_user_prompt=user_prompt,
@@ -1198,66 +1198,66 @@ def run_tuning_process():
         st.session_state.tuning_complete = True
         logging.info("Tuning process completed")
         
-        # 최종 결과
+        # Final results
         results = SessionState.get_results()
         if results:
-            st.success("프롬프트 튜닝 완료!")
+            st.success("Prompt tuning completed!")
             logging.info(f"Final results count: {len(results)}")
             
-            # 비용 요약 표시
-            st.header("💰 비용 및 사용량 요약")
+            # Display cost summary
+            st.header("💰 Cost and Usage Summary")
             cost_summary = tuner.get_cost_summary()
             
-            # 전체 비용 정보를 메트릭으로 표시
+            # Display overall cost information as metrics
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric("총 비용", f"${cost_summary['total_cost']:.4f}")
+                st.metric("Total Cost", f"${cost_summary['total_cost']:.4f}")
             with col2:
-                st.metric("총 토큰", f"{cost_summary['total_tokens']:,}")
+                st.metric("Total Tokens", f"{cost_summary['total_tokens']:,}")
             with col3:
-                st.metric("총 시간", f"{cost_summary['total_duration']:.1f}초")
+                st.metric("Total Time", f"{cost_summary['total_duration']:.1f} seconds")
             with col4:
-                st.metric("총 호출", f"{cost_summary['total_calls']}")
+                st.metric("Total Calls", f"{cost_summary['total_calls']}")
             
-            # 모델별 상세 비용 정보
-            with st.expander("모델별 상세 비용 정보", expanded=False):
+            # Model-wise detailed cost information
+            with st.expander("Model-wise Detailed Cost Information", expanded=False):
                 col1, col2, col3 = st.columns(3)
                 
                 with col1:
-                    st.subheader("🤖 모델 호출")
+                    st.subheader("🤖 Model Calls")
                     model_stats = cost_summary['model_stats']
-                    st.write(f"호출 횟수: {model_stats['total_calls']}")
-                    st.write(f"입력 토큰: {model_stats['total_input_tokens']:,}")
-                    st.write(f"출력 토큰: {model_stats['total_output_tokens']:,}")
-                    st.write(f"총 토큰: {model_stats['total_tokens']:,}")
-                    st.write(f"비용: ${model_stats['total_cost']:.4f}")
-                    st.write(f"시간: {model_stats['total_duration']:.2f}초")
+                    st.write(f"Total Calls: {model_stats['total_calls']}")
+                    st.write(f"Input Tokens: {model_stats['total_input_tokens']:,}")
+                    st.write(f"Output Tokens: {model_stats['total_output_tokens']:,}")
+                    st.write(f"Total Tokens: {model_stats['total_tokens']:,}")
+                    st.write(f"Cost: ${model_stats['total_cost']:.4f}")
+                    st.write(f"Time: {model_stats['total_duration']:.2f} seconds")
                 
                 with col2:
-                    st.subheader("📊 평가자 호출")
+                    st.subheader("�� Evaluator Calls")
                     eval_stats = cost_summary['evaluator_stats']
-                    st.write(f"호출 횟수: {eval_stats['total_calls']}")
-                    st.write(f"입력 토큰: {eval_stats['total_input_tokens']:,}")
-                    st.write(f"출력 토큰: {eval_stats['total_output_tokens']:,}")
-                    st.write(f"총 토큰: {eval_stats['total_tokens']:,}")
-                    st.write(f"비용: ${eval_stats['total_cost']:.4f}")
-                    st.write(f"시간: {eval_stats['total_duration']:.2f}초")
+                    st.write(f"Total Calls: {eval_stats['total_calls']}")
+                    st.write(f"Input Tokens: {eval_stats['total_input_tokens']:,}")
+                    st.write(f"Output Tokens: {eval_stats['total_output_tokens']:,}")
+                    st.write(f"Total Tokens: {eval_stats['total_tokens']:,}")
+                    st.write(f"Cost: ${eval_stats['total_cost']:.4f}")
+                    st.write(f"Time: {eval_stats['total_duration']:.2f} seconds")
                 
                 with col3:
-                    st.subheader("🔧 메타 프롬프트 생성")
+                    st.subheader("🔧 Meta Prompt Generation")
                     meta_stats = cost_summary['meta_prompt_stats']
-                    st.write(f"호출 횟수: {meta_stats['total_calls']}")
-                    st.write(f"입력 토큰: {meta_stats['total_input_tokens']:,}")
-                    st.write(f"출력 토큰: {meta_stats['total_output_tokens']:,}")
-                    st.write(f"총 토큰: {meta_stats['total_tokens']:,}")
-                    st.write(f"비용: ${meta_stats['total_cost']:.4f}")
-                    st.write(f"시간: {meta_stats['total_duration']:.2f}초")
+                    st.write(f"Total Calls: {meta_stats['total_calls']}")
+                    st.write(f"Input Tokens: {meta_stats['total_input_tokens']:,}")
+                    st.write(f"Output Tokens: {meta_stats['total_output_tokens']:,}")
+                    st.write(f"Total Tokens: {meta_stats['total_tokens']:,}")
+                    st.write(f"Cost: ${meta_stats['total_cost']:.4f}")
+                    st.write(f"Time: {meta_stats['total_duration']:.2f} seconds")
             
-            # 이터레이션별 비용 분석
+            # Iteration-wise cost analysis
             iteration_breakdown = tuner.get_iteration_cost_breakdown()
             if iteration_breakdown:
-                with st.expander("이터레이션별 비용 분석", expanded=False):
-                    # 이터레이션별 비용 데이터를 데이터프레임으로 변환
+                with st.expander("Iteration-wise Cost Analysis", expanded=False):
+                    # Convert iteration-wise cost data to dataframe
                     breakdown_data = []
                     for iteration_key, data in iteration_breakdown.items():
                         breakdown_data.append({
@@ -1276,8 +1276,8 @@ def run_tuning_process():
                         df_breakdown = pd.DataFrame(breakdown_data)
                         st.dataframe(df_breakdown, use_container_width=True)
             
-            # 전체 결과에서 가장 높은 평균 점수를 가진 프롬프트 찾기
-            st.header("🏆 최고 성능 프롬프트")
+            # Find prompt with highest average score from all results
+            st.header("🏆 Best Prompt")
             best_result = max(results, key=lambda x: x.avg_score)
             st.write("Final Best Prompt:")
             col1, col2 = st.columns(2)
@@ -1287,94 +1287,94 @@ def run_tuning_process():
             with col2:
                 st.write("User Prompt:")
                 st.code(best_result.user_prompt)
-            st.write(f"최종 결과: 평균 점수 {best_result.avg_score:.2f}, 최고 평균 점수 {best_result.best_avg_score:.2f}, 최고 개별 점수 {best_result.best_sample_score:.2f}")
+            st.write(f"Final Result: Average Score {best_result.avg_score:.2f}, Best Average Score {best_result.best_avg_score:.2f}, Best Individual Score {best_result.best_sample_score:.2f}")
             
-            # 다운로드 버튼들
-            st.header("📥 결과 다운로드")
+            # Download buttons
+            st.header("📥 Download Results")
             col1, col2 = st.columns(2)
             
             with col1:
-                # 전체 결과 (비용 정보 포함) CSV 다운로드
+                # Full results (including cost information) CSV download
                 try:
                     csv_data = tuner.save_results_to_csv()
                     st.download_button(
-                        label="📊 전체 결과 (비용 포함) CSV 저장",
+                        label="📊 Download Full Results (Cost Included) CSV",
                         data=csv_data,
                         file_name=f"prompt_tuning_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
                         mime="text/csv",
                         key="download_full_csv",
-                        help="테스트 케이스별 상세 결과와 비용 정보가 포함된 전체 데이터"
+                        help="Detailed results per test case and cost information"
                     )
                 except Exception as e:
-                    st.error(f"전체 결과 CSV 파일 생성 중 오류가 발생했습니다: {str(e)}")
+                    st.error(f"Error generating full results CSV file: {str(e)}")
             
             with col2:
-                # 비용 요약만 CSV 다운로드
+                # Cost summary only CSV download
                 try:
                     cost_csv_data = tuner.export_cost_summary_to_csv()
                     st.download_button(
-                        label="💰 비용 요약 CSV 저장",
+                        label="💰 Download Cost Summary CSV",
                         data=cost_csv_data,
                         file_name=f"cost_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
                         mime="text/csv",
                         key="download_cost_csv",
-                        help="모델별, 이터레이션별 비용 요약 데이터"
+                        help="Model-wise, iteration-wise cost summary data"
                     )
                 except Exception as e:
-                    st.error(f"비용 요약 CSV 파일 생성 중 오류가 발생했습니다: {str(e)}")
+                    st.error(f"Error generating cost summary CSV file: {str(e)}")
             
-            # 콘솔에도 비용 요약 출력 (개발자용)
+            # Also output cost summary to console (for developers)
             tuner.print_cost_summary()
         else:
-            st.warning("튜닝 결과가 없습니다.")
+            st.warning("No tuning results.")
 
-# 튜닝 시작 버튼
-if st.button("프롬프트 튜닝 시작", type="primary"):
-    # 세션 상태 초기화
+# Start tuning button
+if st.button("Start Prompt Tuning", type="primary"):
+    # Initialize session state
     SessionState.reset()
     
-    # API 키 확인
+    # Check API keys
     required_keys = {
         "solar": "SOLAR_API_KEY",
         "gpt4o": "OPENAI_API_KEY",
         "claude": "ANTHROPIC_API_KEY",
-        "local1": None,  # local1 모델은 API 키가 필요하지 않음
-        "local2": None,   # local2 모델은 API 키가 필요하지 않음
-        "solar_strawberry": "SOLAR_STRAWBERRY_API_KEY",  # 추가
+        "local1": None,  # local1 model doesn't need API key
+        "local2": None,   # local2 model doesn't need API key
+        "solar_strawberry": "SOLAR_STRAWBERRY_API_KEY",  # Added
     }
     
-    # 사용되는 모델들의 API 키 확인
+    # Check API keys for used models
     used_models = set([model_name, evaluator_model])
     missing_keys = []
     
     for model in used_models:
         key = required_keys[model]
-        if key and not os.getenv(key):  # key가 None이 아닌 경우에만 API 키 확인
+        if key and not os.getenv(key):  # Only check API key if key is not None
             missing_keys.append(f"{MODEL_INFO[model]['name']} ({key})")
     
     if missing_keys:
-        st.error(f"다음 API 키가 필요합니다: {', '.join(missing_keys)}")
-        st.info("API 키를 .env 파일에 설정하세요.")
+        st.error(f"The following API keys are required: {', '.join(missing_keys)}")
+        st.info("Please set these keys in your .env file.")
     else:
-        # 메타프롬프트가 입력된 경우에만 설정
+        # Only set if meta prompt is entered
         if meta_system_prompt.strip() and meta_user_prompt.strip():
             tuner.set_meta_prompt(meta_system_prompt, meta_user_prompt)
         
-        # 프로그레스 바 설정
+        # Set progress bar
         progress_bar = st.progress(0)
         status_text = st.empty()
         
         def progress_callback(iteration, test_case_index):
-            # 현재 iteration의 진행도 (0부터 시작)
+            # Current iteration progress (starting from 0)
             iteration_progress = (iteration - 1) / iterations
-            # 현재 test case의 진행도 (0부터 시작)
+            # Current test case progress (starting from 0)
             test_case_progress = test_case_index / num_samples
-            # 전체 진행도 계산
+            # Calculate total progress
             progress = iteration_progress + (test_case_progress / iterations)
             progress_bar.progress(progress)
             status_text.text(f"Iteration {iteration}/{iterations}, Test Case {test_case_index}/{num_samples}")
         
         tuner.progress_callback = progress_callback
         
-        # 프롬프트 튜닝 실행
+        # Execute prompt tuning
         run_tuning_process() 
