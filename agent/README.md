@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="../img/title.jpg" alt="ZERA: Zero-prompt Evolving Refinement Agent" width="600px">
+</div>
+
 # Agent Directory
 
 This directory contains the core components of the Zera Agent prompt auto-tuning system.

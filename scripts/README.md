@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="../img/title.jpg" alt="ZERA: Zero-prompt Evolving Refinement Agent" width="600px">
+</div>
+
 # Scripts Directory
 
 This directory contains command-line interface tools and utility scripts for the zera-agent project.

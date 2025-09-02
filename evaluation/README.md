@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="../img/title.jpg" alt="ZERA: Zero-prompt Evolving Refinement Agent" width="600px">
+</div>
+
 # Evaluation Directory
 
 This directory contains the comprehensive evaluation system for the Zera Agent, providing multiple evaluation methodologies and result analysis tools.

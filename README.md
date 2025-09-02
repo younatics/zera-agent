@@ -1,9 +1,23 @@
+<div align="center">
+  <img src="img/title.jpg" alt="ZERA: Zero-prompt Evolving Refinement Agent" width="800px">
+</div>
+
 # Zera Agent (Prompt Auto Tuning Agent)
 
 ## Overview
 
 **Zera Agent** is a prompt auto-tuning agent that automatically optimizes, evaluates, and iteratively improves prompts across various LLMs (Large Language Models).  
 This agent is designed to systematically evaluate prompt quality, utilize meta-prompts to generate better prompts, and conduct iterative experiments across various datasets and models.
+
+### 🚀 **Core Concept: Self-Refining Optimization**
+
+Zera Agent implements a unique **Self-Refining Optimization** process that continuously evolves prompts from zero instructions to structured, high-performance prompts:
+
+- **🔄 PCG (Prompt Critique Generation)**: Automatically generates critiques of current prompt performance
+- **⚡ MPR (Meta Prompt Refinement)**: Uses meta-prompts to refine and improve prompts iteratively
+- **♾️ Infinity Loop**: Continuous refinement cycle for optimal prompt evolution
+
+This approach enables the agent to start with minimal instructions and progressively develop sophisticated, task-specific prompts through automated self-improvement.
 
 ---
 

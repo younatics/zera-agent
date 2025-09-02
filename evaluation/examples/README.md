@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="../../img/title.jpg" alt="ZERA: Zero-prompt Evolving Refinement Agent" width="500px">
+</div>
+
 # Prompt Autotuning Agent Examples
 
 This directory contains various usage examples for the Prompt Autotuning Agent.
