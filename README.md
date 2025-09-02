@@ -134,20 +134,20 @@ ZERA implements a revolutionary **Self-Refining Optimization** process that tran
 
 ### 📋 **8 Evaluation Principles**
 
-ZERA evaluates prompts using eight comprehensive principles, each with adaptive weighting:
+ZERA evaluates prompts using eight comprehensive principles with adaptive weighting that adjusts based on task requirements and performance:
 
-| Principle | Weight | Description | Focus Area |
-|-----------|--------|-------------|------------|
-| **Meaning** | 0.15 | Captures key details and core information | Content accuracy |
-| **Completeness** | 0.10 | Covers all essential aspects comprehensively | Information coverage |
-| **Expression** | 0.05 | Uses appropriate tone and style | Communication quality |
-| **Faithfulness** | 0.20 | Stays true to source without fabrication | Source adherence |
-| **Conciseness** | 0.20 | Maintains brevity while being complete | Efficiency |
-| **Correctness** | 0.10 | Provides accurate and factual information | Factual accuracy |
-| **Structural** | 0.05 | Organizes content in logical structure | Organization |
-| **Reasoning** | 0.15 | Demonstrates clear logical thinking | Logical flow |
+| Principle | Description | Focus Area |
+|-----------|-------------|------------|
+| **Meaning** | Captures key details and core information | Content accuracy |
+| **Completeness** | Covers all essential aspects comprehensively | Information coverage |
+| **Expression** | Uses appropriate tone and style | Communication quality |
+| **Faithfulness** | Stays true to source without fabrication | Source adherence |
+| **Conciseness** | Maintains brevity while being complete | Efficiency |
+| **Correctness** | Provides accurate and factual information | Factual accuracy |
+| **Structural** | Organizes content in logical structure | Organization |
+| **Reasoning** | Demonstrates clear logical thinking | Logical flow |
 
-Each principle contributes to the overall prompt quality score, guiding the refinement process toward optimal performance.
+Each principle contributes to the overall prompt quality score, with weights that dynamically adjust to guide the refinement process toward optimal performance.
 
 ---
 
