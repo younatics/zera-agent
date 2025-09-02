@@ -8,8 +8,8 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Paper](https://img.shields.io/badge/Paper-EMNLP%202025-red.svg)](TBD)
 [![arXiv](https://img.shields.io/badge/arXiv-coming%20soon-orange.svg)](TBD)
-[![Stars](https://img.shields.io/github/stars/your-repo/zera-agent?style=social)](https://github.com/your-repo/zera-agent)
-[![Forks](https://img.shields.io/github/forks/your-repo/zera-agent?style=social)](https://github.com/your-repo/zera-agent)
+[![Stars](https://img.shields.io/github/stars/younatics/zera-agent?style=social)](https://github.com/younatics/zera-agent)
+[![Forks](https://img.shields.io/github/forks/younatics/zera-agent?style=social)](https://github.com/younatics/zera-agent)
 
 **🎯 The First Joint System-User Prompt Optimization Agent**  
 **🚀 From Zero Instructions to Structured Prompts via Self-Refining Optimization**
@@ -61,7 +61,7 @@
 **Title**: ZERA: Zero-prompt Evolving Refinement Agent – From Zero Instructions to Structured Prompts via Principle-based Optimization  
 **Conference**: **EMNLP 2025 Main Conference (Main Track)**  
 **Status**: ✅ **Accepted**  
-**Authors**: ZERA Research Team
+**Authors**: Seungyoun Yi, Minsoo Khang, Sungrae Park
 
 <div align="center">
 
@@ -105,20 +105,13 @@ ZERA implements a revolutionary **Self-Refining Optimization** process that tran
 
 ### 🎯 **The ZERA Loop**
 
-```mermaid
-graph LR
-    A[Zero Prompt] --> B[PCG: Critique Generation]
-    B --> C[MPR: Meta Prompt Refinement]
-    C --> D[Enhanced Prompt]
-    D --> E{Performance Check}
-    E -->|Needs Improvement| B
-    E -->|Optimal| F[Final Prompt]
-    
-    style A fill:#ff9999
-    style F fill:#99ff99
-    style B fill:#99ccff
-    style C fill:#ffcc99
-```
+<div align="center">
+
+![ZERA Concept](img/ZERA_Concept_v2.png)
+
+*ZERA's iterative prompt refinement process: PCG (Principle-based Critique Generation) → MPR (Meta-cognitive Prompt Refinement) → Enhanced Prompt*
+
+</div>
 
 ### 🔧 **How It Works**
 
@@ -136,16 +129,6 @@ graph LR
    - Task samples → Inference → Evaluation → Critique → Refinement
    - Each iteration produces better prompts based on principle-based feedback
    - Rapid convergence to optimal prompts with minimal samples
-
-### 🎨 **Visual Representation**
-
-<div align="center">
-
-![ZERA Concept](img/ZERA_Concept_v2.png)
-
-*ZERA's iterative prompt refinement process: PCG (Principle-based Critique Generation) → MPR (Meta-cognitive Prompt Refinement) → Enhanced Prompt*
-
-</div>
 
 ### 📋 **8 Evaluation Principles**
 
@@ -293,7 +276,7 @@ python evaluation/examples/<dataset>_example.py
 
 ### 1. Clone and Setup
 ```bash
-git clone https://github.com/your-repo/zera-agent.git
+git clone https://github.com/younatics/zera-agent.git
 cd zera-agent
 pip install -r requirements.txt
 ```
@@ -408,8 +391,8 @@ EvaluationError: Failed to evaluate response
 
 ### Getting Help
 
-- **GitHub Issues**: [Report bugs and request features](https://github.com/your-repo/zera-agent/issues)
-- **Discussions**: [Join community discussions](https://github.com/your-repo/zera-agent/discussions)
+- **GitHub Issues**: [Report bugs and request features](https://github.com/younatics/zera-agent/issues)
+- **Discussions**: [Join community discussions](https://github.com/younatics/zera-agent/discussions)
 - **Documentation**: Check the [scripts/README.md](scripts/README.md) for CLI usage details
 
 ## 🤝 Community & Contributing
@@ -422,22 +405,36 @@ EvaluationError: Failed to evaluate response
 
 ### 🚀 **Get Involved**
 
-- 🐛 **Report Bugs**: [GitHub Issues](https://github.com/your-repo/zera-agent/issues)
-- 💡 **Request Features**: [Feature Requests](https://github.com/your-repo/zera-agent/discussions)
-- 📚 **Ask Questions**: [Q&A Discussions](https://github.com/your-repo/zera-agent/discussions)
-- 🔧 **Contribute Code**: [Pull Requests](https://github.com/your-repo/zera-agent/pulls)
-- 📖 **Improve Docs**: [Documentation PRs](https://github.com/your-repo/zera-agent/pulls)
+- 🐛 **Report Bugs**: [GitHub Issues](https://github.com/younatics/zera-agent/issues)
+- 💡 **Request Features**: [Feature Requests](https://github.com/younatics/zera-agent/discussions)
+- 📚 **Ask Questions**: [Q&A Discussions](https://github.com/younatics/zera-agent/discussions)
+- 🔧 **Contribute Code**: [Pull Requests](https://github.com/younatics/zera-agent/pulls)
+- 📖 **Improve Docs**: [Documentation PRs](https://github.com/younatics/zera-agent/pulls)
 
 
 
 ### 📧 **Stay Connected**
 
-- 📧 **Email**: [zera-team@example.com](mailto:zera-team@example.com)
+- 📧 **Email**: [younatics@gmail.com](mailto:younatics@gmail.com)
 - 🐦 **Twitter**: [@ZERAAgent](https://twitter.com/ZERAAgent)
 
 ### 🏆 **Contributors**
 
 We welcome contributions from the community! See our [Contributing Guide](CONTRIBUTING.md) for details on how to get involved.
+
+## Citation
+
+If you use ZERA in your research, please cite our paper:
+
+```bibtex
+@inproceedings{yi2025zera,
+  title={ZERA: Zero-prompt Evolving Refinement Agent – From Zero Instructions to Structured Prompts via Principle-based Optimization},
+  author={Yi, Seungyoun and Khang, Minsoo and Park, Sungrae},
+  booktitle={Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing},
+  year={2025},
+  publisher={Association for Computational Linguistics}
+}
+```
 
 ## License
 
