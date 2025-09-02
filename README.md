@@ -415,8 +415,7 @@ EvaluationError: Failed to evaluate response
 
 ### 📧 **Stay Connected**
 
-- 📧 **Email**: [younatics@gmail.com](mailto:younatics@gmail.com)
-- 🐦 **Twitter**: [@ZERAAgent](https://twitter.com/ZERAAgent)
+- 💼 **LinkedIn**: [Seungyoun Yi](https://www.linkedin.com/in/younatics/)
 
 ### 🏆 **Contributors**
 
