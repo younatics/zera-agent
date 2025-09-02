@@ -122,6 +122,53 @@ python evaluation/examples/<dataset>_example.py
 
 ---
 
+## Quick Start
+
+Get up and running with Zera Agent in minutes:
+
+### 1. Clone and Setup
+```bash
+git clone https://github.com/your-repo/zera-agent.git
+cd zera-agent
+pip install -r requirements.txt
+```
+
+### 2. Configure API Keys
+Create a `.env` file in the project root with your API keys:
+
+```bash
+# Required API Keys
+OPENAI_API_KEY=your_openai_api_key_here
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+SOLAR_API_KEY=your_solar_api_key_here
+SOLAR_STRAWBERRY_API_KEY=your_solar_strawberry_api_key_here
+
+# Optional: Local model configuration
+LOCAL_MODEL_ENDPOINT=http://localhost:8000/v1
+LOCAL_MODEL_API_KEY=your_local_api_key_here
+
+# Optional: Slack notifications
+SLACK_WEBHOOK_URL=your_slack_webhook_url_here
+SLACK_CHANNEL=#experiments
+```
+
+**Note**: You only need to set the API keys for the models you plan to use.
+
+### 3. Run Your First Experiment
+```bash
+# Quick test with BBH dataset
+python scripts/run_prompt_tuning.py \
+  --dataset bbh \
+  --total_samples 10 \
+  --iterations 3 \
+  --model solar
+```
+
+### 4. Explore with Web UI
+```bash
+streamlit run agent/app/streamlit_app.py
+```
+
 ## Installation and Execution
 
 1. Install dependencies
@@ -160,10 +207,67 @@ python evaluation/examples/<dataset>_example.py
 
 ---
 
+## Troubleshooting
+
+### Common Issues
+
+#### 🔑 **API Key Errors**
+```bash
+Error: No API key found for model 'solar'
+```
+**Solution**: Ensure your `.env` file contains the correct API key for the model you're using.
+
+#### 📦 **Import Errors**
+```bash
+ModuleNotFoundError: No module named 'agent'
+```
+**Solution**: Make sure you're running commands from the project root directory, not from subdirectories.
+
+#### 💾 **Memory Issues**
+```bash
+MemoryError: Unable to allocate array
+```
+**Solution**: Reduce the `--total_samples` or `--iteration_samples` parameters.
+
+#### ⏱️ **Timeout Errors**
+```bash
+RequestTimeout: Request timed out
+```
+**Solution**: Check your internet connection and API rate limits.
+
+#### 📊 **Evaluation Errors**
+```bash
+EvaluationError: Failed to evaluate response
+```
+**Solution**: Verify your evaluation prompts are properly formatted and the model can access them.
+
+### Getting Help
+
+- **GitHub Issues**: [Report bugs and request features](https://github.com/your-repo/zera-agent/issues)
+- **Discussions**: [Join community discussions](https://github.com/your-repo/zera-agent/discussions)
+- **Documentation**: Check the [scripts/README.md](scripts/README.md) for CLI usage details
+
 ## Contributing and Inquiries
 
 - Pull Requests and Issues welcome
-- Inquiries: [Project manager email or GitHub issues]
+- Inquiries: Please use [GitHub Issues](https://github.com/your-repo/zera-agent/issues) for questions and bug reports
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Citation
+
+If you use this project in your research, please cite:
+
+```bibtex
+@software{zera_agent,
+  title={Zera Agent: Prompt Auto-tuning Agent},
+  author={Zera Agent Team},
+  year={2024},
+  url={https://github.com/your-repo/zera-agent}
+}
+```
 
 ---
 

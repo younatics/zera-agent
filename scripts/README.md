@@ -111,3 +111,83 @@ python scripts/run_prompt_tuning.py \
   --meta_model solar \
   --output_dir ./custom_results
 ```
+
+### Real-World Scenarios
+
+#### 🧮 **Math Problem Solving (GSM8K)**
+```bash
+python scripts/run_prompt_tuning.py \
+  --dataset gsm8k \
+  --total_samples 100 \
+  --iterations 10 \
+  --model gpt4o \
+  --evaluator gpt4o \
+  --meta_model gpt4o \
+  --evaluation_threshold 0.9 \
+  --output_dir ./results/gsm8k_math_expert
+```
+
+#### 📚 **Multiple Choice Questions (MMLU)**
+```bash
+python scripts/run_prompt_tuning.py \
+  --dataset mmlu \
+  --total_samples 200 \
+  --iterations 15 \
+  --model claude \
+  --evaluator claude \
+  --meta_model claude \
+  --evaluation_threshold 0.85 \
+  --output_dir ./results/mmlu_knowledge_expert
+```
+
+#### 💻 **Programming Problems (MBPP)**
+```bash
+python scripts/run_prompt_tuning.py \
+  --dataset mbpp \
+  --total_samples 50 \
+  --iterations 8 \
+  --model solar \
+  --evaluator solar \
+  --meta_model solar \
+  --evaluation_threshold 0.8 \
+  --output_dir ./results/mbpp_code_expert
+```
+
+#### 📰 **News Summarization (CNN)**
+```bash
+python scripts/run_prompt_tuning.py \
+  --dataset cnn \
+  --total_samples 80 \
+  --iterations 12 \
+  --model gpt4o \
+  --evaluator claude \
+  --meta_model solar \
+  --evaluation_threshold 0.75 \
+  --output_dir ./results/cnn_summary_expert
+```
+
+### Cost Optimization Examples
+
+#### 💰 **Budget-Conscious Experiment**
+```bash
+# Use smaller sample sizes to reduce costs
+python scripts/run_prompt_tuning.py \
+  --dataset bbh \
+  --total_samples 20 \
+  --iterations 5 \
+  --model solar \
+  --evaluation_threshold 0.7 \
+  --output_dir ./results/bbh_budget_test
+```
+
+#### 🚀 **High-Performance Experiment**
+```bash
+# Use larger samples for better results (higher cost)
+python scripts/run_prompt_tuning.py \
+  --dataset mmlu \
+  --total_samples 500 \
+  --iterations 20 \
+  --model gpt4o \
+  --evaluation_threshold 0.95 \
+  --output_dir ./results/mmlu_high_performance
+```
