@@ -28,6 +28,12 @@ evaluation/
   examples/            # Evaluation and tuning example code
   results/             # Evaluation result storage
   samples/             # Sample data
+
+scripts/               # Command-line interface tools and utilities
+  run_prompt_tuning.py      # CLI for prompt tuning experiments
+  run_batch_experiments.py  # Batch experiment execution
+  update_results.py         # Result update utilities
+  run_background.sh         # Background process management
 ```
 
 ### agent directory
@@ -129,6 +135,18 @@ python evaluation/examples/<dataset>_example.py
 3. Run web UI
    ```
    streamlit run agent/app/streamlit_app.py
+   ```
+
+4. Run CLI tools (optional)
+   ```bash
+   # Run prompt tuning experiment
+   python scripts/run_prompt_tuning.py --dataset bbh --total_samples 20 --iterations 5 --model solar
+   
+   # Run batch experiments
+   python scripts/run_batch_experiments.py --config experiments_config.json
+   
+   # Update results
+   python scripts/update_results.py
    ```
 
 ---
