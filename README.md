@@ -270,19 +270,6 @@ EvaluationError: Failed to evaluate response
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Citation
-
-If you use this project in your research, please cite:
-
-```bibtex
-@software{zera_agent,
-  title={Zera Agent: Prompt Auto-tuning Agent},
-  author={Zera Agent Team},
-  year={2024},
-  url={https://github.com/your-repo/zera-agent}
-}
-```
-
 ---
 
 This README is written based on the actual code structure, key features, and the entire evaluation system.  
