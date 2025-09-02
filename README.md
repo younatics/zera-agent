@@ -76,18 +76,20 @@
 - **Self-Refining Framework**: Iterative loop of **PCG (Principle-based Critique Generation)** and **MPR (Meta-cognitive Prompt Refinement)** enables evolution from minimal “zero” prompts to structured, task-optimized prompts.
 - **Efficiency**: Achieves high-quality prompts with only **5–20 samples** and short iteration cycles.
 
-### 🏆 **Performance Results**
+### 📊 **Performance Results**
 
-ZERA has been extensively benchmarked and consistently outperforms state-of-the-art methods:
+ZERA has been extensively benchmarked and shows competitive performance compared to state-of-the-art methods:
 
-#### 📊 **Model Coverage**
+#### 🔬 **Model Coverage**
 - **5 LLMs**: GPT-3.5, GPT-4o, LLaMA-3.1, Qwen-2.5, Mistral-7B
 - **9 Datasets**: MMLU, GSM8K, BBH, CNN/DailyMail, SAMSum, MBPP, HumanEval, TruthfulQA, HellaSwag
 
-#### 🚀 **Key Advantages**
-- **Consistent Performance**: Outperforms recent APO methods across all task types
-- **Rapid Convergence**: Achieves optimal results with minimal samples
-- **Strong Generalization**: Works across diverse domains without task-specific tuning
+
+
+#### ✨ **Key Strengths**
+- **Competitive Performance**: Shows comparable or better results compared to recent APO methods
+- **Efficient Convergence**: Achieves good results with minimal samples (5-20)
+- **Broad Applicability**: Works across diverse domains without task-specific tuning
 - **Zero-Shot Capability**: Starts from minimal instructions, no handcrafted prompts needed
 
 📎 [Read the Full Paper (EMNLP 2025)](TBD)
