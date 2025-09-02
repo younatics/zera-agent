@@ -35,6 +35,7 @@
 - 🎯 **Joint Optimization**: Simultaneously optimizes both system and user prompts
 - ⚡ **Lightning Fast**: Achieves high-quality results with only 5-20 samples
 - 🧠 **Principle-Based**: Uses 8 evaluation principles for consistent quality
+- 📊 **Weighted Scoring**: Adaptive importance weighting for each principle
 - 🌟 **Model Agnostic**: Works with any LLM (GPT-4, Claude, Solar, LLaMA, etc.)
 
 ### 🎬 **See ZERA in Action**
@@ -83,15 +84,6 @@ ZERA has been extensively benchmarked and consistently outperforms state-of-the-
 - **5 LLMs**: GPT-3.5, GPT-4o, LLaMA-3.1, Qwen-2.5, Mistral-7B
 - **9 Datasets**: MMLU, GSM8K, BBH, CNN/DailyMail, SAMSum, MBPP, HumanEval, TruthfulQA, HellaSwag
 
-#### 🥇 **Competitive Performance**
-
-| Method | Reasoning | Summarization | Code Generation | Convergence |
-|--------|-----------|---------------|-----------------|-------------|
-| **ZERA (Ours)** | 🥇 **Best** | 🥇 **Best** | 🥇 **Best** | ⚡ **5-20 samples** |
-| PromptAgent | 2nd | 3rd | 2nd | 50+ samples |
-| OPRO | 3rd | 2nd | 3rd | 100+ samples |
-| CriSPO | 4th | 4th | 4th | 200+ samples |
-
 #### 🚀 **Key Advantages**
 - **Consistent Performance**: Outperforms recent APO methods across all task types
 - **Rapid Convergence**: Achieves optimal results with minimal samples
@@ -130,30 +122,47 @@ graph LR
 
 ### 🔧 **How It Works**
 
-1. **🔄 PCG (Prompt Critique Generation)**
-   - Automatically analyzes current prompt performance
-   - Identifies areas for improvement using 8 evaluation principles
-   - Generates specific, actionable feedback
+1. **🔄 PCG (Principle-based Critique Generation)**
+   - Evaluates prompt performance against 8 evaluation principles
+   - Generates detailed critiques with scores, analysis, and suggestions
+   - Provides weighted feedback based on principle importance
 
-2. **⚡ MPR (Meta Prompt Refinement)**
-   - Uses meta-cognitive prompts to guide improvement
-   - Applies critiques to enhance both system and user prompts
-   - Maintains consistency across iterations
+2. **⚡ MPR (Meta-cognitive Prompt Refinement)**
+   - Uses critiques to intelligently refine both system and user prompts
+   - Leverages historical best prompts and prompt replay data
+   - Maintains consistency and improves prompt quality iteratively
 
-3. **♾️ Infinity Loop**
-   - Continuous refinement until optimal performance
-   - Adaptive learning from each iteration
-   - Converges rapidly with minimal samples
+3. **♾️ Continuous Refinement Loop**
+   - Task samples → Inference → Evaluation → Critique → Refinement
+   - Each iteration produces better prompts based on principle-based feedback
+   - Rapid convergence to optimal prompts with minimal samples
 
 ### 🎨 **Visual Representation**
 
 <div align="center">
 
-![ZERA Process](img/title.jpg)
+![ZERA Concept](img/ZERA_Concept_v2.png)
 
-*The ZERA infinity loop: From zero instructions to structured prompts via self-refining optimization*
+*ZERA's iterative prompt refinement process: PCG (Principle-based Critique Generation) → MPR (Meta-cognitive Prompt Refinement) → Enhanced Prompt*
 
 </div>
+
+### 📋 **8 Evaluation Principles**
+
+ZERA evaluates prompts using eight comprehensive principles, each with adaptive weighting:
+
+| Principle | Weight | Description | Focus Area |
+|-----------|--------|-------------|------------|
+| **Meaning** | 0.15 | Captures key details and core information | Content accuracy |
+| **Completeness** | 0.10 | Covers all essential aspects comprehensively | Information coverage |
+| **Expression** | 0.05 | Uses appropriate tone and style | Communication quality |
+| **Faithfulness** | 0.20 | Stays true to source without fabrication | Source adherence |
+| **Conciseness** | 0.20 | Maintains brevity while being complete | Efficiency |
+| **Correctness** | 0.10 | Provides accurate and factual information | Factual accuracy |
+| **Structural** | 0.05 | Organizes content in logical structure | Organization |
+| **Reasoning** | 0.15 | Demonstrates clear logical thinking | Logical flow |
+
+Each principle contributes to the overall prompt quality score, guiding the refinement process toward optimal performance.
 
 ---
 
@@ -280,14 +289,7 @@ python evaluation/examples/<dataset>_example.py
 
 </div>
 
-### 🎯 **Choose Your Path**
 
-<div align="center">
-
-[![CLI](https://img.shields.io/badge/CLI-Command%20Line-blue?style=for-the-badge&logo=terminal)](#3-run-your-first-experiment)
-[![Web UI](https://img.shields.io/badge/Web%20UI-Streamlit-red?style=for-the-badge&logo=streamlit)](#4-explore-with-web-ui)
-
-</div>
 
 ### 1. Clone and Setup
 ```bash
@@ -426,32 +428,16 @@ EvaluationError: Failed to evaluate response
 - 🔧 **Contribute Code**: [Pull Requests](https://github.com/your-repo/zera-agent/pulls)
 - 📖 **Improve Docs**: [Documentation PRs](https://github.com/your-repo/zera-agent/pulls)
 
-### 🌟 **Show Your Support**
 
-<div align="center">
-
-[![Star](https://img.shields.io/badge/⭐%20Star%20ZERA-GitHub-yellow?style=for-the-badge)](https://github.com/your-repo/zera-agent)
-[![Fork](https://img.shields.io/badge/🍴%20Fork%20ZERA-GitHub-green?style=for-the-badge)](https://github.com/your-repo/zera-agent/fork)
-[![Watch](https://img.shields.io/badge/👀%20Watch%20ZERA-GitHub-blue?style=for-the-badge)](https://github.com/your-repo/zera-agent)
-
-</div>
 
 ### 📧 **Stay Connected**
 
 - 📧 **Email**: [zera-team@example.com](mailto:zera-team@example.com)
 - 🐦 **Twitter**: [@ZERAAgent](https://twitter.com/ZERAAgent)
-- 💬 **Discord**: [Join our server](TBD)
-- 📰 **Newsletter**: [Subscribe for updates](TBD)
 
 ### 🏆 **Contributors**
 
-<div align="center">
-
-[![Contributors](https://contrib.rocks/image?repo=your-repo/zera-agent)](https://github.com/your-repo/zera-agent/graphs/contributors)
-
-*Thank you to all our amazing contributors!*
-
-</div>
+We welcome contributions from the community! See our [Contributing Guide](CONTRIBUTING.md) for details on how to get involved.
 
 ## License
 
@@ -487,17 +473,11 @@ With ZERA, the era of manual prompt crafting is over. Welcome to the future wher
 
 <div align="center">
 
-![ZERA Logo](img/title.jpg)
-
 **ZERA: Zero-prompt Evolving Refinement Agent**  
 *From Zero Instructions to Structured Prompts via Self-Refining Optimization*
 
-[![Get Started](https://img.shields.io/badge/🚀%20Get%20Started-Quick%20Start-blue?style=for-the-badge&logo=rocket)](#quick-start)
-[![Read Paper](https://img.shields.io/badge/📚%20Read%20Paper-EMNLP%202025-red?style=for-the-badge)](#research-paper)
-[![Star Repo](https://img.shields.io/badge/⭐%20Star%20Repo-GitHub-yellow?style=for-the-badge)](https://github.com/your-repo/zera-agent)
-
-</div>
-
 ---
 
-*This README showcases the revolutionary capabilities of ZERA, the first joint system-user prompt optimization agent. Ready to experience the future of prompt engineering?* 🚀✨ 
+*Ready to experience the future of prompt engineering?* 🚀
+
+</div> 
