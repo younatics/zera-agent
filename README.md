@@ -9,6 +9,31 @@
 **Zera Agent** is a prompt auto-tuning agent that automatically optimizes, evaluates, and iteratively improves prompts across various LLMs (Large Language Models).  
 This agent is designed to systematically evaluate prompt quality, utilize meta-prompts to generate better prompts, and conduct iterative experiments across various datasets and models.
 
+---
+
+## 📄 About the Paper
+
+This project is based on our research paper:
+
+**ZERA: Zero-prompt Evolving Refinement Agent – From Zero Instructions to Structured Prompts via Principle-based Optimization**  
+✅ Accepted to **EMNLP 2025 Main Conference (Main Track)**
+
+### Research Contribution
+- **Joint Optimization**: Unlike prior APO (Automatic Prompt Optimization) methods that only refine user prompts, ZERA jointly optimizes both **system and user prompts**.
+- **Principle-based Evaluation**: Introduces eight general evaluation principles (Correctness, Reasoning Quality, Conciseness, etc.) with adaptive weighting to guide prompt refinement.
+- **Self-Refining Framework**: Iterative loop of **PCG (Principle-based Critique Generation)** and **MPR (Meta-cognitive Prompt Refinement)** enables evolution from minimal “zero” prompts to structured, task-optimized prompts.
+- **Efficiency**: Achieves high-quality prompts with only **5–20 samples** and short iteration cycles.
+
+### Results
+- Benchmarked across **5 LLMs** (GPT-3.5, GPT-4o, LLaMA-3.1, Qwen-2.5, Mistral-7B) and **9 datasets** (MMLU, GSM8K, BBH, CNN/DailyMail, SAMSum, MBPP, HumanEval, etc.).
+- Consistently outperforms recent APO methods (**PromptAgent, OPRO, CriSPO**) on reasoning, summarization, and code generation tasks.
+- Demonstrates strong **generalization** and **rapid convergence**, even without handcrafted prompts or task descriptions.
+
+📎 [Read the Full Paper (EMNLP 2025)](TBD)
+
+---
+
+
 ### 🚀 **Core Concept: Self-Refining Optimization**
 
 Zera Agent implements a unique **Self-Refining Optimization** process that continuously evolves prompts from zero instructions to structured, high-performance prompts:
