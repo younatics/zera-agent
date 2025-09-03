@@ -14,8 +14,6 @@
 **🎯 The First Joint System-User Prompt Optimization Agent**  
 **🚀 From Zero Instructions to Structured Prompts via Self-Refining Optimization**
 
-[![Try it online](https://img.shields.io/badge/Try%20it%20online-Streamlit-red.svg)](TBD)
-
 </div>
 
 # ZERA: Zero-prompt Evolving Refinement Agent
