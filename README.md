@@ -7,7 +7,7 @@
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Paper](https://img.shields.io/badge/Paper-EMNLP%202025-red.svg)](TBD)
-[![arXiv](https://img.shields.io/badge/arXiv-coming%20soon-orange.svg)](TBD)
+[![arXiv](https://img.shields.io/badge/arXiv-2509.18158-orange.svg)](https://arxiv.org/abs/2509.18158)
 [![Stars](https://img.shields.io/github/stars/younatics/zera-agent?style=social)](https://github.com/younatics/zera-agent)
 [![Forks](https://img.shields.io/github/forks/younatics/zera-agent?style=social)](https://github.com/younatics/zera-agent)
 
@@ -64,7 +64,7 @@
 <div align="center">
 
 [![Paper Badge](https://img.shields.io/badge/EMNLP%202025-Main%20Track-blue?style=for-the-badge&logo=academia)](TBD)
-[![arXiv Badge](https://img.shields.io/badge/arXiv-coming%20soon-orange?style=for-the-badge)](TBD)
+[![arXiv Badge](https://img.shields.io/badge/arXiv-2509.18158-orange?style=for-the-badge)](https://arxiv.org/abs/2509.18158)
 
 </div>
 
@@ -90,7 +90,7 @@ ZERA has been extensively benchmarked and shows competitive performance compared
 - **Broad Applicability**: Works across diverse domains without task-specific tuning
 - **Zero-Shot Capability**: Starts from minimal instructions, no handcrafted prompts needed
 
-📎 [Read the Full Paper (EMNLP 2025)](TBD)
+📎 [Read the Full Paper (arXiv)](https://arxiv.org/abs/2509.18158)
 
 ---
 
