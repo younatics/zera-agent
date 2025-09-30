@@ -427,7 +427,7 @@ If you use ZERA in your research, please cite our paper:
 
 ```bibtex
 @inproceedings{yi2025zera,
-  title={ZERA: Zero-prompt Evolving Refinement Agent – From Zero Instructions to Structured Prompts via Principle-based Optimization},
+  title={ZERA: Zero-init Instruction Evolving Refinement Agent – From Zero Instructions to Structured Prompts via Principle-based Optimization},
   author={Yi, Seungyoun and Khang, Minsoo and Park, Sungrae},
   booktitle={Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing},
   year={2025},
