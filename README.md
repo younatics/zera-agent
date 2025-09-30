@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="img/title.jpg" alt="ZERA: Zero-prompt Evolving Refinement Agent" width="800px">
+  <img src="img/title.jpg" alt="ZERA: Zero-init Instruction Evolving Refinement Agent" width="800px">
 </div>
 
 <div align="center">
@@ -469,7 +469,7 @@ With ZERA, the era of manual prompt crafting is over. Welcome to the future wher
 
 <div align="center">
 
-**ZERA: Zero-prompt Evolving Refinement Agent**  
+**ZERA: Zero-init Instruction Evolving Refinement Agent**  
 *From Zero Instructions to Structured Prompts via Self-Refining Optimization*
 
 ---
