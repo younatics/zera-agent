@@ -16,7 +16,7 @@
 
 </div>
 
-# ZERA: Zero-prompt Evolving Refinement Agent
+# ZERA: Zero-init Instruction Evolving Refinement Agent
 
 ## 🎯 Overview
 
