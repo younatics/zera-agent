@@ -56,8 +56,8 @@
 
 ### 📖 **Paper Details**
 
-**Title**: ZERA: Zero-prompt Evolving Refinement Agent – From Zero Instructions to Structured Prompts via Principle-based Optimization  
-**Conference**: **EMNLP 2025 Main Conference (Main Track)**  
+**Title**: ZERA: Zero-init Instruction Evolving Refinement Agent – From Zero Instructions to Structured Prompts via Principle-based Optimization
+**Conference**: **EMNLP 2025 Main Track (Oral Presentation)**  
 **Status**: ✅ **Accepted**  
 **Authors**: Seungyoun Yi, Minsoo Khang, Sungrae Park
 
