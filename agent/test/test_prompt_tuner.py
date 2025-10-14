@@ -1,63 +1,67 @@
-import csv
-import os
-from ..prompt_tuner import PromptTuner
+import sys
+from pathlib import Path
 
-def load_test_cases_from_csv(csv_file):
-    test_cases = []
-    with open(csv_file, 'r', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            test_case = {
-                'question': row['question'],
-                'expected': row['expected_answer']
-            }
-            test_cases.append(test_case)
-    return test_cases
+ROOT = Path(__file__).resolve().parents[3]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
-def test_prompt_tuner():
-    print("Starting prompt tuner test")
-    
-    # Load test cases from CSV file
-    csv_file = "input.csv"  # input.csv in project root
-    if not os.path.exists(csv_file):
-        print(f"Error: {csv_file} not found")
-        return
-    
-    test_cases = load_test_cases_from_csv(csv_file)
-    print(f"\nLoaded {len(test_cases)} test cases from {csv_file}")
-    
-    # Initial prompts
-    initial_system_prompt = "You are a helpful AI assistant."
-    initial_user_prompt = "Be polite and concise in your responses."
-    
-    # Create PromptTuner instance (using solar as default)
-    tuner = PromptTuner()
-    
-    # Execute prompt tuning
-    print("\n=== Starting Prompt Tuning ===")
-    iteration_results = tuner.tune_prompt(
-        initial_system_prompt=initial_system_prompt,
-        initial_user_prompt=initial_user_prompt,
-        initial_test_cases=test_cases,
-        num_iterations=3
+from agent.core.prompt_tuner import PromptTuner
+
+
+class StubModel:
+    def __init__(self, responses):
+        self._responses = iter(responses)
+        self.calls = []
+
+    def ask(self, question, system_prompt=None, user_prompt=None):
+        self.calls.append((question, system_prompt, user_prompt))
+        response = next(self._responses)
+        metadata = {
+            "input_tokens": 10,
+            "output_tokens": 5,
+            "total_tokens": 15,
+            "cost": 0.0,
+            "duration": 0.01,
+            "model": "stub",
+        }
+        return response, metadata
+
+
+class StubEvaluationModel(StubModel):
+    pass
+
+
+def test_prompt_tuner_with_stub_models(tmp_path):
+    answer_model = StubModel(["Expected answer"])
+    evaluation_payload = [
+        '{"scores": {"quality": {"score": 1.0, "weight": 1.0, "current_state": "ok", "improvement_action": ""}}}'
+    ]
+    evaluator_model = StubEvaluationModel(evaluation_payload)
+    meta_model = StubEvaluationModel([""])
+
+    tuner = PromptTuner(
+        model_name="solar",
+        evaluator_model_name="solar",
+        meta_prompt_model_name="solar",
+        model=answer_model,
+        evaluator=evaluator_model,
+        meta_prompt_model=meta_model,
     )
-    
-    # Output results
-    print("\n=== Tuning Results ===")
-    best_result = max(iteration_results, key=lambda x: x.avg_score)
-    print(f"Best average score: {best_result.best_avg_score}")
-    print(f"Best individual score: {best_result.best_sample_score}")
-    print(f"Optimal system prompt: {best_result.system_prompt}")
-    print(f"Optimal user prompt: {best_result.user_prompt}")
-    
-    print("\n=== Evaluation Records ===")
-    for result in iteration_results:
-        print(f"Iteration {result.iteration}:")
-        print(f"Average score: {result.avg_score}")
-        print(f"Standard deviation: {result.std_dev}")
-        print(f"Top3 average score: {result.top3_avg_score}")
-        print(f"System prompt: {result.system_prompt}")
-        print(f"User prompt: {result.user_prompt}\n")
 
-if __name__ == "__main__":
-    test_prompt_tuner() 
+    test_cases = [{"question": "What?", "expected": "Expected answer"}]
+
+    results = tuner.tune_prompt(
+        initial_system_prompt="System",
+        initial_user_prompt="User",
+        initial_test_cases=test_cases,
+        num_iterations=1,
+        use_meta_prompt=False,
+    )
+
+    assert len(results) == 1
+    result = results[0]
+    assert result.avg_score == 1.0
+    assert result.test_case_results[0].actual_output == "Expected answer"
+    assert answer_model.calls[0][0] == "What?"
+    assert evaluator_model.calls
+    assert meta_model.calls == []

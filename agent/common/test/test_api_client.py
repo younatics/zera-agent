@@ -1,82 +1,90 @@
-from ..api_client import Model
-import os
-from openai import OpenAI
-from anthropic import Anthropic
-from dotenv import load_dotenv
+import sys
+from pathlib import Path
+from types import SimpleNamespace
 
-# Load .env file
-load_dotenv()
+import pytest
 
-# Define test question
-TEST_QUESTION = "Hello! Who are you?"
+ROOT = Path(__file__).resolve().parents[3]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
-# Set API keys
-openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-anthropic_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-solar_client = OpenAI(
-    api_key=os.getenv("SOLAR_API_KEY"),
-    base_url="https://api.upstage.ai/v1"
-)
+from agent.common.api_client import Model, create_messages
 
-def test_model_initialization():
-    print("\n=== Model Initialization Test ===")
-    
-    # GPT model test
-    try:
-        model = Model("gpt4o")
-        print("GPT model initialization successful:", model.name)
-    except Exception as e:
-        print("GPT model initialization failed:", str(e))
-    
-    # Claude model test
-    try:
-        model = Model("claude")
-        print("Claude model initialization successful:", model.name)
-    except Exception as e:
-        print("Claude model initialization failed:", str(e))
-    
-    # Solar Pro model test
-    try:
-        model = Model("solar")
-        print("Solar Pro model initialization successful:", model.name)
-    except Exception as e:
-        print("Solar Pro model initialization failed:", str(e))
-    
-    # Invalid model name test
-    try:
-        model = Model("invalid_model")
-    except Exception as e:
-        print("Invalid model name test successful:", str(e))
 
-def test_available_models():
-    print("\n=== Available Models List Test ===")
-    models = Model.get_available_models()
-    print("Available models:", models)
+class DummyChatCompletions:
+    def __init__(self, response):
+        self._response = response
+        self.last_request = None
 
-def test_model_responses():
-    print("\n=== Model Question Test ===")
-    
-    # GPT model test
-    print("\n[GPT Model Test]")
-    gpt_model = Model("gpt4o")
-    gpt_response = gpt_model.ask(TEST_QUESTION)
-    print("GPT response:", gpt_response)
-    
-    # Claude model test
-    print("\n[Claude Model Test]")
-    claude_model = Model("claude")
-    claude_response = claude_model.ask(TEST_QUESTION)
-    print("Claude response:", claude_response)
-    
-    # Solar Pro model test
-    print("\n[Solar Pro Model Test]")
-    solar_model = Model("solar")
-    solar_response = solar_model.ask(TEST_QUESTION)
-    print("Solar Pro response:", solar_response)
+    def create(self, **kwargs):
+        self.last_request = kwargs
+        return self._response
 
-if __name__ == "__main__":
-    print("API client test started")
-    test_model_initialization()
-    test_available_models()
-    test_model_responses()
-    print("\nTest completed") 
+
+class DummyClient:
+    def __init__(self, response):
+        self.chat = SimpleNamespace(completions=DummyChatCompletions(response))
+
+
+def build_openai_response(text, prompt_tokens=0, completion_tokens=0, total_tokens=None):
+    usage = SimpleNamespace(
+        prompt_tokens=prompt_tokens,
+        completion_tokens=completion_tokens,
+        total_tokens=total_tokens if total_tokens is not None else prompt_tokens + completion_tokens,
+    )
+    message = SimpleNamespace(content=text)
+    choice = SimpleNamespace(message=message)
+    return SimpleNamespace(choices=[choice], usage=usage)
+
+
+def test_create_messages_handles_empty_segments():
+    messages = create_messages("What is new?", system_prompt="system", user_prompt="")
+
+    assert messages[0]["role"] == "system"
+    assert messages[0]["content"] == "system"
+    assert messages[1]["content"] == "What is new?"
+
+
+def test_model_ask_returns_metadata_and_uses_client():
+    response = build_openai_response("hello", prompt_tokens=1000, completion_tokens=500)
+    dummy_client = DummyClient(response)
+    model = Model("gpt4o", client=dummy_client)
+
+    answer, metadata = model.ask("Question?", system_prompt="System", user_prompt="Be kind")
+
+    assert answer == "hello"
+    assert metadata["input_tokens"] == 1000
+    assert metadata["output_tokens"] == 500
+    assert metadata["total_tokens"] == 1500
+    expected_cost = (
+        (1000 / 1000) * Model.token_prices["gpt4o"]["input_price_per_1k"]
+        + (500 / 1000) * Model.token_prices["gpt4o"]["output_price_per_1k"]
+    )
+    assert metadata["cost"] == pytest.approx(expected_cost)
+    assert metadata["model"] == model.model_id
+
+    sent_messages = dummy_client.chat.completions.last_request["messages"]
+    assert sent_messages[0]["content"] == "System"
+    assert "Be kind" in sent_messages[1]["content"]
+
+
+def test_ask_simple_delegates_to_ask():
+    response = build_openai_response("result")
+    model = Model("gpt4o", client=DummyClient(response))
+
+    assert model.ask_simple("Question?") == "result"
+
+
+def test_temperature_validation():
+    model = Model("gpt4o", client=DummyClient(build_openai_response("answer")))
+
+    with pytest.raises(ValueError):
+        model.set_temperature(1.5)
+
+    # Valid assignment should not raise
+    model.set_temperature(0.2)
+
+
+def test_get_model_info_contains_provider():
+    info = Model.get_model_info("gpt4o")
+    assert info["provider"] == "openai"
