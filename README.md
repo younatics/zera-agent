@@ -6,7 +6,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Paper](https://img.shields.io/badge/Paper-EMNLP%202025-red.svg)](TBD)
+[![Paper](https://img.shields.io/badge/Paper-EMNLP%202025-red.svg)](https://aclanthology.org/2025.emnlp-main.1190/)
 [![arXiv](https://img.shields.io/badge/arXiv-2509.18158-orange.svg)](https://arxiv.org/abs/2509.18158)
 [![Stars](https://img.shields.io/github/stars/younatics/zera-agent?style=social)](https://github.com/younatics/zera-agent)
 [![Forks](https://img.shields.io/github/forks/younatics/zera-agent?style=social)](https://github.com/younatics/zera-agent)
@@ -63,7 +63,7 @@
 
 <div align="center">
 
-[![Paper Badge](https://img.shields.io/badge/EMNLP%202025-Main%20Track-blue?style=for-the-badge&logo=academia)](TBD)
+[![Paper Badge](https://img.shields.io/badge/EMNLP%202025-Main%20Track-blue?style=for-the-badge&logo=academia)](https://aclanthology.org/2025.emnlp-main.1190/)
 [![arXiv Badge](https://img.shields.io/badge/arXiv-2509.18158-orange?style=for-the-badge)](https://arxiv.org/abs/2509.18158)
 
 </div>
