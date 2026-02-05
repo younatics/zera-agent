@@ -11,26 +11,49 @@ import json
 from .iteration_result import IterationResult, TestCaseResult
 import pandas as pd
 
+
 class PromptTuner:
     """
     A class for automatically fine-tuning system prompts for LLMs.
     """
     
-    def __init__(self, model_name: str = "solar", evaluator_model_name: str = "solar", meta_prompt_model_name: str = "solar", model_version: str = None, evaluator_model_version: str = None, meta_prompt_model_version: str = None):
+    def __init__(
+        self,
+        model_name: str = "solar",
+        evaluator_model_name: str = "solar",
+        meta_prompt_model_name: str = "solar",
+        model_version: str | None = None,
+        evaluator_model_version: str | None = None,
+        meta_prompt_model_version: str | None = None,
+        *,
+        model: Optional[Model] = None,
+        evaluator: Optional[Model] = None,
+        meta_prompt_model: Optional[Model] = None,
+        model_factory: Optional[Callable[[str, Optional[str]], Model]] = None,
+    ):
         """
         Initialize the PromptTuner with specific models.
-        
+
         Args:
-            model_name (str): The name of the model to use for tuning (default: "solar")
-            evaluator_model_name (str): The name of the model to use for evaluation (default: "solar")
-            meta_prompt_model_name (str): The name of the model to use for meta prompt generation (default: "solar")
-            model_version (str): The version of the model to use for tuning (default: None)
-            evaluator_model_version (str): The version of the model to use for evaluation (default: None)
-            meta_prompt_model_version (str): The version of the model to use for meta prompt generation (default: None)
+            model_name: The name of the model to use for tuning.
+            evaluator_model_name: The name of the model to use for evaluation.
+            meta_prompt_model_name: The name of the model to use for meta prompt generation.
+            model_version: The version of the tuning model.
+            evaluator_model_version: The version of the evaluation model.
+            meta_prompt_model_version: The version of the meta prompt model.
+            model: Optional pre-configured model instance for generating answers. When provided the
+                ``model_name`` and ``model_version`` parameters are ignored for the main model.
+            evaluator: Optional pre-configured model instance for evaluation.
+            meta_prompt_model: Optional pre-configured model instance for meta prompt generation.
+            model_factory: Optional factory used to instantiate :class:`~agent.common.api_client.Model`
+                objects when explicit instances are not provided. The callable receives the desired
+                model name and version.
         """
-        self.model = Model(model_name, version=model_version)
-        self.evaluator = Model(evaluator_model_name, version=evaluator_model_version)
-        self.meta_prompt_model = Model(meta_prompt_model_name, version=meta_prompt_model_version)
+
+        self._model_factory = model_factory or (lambda name, version=None: Model(name, version=version))
+        self.model = model or self._model_factory(model_name, model_version)
+        self.evaluator = evaluator or self._model_factory(evaluator_model_name, evaluator_model_version)
+        self.meta_prompt_model = meta_prompt_model or self._model_factory(meta_prompt_model_name, meta_prompt_model_version)
         self.iteration_results = []
         self.progress_callback = None
         self.iteration_callback = None
