@@ -22,7 +22,13 @@ agent/
 ## Core Components
 
 ### 🖥️ **app/** - Web User Interface
-- **`streamlit_app.py`**: Main Streamlit application for interactive prompt tuning
+- **`streamlit_app.py`**: Thin Streamlit entrypoint that wires the app modules together
+- **`config.py`**: Environment, prompt template, and API key configuration helpers
+- **`sidebar.py`**: Tuning, threshold, and model setting controls
+- **`prompt_controls.py`**: Initial, meta, and evaluation prompt editors
+- **`datasets.py`**: Dataset selection and loading UI
+- **`app_logic.py`**: Pure dataset-to-test-case conversion logic
+- **`results_display.py`**: Live metrics, iteration details, costs, and downloads
 - Provides intuitive experiment management and result visualization
 - Real-time progress tracking and cost monitoring
 - Interactive prompt editing and configuration
@@ -154,8 +160,19 @@ Each model can be configured with:
 
 ### Running Tests
 ```bash
-python -m pytest agent/test/
+python3 -m unittest discover -v
 ```
+
+If you install the optional development dependencies, the same tests can also be
+run with pytest.
+
+### No-API Smoke Test
+```bash
+python3 scripts/smoke_test_no_api.py
+```
+
+This runs deterministic fake model checks for the tuning loop and app support
+logic without calling external APIs.
 
 ## Architecture
 

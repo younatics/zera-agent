@@ -1,82 +1,88 @@
-from ..api_client import Model
-import os
-from openai import OpenAI
-from anthropic import Anthropic
-from dotenv import load_dotenv
+import unittest
 
-# Load .env file
-load_dotenv()
+from agent.common.api_client import Model, create_messages
 
-# Define test question
-TEST_QUESTION = "Hello! Who are you?"
 
-# Set API keys
-openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-anthropic_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-solar_client = OpenAI(
-    api_key=os.getenv("SOLAR_API_KEY"),
-    base_url="https://api.upstage.ai/v1"
-)
+class FakeUsage:
+    prompt_tokens = 120
+    completion_tokens = 30
+    total_tokens = 150
 
-def test_model_initialization():
-    print("\n=== Model Initialization Test ===")
-    
-    # GPT model test
-    try:
-        model = Model("gpt4o")
-        print("GPT model initialization successful:", model.name)
-    except Exception as e:
-        print("GPT model initialization failed:", str(e))
-    
-    # Claude model test
-    try:
-        model = Model("claude")
-        print("Claude model initialization successful:", model.name)
-    except Exception as e:
-        print("Claude model initialization failed:", str(e))
-    
-    # Solar Pro model test
-    try:
-        model = Model("solar")
-        print("Solar Pro model initialization successful:", model.name)
-    except Exception as e:
-        print("Solar Pro model initialization failed:", str(e))
-    
-    # Invalid model name test
-    try:
-        model = Model("invalid_model")
-    except Exception as e:
-        print("Invalid model name test successful:", str(e))
 
-def test_available_models():
-    print("\n=== Available Models List Test ===")
-    models = Model.get_available_models()
-    print("Available models:", models)
+class FakeMessage:
+    content = "fake answer"
 
-def test_model_responses():
-    print("\n=== Model Question Test ===")
-    
-    # GPT model test
-    print("\n[GPT Model Test]")
-    gpt_model = Model("gpt4o")
-    gpt_response = gpt_model.ask(TEST_QUESTION)
-    print("GPT response:", gpt_response)
-    
-    # Claude model test
-    print("\n[Claude Model Test]")
-    claude_model = Model("claude")
-    claude_response = claude_model.ask(TEST_QUESTION)
-    print("Claude response:", claude_response)
-    
-    # Solar Pro model test
-    print("\n[Solar Pro Model Test]")
-    solar_model = Model("solar")
-    solar_response = solar_model.ask(TEST_QUESTION)
-    print("Solar Pro response:", solar_response)
+
+class FakeChoice:
+    message = FakeMessage()
+
+
+class FakeResponse:
+    usage = FakeUsage()
+    choices = [FakeChoice()]
+
+
+class FakeCompletions:
+    def __init__(self):
+        self.last_params = None
+
+    def create(self, **params):
+        self.last_params = params
+        return FakeResponse()
+
+
+class FakeChat:
+    def __init__(self):
+        self.completions = FakeCompletions()
+
+
+class FakeOpenAIClient:
+    def __init__(self):
+        self.chat = FakeChat()
+
+
+class ApiClientTest(unittest.TestCase):
+    def test_create_messages_combines_user_prompt_and_question(self):
+        messages = create_messages("What is 2+2?", "system", "answer briefly")
+
+        self.assertEqual(
+            messages,
+            [
+                {"role": "system", "content": "system"},
+                {"role": "user", "content": "answer briefly\n\nWhat is 2+2?"},
+            ],
+        )
+
+    def test_invalid_model_name_raises_before_loading_sdk(self):
+        with self.assertRaises(ValueError):
+            Model("missing-model", client=FakeOpenAIClient())
+
+    def test_openai_compatible_model_uses_injected_client(self):
+        client = FakeOpenAIClient()
+        model = Model("solar", client=client).set_temperature(0.2).set_top_p(0.8)
+
+        answer, metadata = model.ask("question", system_prompt="system", user_prompt="user")
+
+        self.assertEqual(answer, "fake answer")
+        self.assertEqual(metadata["input_tokens"], 120)
+        self.assertEqual(metadata["output_tokens"], 30)
+        self.assertEqual(metadata["total_tokens"], 150)
+        self.assertAlmostEqual(metadata["cost"], (120 / 1000) * 0.0002 + (30 / 1000) * 0.0004)
+
+        params = client.chat.completions.last_params
+        self.assertEqual(params["model"], "solar-pro")
+        self.assertEqual(params["temperature"], 0.2)
+        self.assertEqual(params["top_p"], 0.8)
+        self.assertFalse(params["stream"])
+
+    def test_sampling_parameters_validate_range(self):
+        model = Model("gpt4o", client=FakeOpenAIClient())
+
+        with self.assertRaises(ValueError):
+            model.set_temperature(1.1)
+        with self.assertRaises(ValueError):
+            model.set_top_p(-0.1)
+
 
 if __name__ == "__main__":
-    print("API client test started")
-    test_model_initialization()
-    test_available_models()
-    test_model_responses()
-    print("\nTest completed") 
+    unittest.main()

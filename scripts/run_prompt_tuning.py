@@ -16,23 +16,85 @@ import json
 import random
 
 # Add project root directory to Python path
-project_root = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(project_root)
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from agent.core.prompt_tuner import PromptTuner
 from agent.common.api_client import Model
-from agent.dataset.mmlu_dataset import MMLUDataset
-from agent.dataset.mmlu_pro_dataset import MMLUProDataset
-from agent.dataset.cnn_dataset import CNNDataset
-from agent.dataset.gsm8k_dataset import GSM8KDataset
-from agent.dataset.mbpp_dataset import MBPPDataset
-from agent.dataset.xsum_dataset import XSumDataset
-from agent.dataset.bbh_dataset import BBHDataset
-from agent.dataset.truthfulqa_dataset import TruthfulQADataset
-from agent.dataset.hellaswag_dataset import HellaSwagDataset
-from agent.dataset.humaneval_dataset import HumanEvalDataset
-from agent.dataset.samsum_dataset import SamsumDataset
-from agent.dataset.meetingbank_dataset import MeetingBankDataset
+
+
+EMPTY_METADATA = {
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0,
+    "cost": 0.0,
+    "duration": 0.0,
+}
+
+
+class MockModel:
+    """Deterministic no-API model used by --mock smoke runs."""
+
+    def __init__(self, model_name, version=None):
+        self.name = model_name
+        self.model_id = version or f"mock-{model_name}"
+        self.calls = 0
+
+    def ask(self, question, system_prompt=None, user_prompt=None):
+        self.calls += 1
+        lower_name = self.name.lower()
+
+        if "evaluator" in lower_name:
+            score = 0.95 if "improved answer" in question.lower() else 0.55
+            response = json.dumps(
+                {
+                    "scores": {
+                        "correctness": {
+                            "score": score,
+                            "current_state": "mock evaluation",
+                            "improvement_action": "use refined instructions",
+                            "weight": 1.0,
+                        }
+                    }
+                }
+            )
+        elif "meta" in lower_name:
+            response = (
+                "TASK_TYPE: Mock QA\n"
+                "TASK_DESCRIPTION: Answer short factual questions in a deterministic smoke test.\n"
+                "SYSTEM_PROMPT: You are a careful mock solver that produces improved answers.\n"
+                "USER_PROMPT: Return an improved answer and keep it concise."
+            )
+        else:
+            if system_prompt and "careful mock solver" in system_prompt.lower():
+                response = f"improved answer: {question}"
+            else:
+                response = f"draft answer: {question}"
+
+        metadata = EMPTY_METADATA.copy()
+        metadata["model"] = self.model_id
+        return response, metadata
+
+
+class MockModelFactory:
+    def __call__(self, model_name, version=None):
+        return MockModel(model_name, version=version)
+
+
+def load_mock_dataset(total_samples, logger):
+    """Return a small in-memory dataset for no-API smoke testing."""
+    samples = [
+        {"question": "What is 2 + 2?", "expected": "4"},
+        {"question": "Name the color of the sky on a clear day.", "expected": "blue"},
+        {"question": "What language is this repository written in?", "expected": "Python"},
+        {"question": "Return the word ZERA.", "expected": "ZERA"},
+        {"question": "What comes after alpha?", "expected": "beta"},
+    ]
+    if total_samples > 0:
+        samples = samples[: min(total_samples, len(samples))]
+    logger.info(f"Mock dataset loaded: {len(samples)} samples")
+    return samples
 
 def setup_logging(output_dir):
     """Setup logging configuration"""
@@ -59,6 +121,8 @@ def load_dataset(dataset_name, total_samples, logger):
     test_cases = []
     
     if dataset_name.lower() == "mmlu":
+        from agent.dataset.mmlu_dataset import MMLUDataset
+
         dataset = MMLUDataset()
         all_subjects_data = dataset.get_all_subjects_data()
         data = []
@@ -75,6 +139,8 @@ def load_dataset(dataset_name, total_samples, logger):
             })
     
     elif dataset_name.lower() == "mmlu_pro":
+        from agent.dataset.mmlu_pro_dataset import MMLUProDataset
+
         dataset = MMLUProDataset()
         all_subjects_data = dataset.get_all_subjects_data()
         data = []
@@ -91,6 +157,8 @@ def load_dataset(dataset_name, total_samples, logger):
             })
     
     elif dataset_name.lower() == "bbh":
+        from agent.dataset.bbh_dataset import BBHDataset
+
         dataset = BBHDataset()
         all_data_dict = dataset.get_all_data()
         data = []
@@ -106,6 +174,8 @@ def load_dataset(dataset_name, total_samples, logger):
             })
     
     elif dataset_name.lower() == "cnn":
+        from agent.dataset.cnn_dataset import CNNDataset
+
         dataset = CNNDataset()
         data = dataset.get_validation_data()
         
@@ -118,6 +188,8 @@ def load_dataset(dataset_name, total_samples, logger):
             })
     
     elif dataset_name.lower() == "gsm8k":
+        from agent.dataset.gsm8k_dataset import GSM8KDataset
+
         dataset = GSM8KDataset()
         data = dataset.get_validation_data()
         
@@ -130,6 +202,8 @@ def load_dataset(dataset_name, total_samples, logger):
             })
     
     elif dataset_name.lower() == "mbpp":
+        from agent.dataset.mbpp_dataset import MBPPDataset
+
         dataset = MBPPDataset()
         data = dataset.get_validation_data()
         
@@ -142,6 +216,8 @@ def load_dataset(dataset_name, total_samples, logger):
             })
     
     elif dataset_name.lower() == "xsum":
+        from agent.dataset.xsum_dataset import XSumDataset
+
         dataset = XSumDataset()
         data = dataset.get_validation_data()
         
@@ -154,6 +230,8 @@ def load_dataset(dataset_name, total_samples, logger):
             })
     
     elif dataset_name.lower() == "truthfulqa":
+        from agent.dataset.truthfulqa_dataset import TruthfulQADataset
+
         dataset = TruthfulQADataset()
         data = dataset.get_validation_data()
         
@@ -166,6 +244,8 @@ def load_dataset(dataset_name, total_samples, logger):
             })
     
     elif dataset_name.lower() == "hellaswag":
+        from agent.dataset.hellaswag_dataset import HellaSwagDataset
+
         dataset = HellaSwagDataset()
         data = dataset.get_validation_data()
         
@@ -179,6 +259,8 @@ def load_dataset(dataset_name, total_samples, logger):
             })
     
     elif dataset_name.lower() == "humaneval":
+        from agent.dataset.humaneval_dataset import HumanEvalDataset
+
         dataset = HumanEvalDataset()
         data = dataset.get_validation_data()
         
@@ -191,6 +273,8 @@ def load_dataset(dataset_name, total_samples, logger):
             })
     
     elif dataset_name.lower() == "samsum":
+        from agent.dataset.samsum_dataset import SamsumDataset
+
         dataset = SamsumDataset()
         data = dataset.get_validation_data()
         
@@ -203,6 +287,8 @@ def load_dataset(dataset_name, total_samples, logger):
             })
     
     elif dataset_name.lower() == "meetingbank":
+        from agent.dataset.meetingbank_dataset import MeetingBankDataset
+
         dataset = MeetingBankDataset()
         data = dataset.get_validation_data()
         
@@ -320,6 +406,9 @@ def main():
     
     parser.add_argument("--seed", type=int, default=42,
                        help="Random seed")
+
+    parser.add_argument("--mock", action="store_true",
+                       help="Run a deterministic no-API smoke test with built-in sample data and fake models")
     
     args = parser.parse_args()
     
@@ -347,31 +436,39 @@ def main():
     
     try:
         # Load dataset
-        test_cases = load_dataset(args.dataset, args.total_samples, logger)
+        if args.mock:
+            test_cases = load_mock_dataset(args.total_samples, logger)
+        else:
+            test_cases = load_dataset(args.dataset, args.total_samples, logger)
         
         # Initialize PromptTuner
         logger.info("Initializing PromptTuner...")
+        model_factory = MockModelFactory() if args.mock else Model
+        tuner_model_name = "generator" if args.mock else args.model
+        tuner_evaluator_name = "evaluator" if args.mock else args.evaluator
+        tuner_meta_model_name = "meta" if args.mock else args.meta_model
         tuner = PromptTuner(
-            model_name=args.model,
+            model_name=tuner_model_name,
             model_version=config["model_version"],
-            evaluator_model_name=args.evaluator,
+            evaluator_model_name=tuner_evaluator_name,
             evaluator_model_version=config["evaluator_version"],
-            meta_prompt_model_name=args.meta_model,
-            meta_prompt_model_version=config["meta_model_version"]
+            meta_prompt_model_name=tuner_meta_model_name,
+            meta_prompt_model_version=config["meta_model_version"],
+            model_factory=model_factory,
         )
         
         # Load prompt files
-        prompts_dir = os.path.join(os.path.dirname(__file__), 'agent', 'prompts')
+        prompts_dir = PROJECT_ROOT / 'agent' / 'prompts'
         
-        with open(os.path.join(prompts_dir, 'initial_system_prompt.txt'), 'r', encoding='utf-8') as f:
+        with open(prompts_dir / 'initial_system_prompt.txt', 'r', encoding='utf-8') as f:
             initial_system_prompt = f.read()
-        with open(os.path.join(prompts_dir, 'initial_user_prompt.txt'), 'r', encoding='utf-8') as f:
+        with open(prompts_dir / 'initial_user_prompt.txt', 'r', encoding='utf-8') as f:
             initial_user_prompt = f.read()
         
         # Load and configure metaprompt files (same as Streamlit app)
-        with open(os.path.join(prompts_dir, 'meta_system_prompt.txt'), 'r', encoding='utf-8') as f:
+        with open(prompts_dir / 'meta_system_prompt.txt', 'r', encoding='utf-8') as f:
             meta_system_prompt = f.read()
-        with open(os.path.join(prompts_dir, 'meta_user_prompt.txt'), 'r', encoding='utf-8') as f:
+        with open(prompts_dir / 'meta_user_prompt.txt', 'r', encoding='utf-8') as f:
             meta_user_prompt = f.read()
         
         # Metaprompt configuration (same logic as Streamlit app)
@@ -491,4 +588,4 @@ def main():
         sys.exit(1)
 
 if __name__ == "__main__":
-    main() 
+    main()

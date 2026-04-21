@@ -16,6 +16,17 @@ Command-line interface for running prompt tuning experiments.
 python scripts/run_prompt_tuning.py --dataset bbh --total_samples 20 --iteration_samples 5 --iterations 10 --model solar --evaluator solar --meta_model solar --output_dir ./results
 ```
 
+**No-API smoke run:**
+```bash
+python3 scripts/run_prompt_tuning.py \
+  --dataset bbh \
+  --total_samples 5 \
+  --iteration_samples 2 \
+  --iterations 2 \
+  --mock \
+  --output_dir ./results/mock_smoke
+```
+
 **Options:**
 - `--dataset`: Dataset to use (bbh, mmlu, mmlu_pro, cnn, gsm8k, mbpp, xsum, truthfulqa, hellaswag, humaneval, samsum, meetingbank)
 - `--total_samples`: Total number of samples to use
@@ -25,6 +36,15 @@ python scripts/run_prompt_tuning.py --dataset bbh --total_samples 20 --iteration
 - `--evaluator`: Model to use for evaluation
 - `--meta_model`: Model to use for meta prompt generation
 - `--output_dir`: Directory to save results
+- `--mock`: Run with built-in sample data and deterministic fake models; no API key or network call is required.
+
+### ✅ `smoke_test_no_api.py`
+Runs the unit tests and a mock prompt-tuning execution end to end without real API calls.
+
+**Usage:**
+```bash
+python3 scripts/smoke_test_no_api.py
+```
 
 ### 🔄 `run_batch_experiments.py`
 Script to run multiple prompt tuning experiments in batch.

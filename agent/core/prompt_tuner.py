@@ -1,22 +1,67 @@
-from typing import List, Dict, Optional, Callable
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, List, Optional
 import logging
 from agent.common.api_client import Model
 import os
 import random
 import statistics
 import csv
-from datetime import datetime
 import io
 import json
 from .iteration_result import IterationResult, TestCaseResult
-import pandas as pd
+
+
+DEFAULT_TASK_TYPE = "General Task"
+DEFAULT_TASK_DESCRIPTION = "General task requiring outputs to various questions"
+DEFAULT_SCORE_WEIGHT = 0.5
+
+PROMPT_TEMPLATE_FILES = {
+    "initial_system_prompt": "initial_system_prompt.txt",
+    "initial_user_prompt": "initial_user_prompt.txt",
+    "evaluation_system_prompt_template": "evaluation_system_prompt.txt",
+    "evaluation_user_prompt_template": "evaluation_user_prompt.txt",
+    "meta_system_prompt_template": "meta_system_prompt.txt",
+    "meta_user_prompt_template": "meta_user_prompt.txt",
+}
+
+META_PROMPT_SECTION_PATTERNS = {
+    "task_type": ("TASK_TYPE:", "Task Type:", "Task type:"),
+    "task_description": (
+        "TASK_DESCRIPTION:",
+        "Task Description:",
+        "Task description:",
+    ),
+    "system_prompt": ("SYSTEM_PROMPT:", "System Prompt:", "System prompt:"),
+    "user_prompt": ("USER_PROMPT:", "User Prompt:", "User prompt:"),
+}
+
+
+@dataclass(frozen=True)
+class PromptSections:
+    task_type: str
+    task_description: str
+    system_prompt: str
+    user_prompt: str
+    raw_text: str
+
 
 class PromptTuner:
     """
     A class for automatically fine-tuning system prompts for LLMs.
     """
     
-    def __init__(self, model_name: str = "solar", evaluator_model_name: str = "solar", meta_prompt_model_name: str = "solar", model_version: str = None, evaluator_model_version: str = None, meta_prompt_model_version: str = None):
+    def __init__(
+        self,
+        model_name: str = "solar",
+        evaluator_model_name: str = "solar",
+        meta_prompt_model_name: str = "solar",
+        model_version: str = None,
+        evaluator_model_version: str = None,
+        meta_prompt_model_version: str = None,
+        model_factory: Callable[..., Model] = Model,
+    ):
         """
         Initialize the PromptTuner with specific models.
         
@@ -28,45 +73,37 @@ class PromptTuner:
             evaluator_model_version (str): The version of the model to use for evaluation (default: None)
             meta_prompt_model_version (str): The version of the model to use for meta prompt generation (default: None)
         """
-        self.model = Model(model_name, version=model_version)
-        self.evaluator = Model(evaluator_model_name, version=evaluator_model_version)
-        self.meta_prompt_model = Model(meta_prompt_model_name, version=meta_prompt_model_version)
+        self.model = model_factory(model_name, version=model_version)
+        self.evaluator = model_factory(evaluator_model_name, version=evaluator_model_version)
+        self.meta_prompt_model = model_factory(
+            meta_prompt_model_name,
+            version=meta_prompt_model_version,
+        )
         self.iteration_results = []
         self.progress_callback = None
         self.iteration_callback = None
-        # Add new callbacks
+        self.best_prompt_callback = None
         self.prompt_improvement_start_callback = None
         self.meta_prompt_generated_callback = None
         self.prompt_updated_callback = None
-        logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
         
         # Initialize statistics for cost tracking
         self.model_stats = self._initialize_stats("Model calls")
         self.evaluator_stats = self._initialize_stats("Evaluator calls") 
         self.meta_prompt_stats = self._initialize_stats("Meta prompt generation")
-        
-        # Prompt file paths
-        prompts_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'prompts')
-        
-        # Load default initial_system_prompt
-        with open(os.path.join(prompts_dir, 'initial_system_prompt.txt'), 'r', encoding='utf-8') as f:
-            self.initial_system_prompt = f.read()
-        # Load default initial_user_prompt
-        with open(os.path.join(prompts_dir, 'initial_user_prompt.txt'), 'r', encoding='utf-8') as f:
-            self.initial_user_prompt = f.read()
-        
-        # Load default evaluation prompts
-        with open(os.path.join(prompts_dir, 'evaluation_system_prompt.txt'), 'r', encoding='utf-8') as f:
-            self.evaluation_system_prompt_template = f.read()
-        with open(os.path.join(prompts_dir, 'evaluation_user_prompt.txt'), 'r', encoding='utf-8') as f:
-            self.evaluation_user_prompt_template = f.read()
-        
-        # Load default meta prompts
-        with open(os.path.join(prompts_dir, 'meta_system_prompt.txt'), 'r', encoding='utf-8') as f:
-            self.meta_system_prompt_template = f.read()
-        with open(os.path.join(prompts_dir, 'meta_user_prompt.txt'), 'r', encoding='utf-8') as f:
-            self.meta_user_prompt_template = f.read()
+        self._load_prompt_templates()
+
+    def _load_prompt_templates(self) -> None:
+        """Load bundled prompt templates into instance attributes."""
+        prompts_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "prompts")
+        for attribute, filename in PROMPT_TEMPLATE_FILES.items():
+            setattr(self, attribute, self._read_prompt_file(prompts_dir, filename))
+
+    @staticmethod
+    def _read_prompt_file(prompts_dir: str, filename: str) -> str:
+        with open(os.path.join(prompts_dir, filename), "r", encoding="utf-8") as file:
+            return file.read()
     
     def _initialize_stats(self, stat_type: str) -> Dict:
         """Initialize dictionary for statistics tracking."""
@@ -141,6 +178,65 @@ class PromptTuner:
         """
         self.initial_system_prompt = system_prompt
         self.initial_user_prompt = user_prompt
+
+    @staticmethod
+    def _extract_json_object(text: str) -> str:
+        """Return the first outer JSON object embedded in a model response."""
+        response_text = (text or "").strip()
+        json_start = response_text.find("{")
+        json_end = response_text.rfind("}") + 1
+
+        if json_start == -1 or json_end == 0:
+            raise ValueError("JSON object not found in response")
+        return response_text[json_start:json_end]
+
+    def _score_details(self, details: Any) -> tuple[float, Dict[str, Any]]:
+        if isinstance(details, str):
+            score = self._convert_to_float(details)
+            return score, {
+                "score": score,
+                "current_state": details,
+                "improvement_action": "",
+                "weight": DEFAULT_SCORE_WEIGHT,
+            }
+
+        if isinstance(details, dict):
+            score = self._convert_to_float(details.get("score", 0))
+            weight = self._convert_to_float(details.get("weight", DEFAULT_SCORE_WEIGHT))
+            return score, {
+                "score": score,
+                "current_state": details.get("current_state", ""),
+                "improvement_action": details.get("improvement_action", ""),
+                "weight": weight,
+            }
+
+        score = self._convert_to_float(details)
+        return score, {
+            "score": score,
+            "current_state": "",
+            "improvement_action": "",
+            "weight": DEFAULT_SCORE_WEIGHT,
+        }
+
+    def _parse_evaluation_response(self, evaluation: str) -> tuple[float, Dict[str, Any]]:
+        evaluation_data = json.loads(self._extract_json_object(evaluation))
+        scores_data = evaluation_data.get("scores")
+        if not isinstance(scores_data, dict):
+            raise ValueError("JSON response missing scores field")
+
+        evaluation_details = {"category_scores": {}}
+        total_weighted_score = 0.0
+        total_weight = 0.0
+
+        for category, details in scores_data.items():
+            score, normalized_details = self._score_details(details)
+            weight = normalized_details["weight"]
+            evaluation_details["category_scores"][category] = normalized_details
+            total_weighted_score += score * weight
+            total_weight += weight
+
+        final_score = total_weighted_score / total_weight if total_weight > 0 else 0.0
+        return final_score, evaluation_details
     
     def _evaluate_output(self, output: str, expected: str, question: str, task_type: str, task_description: str, iteration: int = None) -> tuple[float, Dict]:
         """
@@ -187,64 +283,10 @@ class PromptTuner:
             self.logger.info(f"Expected output: {expected}")
             self.logger.info(f"Evaluation: {evaluation}")
             
-            # Extract and parse JSON string
             try:
-                # Extract only JSON part from response
-                evaluation = evaluation.strip()
-                json_start = evaluation.find('{')
-                json_end = evaluation.rfind('}') + 1
-                
-                if json_start == -1 or json_end == 0:
-                    raise ValueError("JSON object not found in response")
-                
-                json_str = evaluation[json_start:json_end]
-                
-                # Parse JSON
-                evaluation_data = json.loads(json_str)
-                
-                # Validate required fields
-                if 'scores' not in evaluation_data:
-                    raise ValueError("JSON response missing scores field")
-                
-                # Extract category scores and weights
-                scores_data = evaluation_data.get('scores', {})
-                evaluation_details = {'category_scores': {}}
-                total_weighted_score = 0.0
-                total_weight = 0.0
-                
-                # Extract scores and feedback information for each category
-                for category, details in scores_data.items():
-                    if isinstance(details, str):
-                        # If string (e.g., 'PASS', 'FAIL'), convert directly
-                        score = self._convert_to_float(details)
-                        weight = 0.5  # Change default weight to 0.5
-                        evaluation_details['category_scores'][category] = {
-                            'score': score,
-                            'current_state': details,
-                            'improvement_action': '',
-                            'weight': weight
-                        }
-                    else:
-                        # If dictionary, use existing logic
-                        score = self._convert_to_float(details.get('score', 0))
-                        weight = self._convert_to_float(details.get('weight', 0.5))  # Change default weight to 0.5
-                        evaluation_details['category_scores'][category] = {
-                            'score': score,
-                            'current_state': details.get('current_state', ''),
-                            'improvement_action': details.get('improvement_action', ''),
-                            'weight': weight
-                        }
-                    
-                    # Accumulate weighted scores
-                    total_weighted_score += score * weight
-                    total_weight += weight
-                
-                # Calculate final score (normalize by dividing by weight sum)
-                final_score = total_weighted_score / total_weight if total_weight > 0 else 0.0
-                
+                final_score, evaluation_details = self._parse_evaluation_response(evaluation)
                 self.logger.info(f"Evaluation score: {final_score}")
                 self.logger.info(f"Evaluation details: {evaluation_details}")
-                
                 return final_score, evaluation_details
                 
             except (ValueError, TypeError, json.JSONDecodeError) as e:
@@ -299,8 +341,6 @@ class PromptTuner:
         """
         current_system_prompt = initial_system_prompt
         current_user_prompt = initial_user_prompt
-        best_system_prompt = initial_system_prompt
-        best_user_prompt = initial_user_prompt
         best_avg_score = 0.0
         
         # Log initial prompts
@@ -309,8 +349,8 @@ class PromptTuner:
         self.logger.info(f"   User prompt: {initial_user_prompt[:200]}{'...' if len(initial_user_prompt) > 200 else ''}")
         
         # Set initial task_type and task_description
-        current_task_type = "General Task"
-        current_task_description = "General task requiring outputs to various questions"
+        current_task_type = DEFAULT_TASK_TYPE
+        current_task_description = DEFAULT_TASK_DESCRIPTION
         
         # Log tuning configuration
         self.logger.info(f"🎯 Prompt tuning configuration:")
@@ -412,11 +452,9 @@ class PromptTuner:
             if avg_score > best_avg_score:
                 self.logger.info(f"🎉 New best score achieved! {best_avg_score:.3f} → {avg_score:.3f}")
                 best_avg_score = avg_score
-                best_system_prompt = current_system_prompt
-                best_user_prompt = current_user_prompt
                 
                 # Call callback for real-time best prompt saving
-                if hasattr(self, 'best_prompt_callback') and self.best_prompt_callback:
+                if self.best_prompt_callback:
                     self.best_prompt_callback(iteration + 1, avg_score, current_system_prompt, current_user_prompt)
             else:
                 self.logger.info(f"📊 Best score maintained: {best_avg_score:.3f} (Current: {avg_score:.3f})")
@@ -499,101 +537,42 @@ class PromptTuner:
                 self.logger.info(f"🔍 Meta prompt response received (length: {len(improved_prompts) if improved_prompts else 0} characters)")
                 self.logger.info(f"📄 Meta prompt original response:\n{'-'*50}\n{improved_prompts}\n{'-'*50}")
                 
-                if improved_prompts and improved_prompts.strip():
-                    # Extract TASK_TYPE, TASK_DESCRIPTION, system prompt, user prompt from improved prompt
-                    improved_prompts = improved_prompts.strip()
-                    
-                    # Extract TASK_TYPE (support multiple formats)
-                    task_type_patterns = ["TASK_TYPE:", "Task Type:", "Task type:"]
-                    task_description_patterns = ["TASK_DESCRIPTION:", "Task Description:", "Task description:"]
-                    system_prompt_patterns = ["SYSTEM_PROMPT:", "System Prompt:", "System prompt:"]
-                    user_prompt_patterns = ["USER_PROMPT:", "User Prompt:", "User prompt:"]
-                    
-                    def find_pattern(text, patterns):
-                        for pattern in patterns:
-                            pos = text.find(pattern)
-                            if pos != -1:
-                                return pos, pattern
-                        return -1, None
-                    
-                    task_type_start, task_type_pattern = find_pattern(improved_prompts, task_type_patterns)
-                    task_description_start, task_description_pattern = find_pattern(improved_prompts, task_description_patterns)
-                    system_prompt_start, system_prompt_pattern = find_pattern(improved_prompts, system_prompt_patterns)
-                    user_prompt_start, user_prompt_pattern = find_pattern(improved_prompts, user_prompt_patterns)
-                    
-                    self.logger.info(f"🔍 Prompt parsing positions:")
-                    self.logger.info(f"   TASK_TYPE position: {task_type_start} (pattern: {task_type_pattern})")
-                    self.logger.info(f"   TASK_DESCRIPTION position: {task_description_start} (pattern: {task_description_pattern})")
-                    self.logger.info(f"   SYSTEM_PROMPT position: {system_prompt_start} (pattern: {system_prompt_pattern})")
-                    self.logger.info(f"   USER_PROMPT position: {user_prompt_start} (pattern: {user_prompt_pattern})")
-                    
-                    if all(pos != -1 for pos in [task_type_start, task_description_start, system_prompt_start, user_prompt_start]):
-                        # Save previous prompts (for comparison)
-                        previous_system_prompt = current_system_prompt
-                        previous_user_prompt = current_user_prompt
-                        previous_task_type = current_task_type
-                        previous_task_description = current_task_description
-                        
-                        # Parse new prompts
-                        current_task_type = improved_prompts[task_type_start + len(task_type_pattern):task_description_start].strip()
-                        current_task_description = improved_prompts[task_description_start + len(task_description_pattern):system_prompt_start].strip()
-                        current_system_prompt = improved_prompts[system_prompt_start + len(system_prompt_pattern):user_prompt_start].strip()
-                        current_user_prompt = improved_prompts[user_prompt_start + len(user_prompt_pattern):].strip()
-                        
-                        self.logger.info(f"✅ Prompt parsing successful!")
-                        self.logger.info(f"📝 Parsed meta prompt results:")
-                        self.logger.info(f"{'='*60}")
-                        self.logger.info(f"🏷️  New task type:")
-                        self.logger.info(f"    {current_task_type}")
-                        self.logger.info(f"📋 New task description:")
-                        self.logger.info(f"    {current_task_description}")
-                        self.logger.info(f"⚙️  New system prompt:")
-                        self.logger.info(f"    {current_system_prompt}")
-                        self.logger.info(f"👤 New user prompt:")
-                        self.logger.info(f"    {current_user_prompt}")
-                        self.logger.info(f"{'='*60}")
-                        
-                        # Output change summary
-                        self.logger.info(f"🔄 Prompt change summary:")
-                        if current_task_type != previous_task_type:
-                            self.logger.info(f"   Task type changed: '{previous_task_type}' → '{current_task_type}'")
-                        else:
-                            self.logger.info(f"   Task type maintained: '{current_task_type}'")
-                        
-                        if current_task_description != previous_task_description:
-                            self.logger.info(f"   Task description changed ({len(previous_task_description)} → {len(current_task_description)} characters)")
-                        else:
-                            self.logger.info(f"   Task description maintained ({len(current_task_description)} characters)")
-                        
-                        if current_system_prompt != previous_system_prompt:
-                            self.logger.info(f"   System prompt changed ({len(previous_system_prompt)} → {len(current_system_prompt)} characters)")
-                        else:
-                            self.logger.info(f"   System prompt maintained ({len(current_system_prompt)} characters)")
-                        
-                        if current_user_prompt != previous_user_prompt:
-                            self.logger.info(f"   User prompt changed ({len(previous_user_prompt)} → {len(current_user_prompt)} characters)")
-                        else:
-                            self.logger.info(f"   User prompt maintained ({len(current_user_prompt)} characters)")
-                        
-                        # Call prompt update completion callback
-                        if self.prompt_updated_callback:
-                            self.prompt_updated_callback(
-                                iteration=iteration + 1,
-                                previous_system_prompt=previous_system_prompt,
-                                previous_user_prompt=previous_user_prompt,
-                                previous_task_type=previous_task_type,
-                                previous_task_description=previous_task_description,
-                                new_system_prompt=current_system_prompt,
-                                new_user_prompt=current_user_prompt,
-                                new_task_type=current_task_type,
-                                new_task_description=current_task_description,
-                                raw_improved_prompts=improved_prompts
-                            )
-                    else:
-                        self.logger.warning(f"❌ Prompt parsing failed! Could not find required sections.")
-                        self.logger.warning(f"   Keeping current prompt unchanged.")
+                parsed_prompt = self.parse_meta_prompt_response(improved_prompts)
+                if parsed_prompt:
+                    previous_system_prompt = current_system_prompt
+                    previous_user_prompt = current_user_prompt
+                    previous_task_type = current_task_type
+                    previous_task_description = current_task_description
+
+                    current_task_type = parsed_prompt.task_type
+                    current_task_description = parsed_prompt.task_description
+                    current_system_prompt = parsed_prompt.system_prompt
+                    current_user_prompt = parsed_prompt.user_prompt
+
+                    self._log_prompt_update(
+                        previous_system_prompt=previous_system_prompt,
+                        previous_user_prompt=previous_user_prompt,
+                        previous_task_type=previous_task_type,
+                        previous_task_description=previous_task_description,
+                        parsed_prompt=parsed_prompt,
+                    )
+
+                    if self.prompt_updated_callback:
+                        self.prompt_updated_callback(
+                            iteration=iteration + 1,
+                            previous_system_prompt=previous_system_prompt,
+                            previous_user_prompt=previous_user_prompt,
+                            previous_task_type=previous_task_type,
+                            previous_task_description=previous_task_description,
+                            new_system_prompt=current_system_prompt,
+                            new_user_prompt=current_user_prompt,
+                            new_task_type=current_task_type,
+                            new_task_description=current_task_description,
+                            raw_improved_prompts=parsed_prompt.raw_text
+                        )
                 else:
-                    self.logger.warning(f"❌ Meta prompt response is empty! Keeping current prompt unchanged.")
+                    self.logger.warning("❌ Prompt parsing failed or response was empty.")
+                    self.logger.warning("   Keeping current prompt unchanged.")
             else:
                 self.logger.info(f"⏭️ Prompt improvement skipped - condition not met or threshold exceeded")
             
@@ -602,7 +581,105 @@ class PromptTuner:
         
         return self.iteration_results
 
-    def _get_recent_prompts(self, num_prompts: int = 5) -> List[IterationResult]:
+    @staticmethod
+    def _find_section_pattern(text: str, patterns: tuple[str, ...]) -> tuple[int, Optional[str]]:
+        for pattern in patterns:
+            position = text.find(pattern)
+            if position != -1:
+                return position, pattern
+        return -1, None
+
+    @classmethod
+    def parse_meta_prompt_response(cls, response: Optional[str]) -> Optional[PromptSections]:
+        """Parse a meta model response into its expected prompt sections."""
+        raw_text = (response or "").strip()
+        if not raw_text:
+            return None
+
+        markers = []
+        for section, patterns in META_PROMPT_SECTION_PATTERNS.items():
+            position, pattern = cls._find_section_pattern(raw_text, patterns)
+            if position == -1 or pattern is None:
+                return None
+            markers.append((section, position, pattern))
+
+        ordered_markers = sorted(markers, key=lambda marker: marker[1])
+        expected_order = list(META_PROMPT_SECTION_PATTERNS.keys())
+        if [section for section, _, _ in ordered_markers] != expected_order:
+            return None
+
+        sections = {}
+        for index, (section, position, pattern) in enumerate(ordered_markers):
+            content_start = position + len(pattern)
+            content_end = (
+                ordered_markers[index + 1][1]
+                if index + 1 < len(ordered_markers)
+                else len(raw_text)
+            )
+            sections[section] = raw_text[content_start:content_end].strip()
+
+        return PromptSections(raw_text=raw_text, **sections)
+
+    def _log_prompt_update(
+        self,
+        previous_system_prompt: str,
+        previous_user_prompt: str,
+        previous_task_type: str,
+        previous_task_description: str,
+        parsed_prompt: PromptSections,
+    ) -> None:
+        self.logger.info("✅ Prompt parsing successful!")
+        self.logger.info("📝 Parsed meta prompt results:")
+        self.logger.info(f"{'='*60}")
+        self.logger.info(f"🏷️  New task type:\n    {parsed_prompt.task_type}")
+        self.logger.info(f"📋 New task description:\n    {parsed_prompt.task_description}")
+        self.logger.info(f"⚙️  New system prompt:\n    {parsed_prompt.system_prompt}")
+        self.logger.info(f"👤 New user prompt:\n    {parsed_prompt.user_prompt}")
+        self.logger.info(f"{'='*60}")
+
+        self.logger.info("🔄 Prompt change summary:")
+        self._log_text_change("Task type", previous_task_type, parsed_prompt.task_type)
+        self._log_text_change(
+            "Task description",
+            previous_task_description,
+            parsed_prompt.task_description,
+            include_lengths=True,
+        )
+        self._log_text_change(
+            "System prompt",
+            previous_system_prompt,
+            parsed_prompt.system_prompt,
+            include_lengths=True,
+        )
+        self._log_text_change(
+            "User prompt",
+            previous_user_prompt,
+            parsed_prompt.user_prompt,
+            include_lengths=True,
+        )
+
+    def _log_text_change(
+        self,
+        label: str,
+        previous_value: str,
+        new_value: str,
+        include_lengths: bool = False,
+    ) -> None:
+        if previous_value == new_value:
+            if include_lengths:
+                self.logger.info(f"   {label} maintained ({len(new_value)} characters)")
+            else:
+                self.logger.info(f"   {label} maintained: '{new_value}'")
+            return
+
+        if include_lengths:
+            self.logger.info(
+                f"   {label} changed ({len(previous_value)} → {len(new_value)} characters)"
+            )
+        else:
+            self.logger.info(f"   {label} changed: '{previous_value}' → '{new_value}'")
+
+    def _get_recent_prompts(self, num_prompts: int = 5) -> List[Dict]:
         """Return recent prompt results."""
         recent_results = self.iteration_results[-num_prompts:] if len(self.iteration_results) >= num_prompts else self.iteration_results
         return [{
@@ -697,6 +774,23 @@ Average Score: {best_prompt['avg_score']:.2f}
         )
         
         return improvement_prompt
+
+    @staticmethod
+    def _rows_to_csv(rows: List[Dict[str, Any]]) -> str:
+        if not rows:
+            return ""
+
+        fieldnames = []
+        for row in rows:
+            for key in row.keys():
+                if key not in fieldnames:
+                    fieldnames.append(key)
+
+        output = io.StringIO()
+        writer = csv.DictWriter(output, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+        return output.getvalue()
 
     def save_results_to_csv(self):
         """Return results as CSV formatted string."""
@@ -795,9 +889,7 @@ Average Score: {best_prompt['avg_score']:.2f}
                 
                 data.append(row)
         
-        # Create DataFrame and convert to CSV
-        df = pd.DataFrame(data)
-        return df.to_csv(index=False, encoding='utf-8')
+        return self._rows_to_csv(data)
 
     def get_cost_summary(self) -> Dict:
         """Return overall cost summary."""
@@ -930,5 +1022,4 @@ Average Score: {best_prompt['avg_score']:.2f}
                 'Meta_Prompt_Tokens': 0
             })
         
-        df = pd.DataFrame(summary_data)
-        return df.to_csv(index=False, encoding='utf-8') 
+        return self._rows_to_csv(summary_data)

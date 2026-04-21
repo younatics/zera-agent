@@ -1,57 +1,76 @@
-from agent.common.slack_notify import notify_slack, send_file_to_slack
 import os
-import requests
+import tempfile
+import unittest
 
-def test_notify_slack():
-    webhook_url = "https://hooks.slack.com/services/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"
-    notify_slack("Test message: Slack notification is working properly.", webhook_url)
-    print("Slack notification test completed.")
+from agent.common.slack_notify import notify_slack, send_file_to_slack
 
-def test_send_file_to_slack():
-    filepath = os.getenv("SLACK_TEST_FILE", "README.md")
-    channel = os.getenv("SLACK_CHANNEL")
-    bot_token = os.getenv("SLACK_BOT_TOKEN")
-    if not channel or not bot_token:
-        print("Please check SLACK_CHANNEL, SLACK_BOT_TOKEN environment variables.")
-        return
-    send_file_to_slack(filepath, channel, f"Test file upload: {os.path.basename(filepath)}", bot_token)
-    print("Slack file upload test completed.")
 
-def test_conversations_open():
-    user_id = os.getenv("SLACK_CHANNEL")
-    bot_token = os.getenv("SLACK_BOT_TOKEN")
-    if not user_id or not bot_token:
-        print("Please check SLACK_CHANNEL, SLACK_BOT_TOKEN environment variables.")
-        return
-    url = "https://slack.com/api/conversations.open"
-    headers = {"Authorization": f"Bearer {bot_token}"}
-    data = {"users": user_id}
-    response = requests.post(url, headers=headers, data=data)
-    print("conversations.open response:", response.text)
-    if response.ok and response.json().get("ok"):
-        channel_id = response.json()["channel"]["id"]
-        print(f"DM channel ID: {channel_id}")
-    else:
-        print("conversations.open failed")
+class FakeResponse:
+    status_code = 200
+    ok = True
+    text = "ok"
 
-def test_users_info():
-    user_id = os.getenv("SLACK_CHANNEL")
-    bot_token = os.getenv("SLACK_BOT_TOKEN")
-    if not user_id or not bot_token:
-        print("Please check SLACK_CHANNEL, SLACK_BOT_TOKEN environment variables.")
-        return
-    url = "https://slack.com/api/users.info"
-    headers = {"Authorization": f"Bearer {bot_token}"}
-    params = {"user": user_id}
-    response = requests.get(url, headers=headers, params=params)
-    print("users.info response:", response.text)
-    if response.ok and response.json().get("ok"):
-        print(f"User {user_id} exists in the workspace.")
-    else:
-        print(f"User {user_id} does not exist in the workspace or has insufficient permissions.")
+    def json(self):
+        return {"ok": True}
+
+
+class FakeHttpClient:
+    def __init__(self):
+        self.calls = []
+
+    def post(self, url, json=None, headers=None, data=None, files=None):
+        file_bytes = None
+        if files and "file" in files:
+            file_bytes = files["file"].read()
+
+        self.calls.append(
+            {
+                "url": url,
+                "json": json,
+                "headers": headers,
+                "data": data,
+                "file_bytes": file_bytes,
+            }
+        )
+        return FakeResponse()
+
+
+class SlackNotifyTest(unittest.TestCase):
+    def test_notify_slack_posts_message_payload(self):
+        client = FakeHttpClient()
+
+        response = notify_slack("hello", "https://example.test/webhook", http_client=client)
+
+        self.assertIsInstance(response, FakeResponse)
+        self.assertEqual(client.calls[0]["url"], "https://example.test/webhook")
+        self.assertEqual(client.calls[0]["json"], {"text": "hello"})
+
+    def test_send_file_to_slack_posts_upload_payload(self):
+        client = FakeHttpClient()
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            tmp.write(b"content")
+            tmp_path = tmp.name
+
+        try:
+            response = send_file_to_slack(
+                filepath=tmp_path,
+                channels="#alerts",
+                message="uploaded",
+                bot_token="token",
+                http_client=client,
+            )
+        finally:
+            os.unlink(tmp_path)
+
+        self.assertIsInstance(response, FakeResponse)
+        self.assertEqual(client.calls[0]["url"], "https://slack.com/api/files.upload")
+        self.assertEqual(client.calls[0]["headers"], {"Authorization": "Bearer token"})
+        self.assertEqual(
+            client.calls[0]["data"],
+            {"channels": "#alerts", "initial_comment": "uploaded"},
+        )
+        self.assertEqual(client.calls[0]["file_bytes"], b"content")
+
 
 if __name__ == "__main__":
-    test_notify_slack()
-    test_send_file_to_slack()
-    test_conversations_open()
-    test_users_info() 
+    unittest.main()
