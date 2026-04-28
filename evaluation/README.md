@@ -230,11 +230,11 @@ Each dataset can be configured with:
 
 ### Running Tests
 ```bash
-# Run evaluation tests
-python -m pytest evaluation/tests/
+# Run the repository's current unit and no-API smoke checks
+python3 scripts/smoke_test_no_api.py
 
-# Run specific evaluator tests
-python -m pytest evaluation/dataset_evaluator/test_bbh_evaluator.py
+# Compile evaluation modules without calling external APIs
+python3 -m compileall evaluation
 ```
 
 ## Performance Considerations

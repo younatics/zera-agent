@@ -4,9 +4,9 @@ This guide explains how to execute prompt auto-tuning from the command line.
 
 ## Key Files
 
-- `run_prompt_tuning.py`: Main CLI script
-- `run_background.sh`: Bash script for background execution  
-- `run_batch_experiments.py`: Script to run multiple experiments in batch
+- `scripts/run_prompt_tuning.py`: Main CLI script
+- `scripts/run_background.sh`: Bash script for background execution
+- `scripts/run_batch_experiments.py`: Script to run multiple experiments in batch
 
 ## Basic Usage
 
@@ -14,10 +14,10 @@ This guide explains how to execute prompt auto-tuning from the command line.
 
 ```bash
 # Run BBH dataset with default settings
-python run_prompt_tuning.py --dataset bbh --total_samples 20 --iteration_samples 5 --iterations 10
+python scripts/run_prompt_tuning.py --dataset bbh --total_samples 20 --iteration_samples 5 --iterations 10
 
 # Use various options
-python run_prompt_tuning.py \
+python scripts/run_prompt_tuning.py \
     --dataset mmlu \
     --total_samples 50 \
     --iteration_samples 5 \
@@ -34,10 +34,10 @@ python run_prompt_tuning.py \
 
 ```bash
 # Default settings (BBH, 20 samples)
-./run_background.sh
+bash scripts/run_background.sh
 
 # Custom settings
-./run_background.sh gsm8k 100
+bash scripts/run_background.sh gsm8k 100
 
 # Real-time log monitoring
 tail -f ./results/background_bbh_YYYYMMDD_HHMMSS.log
@@ -50,13 +50,13 @@ ps -p $(cat ./results/process_bbh_YYYYMMDD_HHMMSS.pid)
 
 ```bash
 # Create default configuration file
-python run_batch_experiments.py --create_config
+python scripts/run_batch_experiments.py --create_config
 
 # Check configuration (without actual execution)
-python run_batch_experiments.py --dry_run
+python scripts/run_batch_experiments.py --dry_run
 
 # Execute batch experiments
-python run_batch_experiments.py --config experiments_config.json
+python scripts/run_batch_experiments.py --config experiments_config.json
 ```
 
 ## Parameter Description
@@ -105,7 +105,7 @@ python run_batch_experiments.py --config experiments_config.json
 ### Example 1: Small-scale Test
 ```bash
 # Quick test with BBH dataset
-python run_prompt_tuning.py \
+python scripts/run_prompt_tuning.py \
     --dataset bbh \
     --total_samples 5 \
     --iteration_samples 3 \
@@ -116,7 +116,7 @@ python run_prompt_tuning.py \
 ### Example 2: Medium-scale Experiment
 ```bash
 # Standard experiment with MMLU dataset
-python run_prompt_tuning.py \
+python scripts/run_prompt_tuning.py \
     --dataset mmlu \
     --total_samples 50 \
     --iteration_samples 5 \
@@ -130,7 +130,7 @@ python run_prompt_tuning.py \
 ### Example 3: Large-scale Experiment (Background)
 ```bash
 # Large-scale experiment with GSM8K dataset
-nohup python run_prompt_tuning.py \
+nohup python scripts/run_prompt_tuning.py \
     --dataset gsm8k \
     --total_samples 200 \
     --iteration_samples 10 \
@@ -211,7 +211,7 @@ After execution, the following files are generated:
 - **ModuleNotFoundError**: Install dependencies with `pip install -r requirements.txt`
 - **API Key Error**: Check API keys in `.env` file
 - **Insufficient Memory**: Reduce sample count or use smaller datasets
-- **Permission Error**: Grant execution permission with `chmod +x run_background.sh`
+- **Permission Error**: Grant execution permission with `chmod +x scripts/run_background.sh`
 
 ### Log Checking
 ```bash
