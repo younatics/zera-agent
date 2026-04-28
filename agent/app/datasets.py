@@ -132,7 +132,7 @@ def process_dataset(data: Any, dataset_type: str) -> Tuple[List[dict], int]:
         st.stop()
 
     st.write("Dataset Content:")
-    st.dataframe(pd.DataFrame(display_data), use_container_width=True)
+    st.dataframe(pd.DataFrame(display_data), width="stretch")
     return test_cases, num_samples
 
 

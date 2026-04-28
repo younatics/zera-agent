@@ -140,7 +140,7 @@ class ResultsDisplay:
             showlegend=True,
             legend=dict(yanchor="top", y=0.99, xanchor="left", x=1.05),
         )
-        container.plotly_chart(fig, use_container_width=True)
+        container.plotly_chart(fig, width="stretch")
 
     def display_iteration_details(self, results: Iterable, container) -> None:
         results = list(results)
@@ -245,7 +245,7 @@ def _render_weight_summary(iteration_result) -> None:
         avg_weights = dataframe.groupby("Category")["Weight"].mean().round(3).reset_index()
         avg_weights.columns = ["Category", "Average Weight"]
         st.write("Category Weights:")
-        st.dataframe(avg_weights, use_container_width=True)
+        st.dataframe(avg_weights, width="stretch")
 
 
 def _render_test_case_table(iteration_result) -> None:
@@ -276,7 +276,7 @@ def _render_test_case_table(iteration_result) -> None:
     dataframe = pd.DataFrame(rows)
     st.dataframe(
         dataframe.style.apply(_highlight_score_extremes, axis=None),
-        use_container_width=True,
+        width="stretch",
         height=400,
     )
 
@@ -338,7 +338,7 @@ def _render_cost_summary(tuner) -> None:
                     "Total Calls": data["total_calls"],
                 }
             )
-        st.dataframe(pd.DataFrame(rows), use_container_width=True)
+        st.dataframe(pd.DataFrame(rows), width="stretch")
 
 
 def _render_usage_column(column, title: str, stats: dict) -> None:
