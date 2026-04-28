@@ -14,8 +14,12 @@ class AppConfigTest(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             self.assertEqual(
                 missing_api_keys(["solar", "gpt4o"]),
-                ["OPENAI_API_KEY", "SOLAR_API_KEY"],
+                ["OPENAI_API_KEY", "UPSTAGE_API_KEY"],
             )
+
+    def test_missing_api_keys_accepts_upstage_key_for_solar(self):
+        with patch.dict(os.environ, {"UPSTAGE_API_KEY": "key"}, clear=True):
+            self.assertEqual(missing_api_keys(["solar"]), [])
 
     def test_missing_api_keys_deduplicates_models(self):
         with patch.dict(os.environ, {}, clear=True):

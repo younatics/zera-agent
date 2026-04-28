@@ -22,17 +22,17 @@ logger = logging.getLogger(__name__)
 # API client setup
 openai_api_key = os.getenv("OPENAI_API_KEY")
 anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
-solar_api_key = os.getenv("SOLAR_API_KEY")
+upstage_api_key = os.getenv("UPSTAGE_API_KEY")
 
-if not openai_api_key and not anthropic_api_key and not solar_api_key:
+if not openai_api_key and not anthropic_api_key and not upstage_api_key:
     raise ValueError("API key is not set.")
 
 openai_client = OpenAI(api_key=openai_api_key) if openai_api_key else None
 anthropic_client = anthropic.Anthropic(api_key=anthropic_api_key) if anthropic_api_key else None
 solar_client = OpenAI(
-    api_key=solar_api_key,
+    api_key=upstage_api_key,
     base_url="https://api.upstage.ai/v1"
-) if solar_api_key else None
+) if upstage_api_key else None
 
 class LLMJudge:
     def __init__(self, model_type: str = "openai"):

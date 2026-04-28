@@ -194,7 +194,7 @@ After execution, the following files are generated:
 ## Precautions
 
 1. **API Key Setup**: API keys for the models you use must be configured in the `.env` file.
-   - `SOLAR_API_KEY`
+   - `UPSTAGE_API_KEY`
    - `OPENAI_API_KEY`
    - `ANTHROPIC_API_KEY`
    - `SOLAR_STRAWBERRY_API_KEY`

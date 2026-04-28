@@ -27,6 +27,24 @@ python3 scripts/run_prompt_tuning.py \
   --output_dir ./results/mock_smoke
 ```
 
+**Minimal API smoke run:**
+```bash
+pip install -r requirements.txt
+cp .env.example .env
+# Fill UPSTAGE_API_KEY in .env, then run:
+python3 scripts/run_prompt_tuning.py \
+  --dataset bbh \
+  --total_samples 5 \
+  --iteration_samples 1 \
+  --iterations 1 \
+  --model solar \
+  --evaluator solar \
+  --meta_model solar \
+  --output_dir ./results/api_smoke_solar
+```
+
+The default API smoke path uses Solar for generation, evaluation, and meta-prompting, so `UPSTAGE_API_KEY` is enough. If you select other remote models, set the matching key: `OPENAI_API_KEY` for `gpt4o`, `ANTHROPIC_API_KEY` for `claude`, and `SOLAR_STRAWBERRY_API_KEY` for `solar_strawberry`.
+
 **Options:**
 - `--dataset`: Dataset to use (bbh, mmlu, mmlu_pro, cnn, gsm8k, mbpp, xsum, truthfulqa, hellaswag, humaneval, samsum, meetingbank)
 - `--total_samples`: Total number of samples to use

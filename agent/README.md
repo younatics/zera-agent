@@ -134,7 +134,7 @@ Set up your API keys in a `.env` file:
 ```bash
 OPENAI_API_KEY=your_openai_key
 ANTHROPIC_API_KEY=your_anthropic_key
-SOLAR_API_KEY=your_solar_key
+UPSTAGE_API_KEY=your_upstage_key
 SOLAR_STRAWBERRY_API_KEY=your_solar_strawberry_key
 ```
 

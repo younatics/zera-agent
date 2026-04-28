@@ -119,7 +119,7 @@ class Model:
         OpenAI = _load_openai_client()
         if model_name == "solar":
             return OpenAI(
-                api_key=os.getenv("SOLAR_API_KEY"),
+                api_key=os.getenv("UPSTAGE_API_KEY"),
                 base_url=self.model_info[model_name]["base_url"],
             )
         if model_name in ["local1", "local2"]:

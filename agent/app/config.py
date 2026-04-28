@@ -15,7 +15,7 @@ PROMPT_FILES = {
 }
 
 REQUIRED_API_KEYS = {
-    "solar": "SOLAR_API_KEY",
+    "solar": "UPSTAGE_API_KEY",
     "gpt4o": "OPENAI_API_KEY",
     "claude": "ANTHROPIC_API_KEY",
     "local1": None,

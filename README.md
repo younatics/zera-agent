@@ -288,7 +288,7 @@ Create a `.env` file in the project root with your API keys:
 # Required API Keys
 OPENAI_API_KEY=your_openai_api_key_here
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
-SOLAR_API_KEY=your_solar_api_key_here
+UPSTAGE_API_KEY=your_upstage_api_key_here
 SOLAR_STRAWBERRY_API_KEY=your_solar_strawberry_api_key_here
 
 # Optional: Local model configuration

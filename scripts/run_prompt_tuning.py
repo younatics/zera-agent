@@ -20,6 +20,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from agent.app.config import missing_api_keys, setup_environment
 from agent.core.prompt_tuner import PromptTuner
 from agent.common.api_client import Model
 
@@ -166,8 +167,8 @@ def load_dataset(dataset_name, total_samples, logger):
             data.extend(split_data)
         
         for item in data:
-            question = item['question']
-            expected = item['answer']
+            question = item["input"]
+            expected = item["target"]
             test_cases.append({
                 'question': question,
                 'expected': expected
@@ -412,6 +413,8 @@ def main():
     
     args = parser.parse_args()
     
+    setup_environment()
+
     # Create output directory
     os.makedirs(args.output_dir, exist_ok=True)
     
@@ -433,6 +436,21 @@ def main():
     
     logger.info("=== Prompt Tuning Started ===")
     logger.info(f"Configuration: {json.dumps(config, ensure_ascii=False, indent=2)}")
+
+    if not args.mock:
+        required_models = {args.model, args.evaluator}
+        if args.use_meta_prompt:
+            required_models.add(args.meta_model)
+        missing_keys = missing_api_keys(required_models)
+        if missing_keys:
+            logger.error(
+                "Missing required API keys for selected models: %s",
+                ", ".join(missing_keys),
+            )
+            logger.error(
+                "Set them in your environment or copy .env.example to .env and fill in the values."
+            )
+            sys.exit(1)
     
     try:
         # Load dataset
